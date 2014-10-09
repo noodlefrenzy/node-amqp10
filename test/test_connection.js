@@ -24,7 +24,7 @@ describe('Connection', function() {
             });
         });
 
-        it('should match with port and with/without route', function() {
+        it('should match with port and with/without route', function () {
             var conn = new Connection();
 
             var addr = 'amqp://localhost:1234';
@@ -45,8 +45,10 @@ describe('Connection', function() {
                 path: '/myroute?with=arguments&multiple=arguments'
             });
         });
+    });
 
-/*
+    describe('#_open()', function() {
+        // NOTE: Only works if you have a local AMQP server running
         it('should connect to activemq', function(done) {
             var conn = new Connection();
             conn.open('amqp://localhost/');
@@ -55,6 +57,5 @@ describe('Connection', function() {
                 done();
             }, 1000);
         });
-*/
     });
 });
