@@ -1,7 +1,7 @@
 {
   "name": "node-amqp-1-0",
   "version": "0.0.1",
-  "description": "node-amqp-1-0: AMQP-1.0 compatible Node client, not based on native code (e.g. no proton).",
+  "description": "AMQP-1.0 compatible Node client, not based on native code (e.g. no proton).",
   "main": "amqp_client.js",
   "engines": {
     "node": ">= 0.8"
@@ -14,8 +14,7 @@
     "debug": "^2.0.0",
     "node-int64": "^0.3.1",
     "readable-stream": "^1.0.32",
-    "stately.js": "^1.2.0",
-    "through2": "^0.6.2"
+    "stately.js": "^1.2.0"
   },
   "devDependencies": {
     "express": "^4.9.0",
