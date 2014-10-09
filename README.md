@@ -6,6 +6,22 @@ I've started a new project rather than fork from node-amqp or amqp.node.  Both n
 great 0.9.1 clients and I recommend them, but neither is pursuing a 1.0 implementation.  If I can find an
 easy way to integrate this code back into them, I'll definitely be submitting a PR.
 
+## Implementation Notes ##
+
+Here are my current implementation plans - if you have feedback or critiques on any of these choices, feel free to
+submit an Issue or even a PR.  Trust me, I don't take criticism personally, and I'm new to Nodejs so I could be making
+"obviously bad" choices to someone who is more familiar with the landscape.
+
++   I'm planning on using Node's built-in net/socket classes for communicating with the server.
++   Data from the server will be written to a circular buffer based on [CBarrick's](https://github.com/cbarrick/CircularBuffer).
++   The connection state will be managed using [Stately.js](https://github.com/fschaefer/Stately.js), with state transitions
+    swapping which callback gets invoked on receipt of new data. (e.g. post-connection, we write the AMQP version header
+    and then install a callback to ensure the correct version.  Once incoming data is written to the circular buffer, this
+    callback is invoked, and a comparison vs. the expected version triggers another transition).
++   Buffer comparisons are done via [Buffertools](https://github.com/bnoordhuis/node-buffertools).  Bit-twiddling is done
+    via [node-butils](https://github.com/nlf/node-butils), if necessary.
++   Binary "parsing" and outgoing bitstream generation is done via [bitsyntax](https://github.com/squaremo/bitsyntax-js).
+
 ## Protocol Notes ##
 
 The [AMQP 1.0 Protocol](http://docs.oasis-open.org/amqp/core/v1.0/amqp-core-complete-v1.0.pdf) differs substantially 
