@@ -1,5 +1,7 @@
 var should      = require('should'),
-    Connection  = require('../lib/connection');
+    Connection  = require('../lib/connection'),
+    constants   = require('../lib/constants'),
+    MockServer  = require('./mock_amqp');
 
 describe('Connection', function() {
     describe('#_parseAddress()', function() {
@@ -49,6 +51,7 @@ describe('Connection', function() {
 
     describe('#_open()', function() {
         // NOTE: Only works if you have a local AMQP server running
+/*
         it('should connect to activemq', function(done) {
             var conn = new Connection();
             conn.open('amqp://localhost/');
@@ -56,6 +59,16 @@ describe('Connection', function() {
                 conn.close();
                 done();
             }, 1000);
+        });
+*/
+
+        it('should connect to mock server', function(done) {
+            var server = new MockServer();
+            server.setSequence([ constants.amqp_version ], [ constants.amqp_version ]);
+            server.setup();
+            var conn = new Connection();
+            conn.open('amqp://localhost:'+server.port);
+            server.assertSequence(function() { conn.close(); done(); });
         });
     });
 });
