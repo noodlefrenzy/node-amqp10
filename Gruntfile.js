@@ -17,8 +17,20 @@ module.exports = function(grunt) {
 
         jsdoc: {
             all: {
-                src: ['*.js', 'lib/**/*.js', 'test/**/*.js'],
-                dest: 'doc'
+                src: ['amqp_client.js', 'lib/**/*.js'],
+                dest: 'doc',
+                template : "node_modules/grunt-jsdoc/node_modules/ink-docstrap/template",
+                configure : "./jsdoc.conf.json"
+            }
+        },
+
+        jsdoc2md: {
+            indexed: {
+                options: {
+                    index: true
+                },
+                src: ['amqp_client.js', 'lib/**/*.js'],
+                dest: 'api/with-index.md'
             }
         }
     });
@@ -26,8 +38,9 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-simple-mocha');
     grunt.loadNpmTasks('grunt-jsdoc');
+    grunt.loadNpmTasks("grunt-jsdoc-to-markdown");
 
     grunt.registerTask('test', ['simplemocha']);
 
-    grunt.registerTask('default', ['jshint', 'test', 'jsdoc']);
+    grunt.registerTask('default', ['jshint', 'test', 'jsdoc', 'jsdoc2md']);
 };

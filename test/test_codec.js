@@ -42,6 +42,9 @@ describe('Codec', function() {
             var buffer = new Buffer([0xA1, 0x3, 0x46, 0x4F, 0x4F]);
             var actual = codec.decode(buffer)[0];
             actual.should.eql("FOO");
+            buffer = new Buffer([0xB1, 0x0, 0x0, 0x0, 0x3, 0x46, 0x4F, 0x4F]);
+            actual = codec.decode(buffer)[0];
+            actual.should.eql("FOO");
         });
 
         it('should fail when not implemented', function() {
