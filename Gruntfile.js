@@ -21,7 +21,7 @@ module.exports = function(grunt) {
                     index: true
                 },
                 src: ['amqp_client.js', 'lib/**/*.js'],
-                dest: 'doc/index.md'
+                dest: 'api/README.md'
             }
         }
     });

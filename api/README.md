@@ -169,7 +169,7 @@ Connection negotiation state diagram from AMQP 1.0 spec:
  R:<b>CTRL</b> = Received <b>CTRL</b>
 
  S:<b>CTRL</b> = Sent <b>CTRL</b>
- 
+
  Also could be DISCARDING if an error condition triggered the CLOSE
 
 <a name="Frame"></a>
