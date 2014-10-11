@@ -1,4 +1,5 @@
-var should      = require('should'),
+var debug       = require('debug')('amqp10-test_connection'),
+    should      = require('should'),
     Connection  = require('../lib/connection'),
     constants   = require('../lib/constants'),
     MockServer  = require('./mock_amqp');
@@ -49,6 +50,14 @@ describe('Connection', function() {
         });
     });
 
+    var assertTransitions = function(actual, expected) {
+        actual.length.should.eql(expected.length-1, "Wrong number of state transitions in " + JSON.stringify(actual) + " vs. " + JSON.stringify(expected));
+        for (var idx = 0; idx < expected.length - 1; ++idx) {
+            var curTransition = expected[idx] + '=>' + expected[idx+1];
+            actual[idx].should.eql(curTransition, "Wrong transition at step "+idx);
+        }
+    };
+
     describe('#_open()', function() {
         // NOTE: Only works if you have a local AMQP server running
 /*
@@ -61,14 +70,46 @@ describe('Connection', function() {
             }, 1000);
         });
 */
+        var server = null;
+
+        afterEach(function (done) {
+            if (server) {
+                server.teardown();
+                server = null;
+            }
+            done();
+        });
 
         it('should connect to mock server', function(done) {
-            var server = new MockServer();
+            server = new MockServer();
             server.setSequence([ constants.amqp_version ], [ constants.amqp_version ]);
             server.setup();
+            var transitions = [];
+            var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
             var conn = new Connection();
+            conn.connSM.bind(recordTransitions);
             conn.open('amqp://localhost:'+server.port);
-            server.assertSequence(function() { conn.close(); done(); });
+            server.assertSequence(function() {
+                conn.close();
+                assertTransitions(transitions, [ 'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'DISCONNECTED' ]);
+                done();
+            });
+        });
+
+        it('should cope with aggressive server handshake', function(done) {
+            server = new MockServer();
+            server.setSequence([ constants.amqp_version ], [ constants.amqp_version ], true);
+            server.setup();
+            var transitions = [];
+            var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
+            var conn = new Connection();
+            conn.connSM.bind(recordTransitions);
+            conn.open('amqp://localhost:'+server.port);
+            server.assertSequence(function() {
+                conn.close();
+                assertTransitions(transitions, [ 'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'DISCONNECTED' ]);
+                done();
+            });
         });
     });
 });

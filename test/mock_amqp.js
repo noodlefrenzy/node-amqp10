@@ -14,6 +14,16 @@ var MockServer = function(port) {
     this.data = new cbuf({ size: 1024, encoding: 'buffer' });
     this.requestsExpected = [];
     this.responsesToSend = [];
+    this.serverGoesFirst = false;
+    this.listenAttempts = 0;
+};
+
+MockServer.prototype._listen = function() {
+    var self = this;
+    self.listenAttempts++;
+    self.server.listen(this.port, function() {
+        debug('Server listening on '+self.port);
+    });
 };
 
 MockServer.prototype.setup = function() {
@@ -22,18 +32,27 @@ MockServer.prototype.setup = function() {
     }
 
     var self = this;
-    this.server = net.createServer(function (c) {
+    var connectionHandler = function (c) {
         debug('Connection established');
+        self.conn = c;
+        if (self.serverGoesFirst) {
+            self._sendNext();
+        }
         c.on('end', function() { debug('Connection terminated'); });
         c.on('data', function(d) { self.data.write(d); self._testData(); });
-        self.conn = c;
+    };
+    self.server = net.createServer(connectionHandler);
+    self.server.on('error', function(err) {
+        if (err.code == 'EADDRINUSE') {
+            self.listenAttempts.should.be.lessThan(5, 'Failed to connect too many times');
+            debug('Address in use on '+self.port+', trying again...');
+            self.port++;
+            self.server = self._listen();
+        } else {
+            should.fail('Error starting mock server: ' + err);
+        }
     });
-    this.server.on('error', function(err) {
-        should.fail('Error starting mock server: '+err);
-    });
-    this.server.listen(this.port, function() {
-        debug('Server listening on '+self.port);
-    });
+    self._listen();
 };
 
 MockServer.prototype.teardown = function() {
@@ -43,9 +62,28 @@ MockServer.prototype.teardown = function() {
     }
 };
 
-MockServer.prototype.setSequence = function(reqs, resps) {
+MockServer.prototype.setSequence = function(reqs, resps, serverFirst) {
     this.requestsExpected = reqs;
     this.responsesToSend = resps;
+    this.serverGoesFirst = serverFirst;
+};
+
+MockServer.prototype._sendNext = function() {
+    var toSend = this.responsesToSend.shift();
+    if (toSend && typeof toSend === 'string') {
+        switch (toSend) {
+            case 'disconnect':
+                break;
+            case 'error':
+                break;
+            default:
+                this.conn.write(toSend, 'utf8', function() { debug('Wrote ' + toSend); });
+        }
+    } else if (toSend) {
+        this.conn.write(toSend);
+    } else {
+        debug('No data to send.');
+    }
 };
 
 MockServer.prototype._testData = function() {
@@ -54,21 +92,7 @@ MockServer.prototype._testData = function() {
         expected = this.requestsExpected.shift();
         var actual = this.data.read(expected.length);
         actual.toString('hex').should.eql(expected.toString('hex'));
-        var toSend = this.responsesToSend.shift();
-        if (toSend && typeof toSend === 'string') {
-            switch (toSend) {
-                case 'disconnect':
-                    break;
-                case 'error':
-                    break;
-                default:
-                    this.conn.write(toSend, 'utf8', function() { debug('Wrote ' + toSend); });
-            }
-        } else if (toSend) {
-            this.conn.write(toSend);
-        } else {
-            debug('Received and validated data, but nothing to send back.');
-        }
+        this._sendNext();
     }
 };
 
