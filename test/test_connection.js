@@ -130,7 +130,7 @@ describe('Connection', function() {
 
         it('should cope with errors', function(done) {
             server = new MockServer();
-            server.setSequence([ constants.amqp_version ], [ 'error' ], true);
+            server.setSequence([ constants.amqp_version ], [ 'error' ]);
             var conn = new Connection();
             server.setup(conn);
             var transitions = [];

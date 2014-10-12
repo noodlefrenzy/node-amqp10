@@ -3,6 +3,9 @@ var bitsyntax   = require('bitsyntax'),
     should      = require('should'),
     constants   = require('../lib/constants');
 
+/**
+ * Simple test playground for verifying assumptions about bitsyntax and the JS type system.
+ */
 describe('TypeTest', function() {
     it('bitsyntax parser', function() {
         var expected = new Buffer([0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80]);
