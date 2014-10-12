@@ -16,6 +16,7 @@ var MockServer = function(port) {
     this.responsesToSend = [];
     this.serverGoesFirst = false;
     this.listenAttempts = 0;
+    this.client = null;
 };
 
 MockServer.prototype._listen = function() {
@@ -26,10 +27,12 @@ MockServer.prototype._listen = function() {
     });
 };
 
-MockServer.prototype.setup = function() {
+MockServer.prototype.setup = function(client) {
     if (this.server) {
         this.teardown();
     }
+
+    this.client = client;
 
     var self = this;
     var connectionHandler = function (c) {
@@ -73,8 +76,10 @@ MockServer.prototype._sendNext = function() {
     if (toSend && typeof toSend === 'string') {
         switch (toSend) {
             case 'disconnect':
+                this.conn.end();
                 break;
             case 'error':
+                this.client.client.emit('error', 'Forced error');
                 break;
             default:
                 this.conn.write(toSend, 'utf8', function() { debug('Wrote ' + toSend); });
