@@ -1,6 +1,8 @@
 var bitsyntax   = require('bitsyntax'),
+    builder     = require('../lib/buffer_builder'),
     Int64       = require('node-int64'),
     should      = require('should'),
+    debug       = require('debug')('amqp10-test-codec'),
     codec       = require('../lib/codec');
 
 describe('Codec', function() {
@@ -51,6 +53,31 @@ describe('Codec', function() {
             var buffer = new Buffer([0x73, 0x01, 0x02, 0x03, 0x04]);
             (function() { codec.decode(buffer); }).should.throw(Error);
         });
+
+        it('should decode composite example from spec', function() {
+            // From Page 25 of AMQP 1.0 spec
+            var buffer = builder([
+                 ['byte', [0x00, 0xA3, 0x11]],
+                 ['string', ['example:book:list']],
+                 ['byte', [0xC0, 0x40, 0x03, 0xA1, 0x15]],
+                 ['string', ['AMQP for & by Dummies']],
+                 ['byte', [0xE0, 0x25, 0x02, 0xA1, 0x0E]],
+                 ['string', ['Rob J. Godfrey']],
+                 ['byte', [0x13]],
+                 ['string', ['Rafael H. Schloming']],
+                 ['byte', [0x40]]
+                ]);
+            debug(buffer.toString('hex'));
+            var actual = codec.decode(buffer)[0];
+            actual.should.eql({
+                type: 'example:book:list',
+                value: [
+                    'AMQP for & by Dummies',
+                    [ 'Rob J. Godfrey', 'Rafael H. Schloming'],
+                    null
+                ]
+            });
+        });
     });
 
     describe('#encode()', function() {
@@ -68,4 +95,5 @@ describe('Codec', function() {
             expected.toString('hex').should.eql(buffer.toString('hex'));
         });
     });
+
 });

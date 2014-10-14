@@ -9,11 +9,12 @@
   "dependencies": {
     "bitsyntax": "0.0.4",
     "bluebird": "^2.3.5",
+    "buffer-builder": "^0.1.0",
     "buffertools": "^2.1.2",
     "butils": "^0.1.0",
     "cbarrick-circular-buffer": "^1.2.1",
     "debug": "^2.0.0",
-    "node-int64": "^0.3.1",
+    "node-int64": "noodlefrenzy/node-int64",
     "readable-stream": "^1.0.32",
     "stately.js": "^1.2.0",
     "xml2js": "^0.4.4"
