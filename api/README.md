@@ -6,11 +6,21 @@
   * [new CircularBuffer(initialSize)](#new_CircularBuffer)
 * [class: Codec](#Codec)
   * [new Codec()](#new_Codec)
-  * [codec.decode(buffer)](#Codec#decode)
+  * [codec.decode(cbuf)](#Codec#decode)
+  * [codec.encode(val, buf, offset, [forceType])](#Codec#encode)
 * [class: Connection](#Connection)
   * [new Connection()](#new_Connection)
 * [class: Frame](#Frame)
   * [new Frame()](#new_Frame)
+
+**Functions**
+
+* [encoder(val, buf, offset)](#encoder)
+* [decoder(buf)](#decoder)
+
+**Members**
+
+* [types](#types)
  
 <a name="CircularBuffer"></a>
 #class: CircularBuffer
@@ -33,21 +43,34 @@ Started this before I found cbarrick's version.  Keeping it around in case his d
 
 * [class: Codec](#Codec)
   * [new Codec()](#new_Codec)
-  * [codec.decode(buffer)](#Codec#decode)
+  * [codec.decode(cbuf)](#Codec#decode)
+  * [codec.encode(val, buf, offset, [forceType])](#Codec#encode)
 
 <a name="new_Codec"></a>
 ##new Codec()
 Build a codec, turning constants defining AMQP1.0 types into specific bitsyntax parsers and builders.
 
 <a name="Codec#decode"></a>
-##codec.decode(buffer)
+##codec.decode(cbuf)
 Decode a single entity from a buffer (starting at offset 0).  Only simple values currently supported.
 
 **Params**
 
-- buffer `Buffer` - The buffer to decode.  
+- cbuf `*` - The circular buffer to decode.  Will decode a single value per call.  
 
-**Returns**: `*` - 2-elt array of decoded value and "the rest", or undefined if parsing failed.  
+**Returns**:  - Single decoded value.  
+<a name="Codec#encode"></a>
+##codec.encode(val, buf, offset, [forceType])
+Encode the given value as an AMQP 1.0 bitstring.
+
+**Params**
+
+- val   
+- buf   
+- offset   
+- \[forceType\] `string` - If set, forces the encoder for the given type.  
+
+**Returns**:  - N/A  
 <a name="Connection"></a>
 #class: Connection
 **Members**
@@ -200,3 +223,28 @@ Encapsulates all convenience methods required for encoding a frame to put it out
 
  </pre>
 
+<a name="encoder"></a>
+#encoder(val, buf, offset)
+Encoder methods are used for all examples of that type and are expected to encode to the proper type (e.g. a uint willencode to the fixed-zero-value, the short uint, or the full uint as appropriate).
+
+**Params**
+
+- val  - Value to encode (for fixed value encoders (e.g. null) this will be ignored)  
+- buf `Buffer` - Buffer into which to write code and encoded value  
+- offset `integer` - Non-negative byte offset for buffer  
+
+**Returns**: `integer` - New offset value  
+<a name="decoder"></a>
+#decoder(buf)
+Decoder methods decode an incoming buffer into an appropriate concrete JS entity.
+
+**Params**
+
+- buf `Buffer` - Buffer to decode, stripped of prefix code (e.g. 0xA1 0x03 'foo' would have the 0xA1 stripped)  
+
+**Returns**:  - Decoded value  
+<a name="types"></a>
+#types
+List of all types.  Each contains a number of encodings, one of which contains an encoder method and all contain decoders.
+
+**Type**: [types](#types)  
