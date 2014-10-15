@@ -7,7 +7,6 @@
     "node": ">= 0.8"
   },
   "dependencies": {
-    "bitsyntax": "0.0.4",
     "bluebird": "^2.3.5",
     "buffer-builder": "^0.1.0",
     "buffertools": "^2.1.2",

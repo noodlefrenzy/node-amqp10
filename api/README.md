@@ -48,7 +48,7 @@ Started this before I found cbarrick's version.  Keeping it around in case his d
 
 <a name="new_Codec"></a>
 ##new Codec()
-Build a codec, turning constants defining AMQP1.0 types into specific bitsyntax parsers and builders.
+Build a codec.
 
 <a name="Codec#decode"></a>
 ##codec.decode(cbuf)

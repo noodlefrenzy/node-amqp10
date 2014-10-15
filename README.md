@@ -23,7 +23,6 @@ submit an Issue or even a PR.  Trust me, I don't take criticism personally, and 
     callback is invoked, and a comparison vs. the expected version triggers another transition).
 +   Buffer comparisons are done via [Buffertools](https://github.com/bnoordhuis/node-buffertools).  Bit-twiddling is done
     via [node-butils](https://github.com/nlf/node-butils), if necessary.
-+   Binary "parsing" and outgoing bitstream generation is done via [bitsyntax](https://github.com/squaremo/bitsyntax-js).
 
 ## Protocol Notes ##
 
