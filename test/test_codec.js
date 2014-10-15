@@ -109,4 +109,13 @@ describe('Codec', function() {
             expected.toString('hex').should.eql(buffer.toString('hex'));
         });
     });
+
+    describe('random', function() {
+        it('should detect buffer vs. cbuffer', function() {
+            var buf = new Buffer(5);
+            var cbuf = newBuf([0x01]);
+            (buf instanceof Buffer).should.be.ok;
+            (cbuf instanceof CBuffer).should.be.ok;
+        });
+    });
 });

@@ -1,5 +1,9 @@
 #Index
 
+**Modules**
+
+* [types](#module_types)
+
 **Classes**
 
 * [class: CircularBuffer](#CircularBuffer)
@@ -15,13 +19,13 @@
 
 **Functions**
 
-* [encoder(val, buf, offset)](#encoder)
-* [decoder(buf)](#decoder)
-
-**Members**
-
-* [types](#types)
+* [encoder(val, buf, offset, [codec])](#encoder)
+* [decoder(buf, [codec])](#decoder)
  
+<a name="module_types"></a>
+#types
+List of all types.  Each contains a number of encodings, one of which contains an encoder method and all contain decoders.
+
 <a name="CircularBuffer"></a>
 #class: CircularBuffer
 **Members**
@@ -224,7 +228,7 @@ Encapsulates all convenience methods required for encoding a frame to put it out
  </pre>
 
 <a name="encoder"></a>
-#encoder(val, buf, offset)
+#encoder(val, buf, offset, [codec])
 Encoder methods are used for all examples of that type and are expected to encode to the proper type (e.g. a uint willencode to the fixed-zero-value, the short uint, or the full uint as appropriate).
 
 **Params**
@@ -232,19 +236,16 @@ Encoder methods are used for all examples of that type and are expected to encod
 - val  - Value to encode (for fixed value encoders (e.g. null) this will be ignored)  
 - buf `Buffer` - Buffer into which to write code and encoded value  
 - offset `integer` - Non-negative byte offset for buffer  
+- \[codec\] <code>[Codec](#Codec)</code> - If needed, the codec to encode other values (e.g. for lists/arrays)  
 
 **Returns**: `integer` - New offset value  
 <a name="decoder"></a>
-#decoder(buf)
+#decoder(buf, [codec])
 Decoder methods decode an incoming buffer into an appropriate concrete JS entity.
 
 **Params**
 
 - buf `Buffer` - Buffer to decode, stripped of prefix code (e.g. 0xA1 0x03 'foo' would have the 0xA1 stripped)  
+- \[codec\] <code>[Codec](#Codec)</code> - If needed, the codec to decode sub-values for composite types.  
 
 **Returns**:  - Decoded value  
-<a name="types"></a>
-#types
-List of all types.  Each contains a number of encodings, one of which contains an encoder method and all contain decoders.
-
-**Type**: [types](#types)  
