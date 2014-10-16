@@ -214,7 +214,7 @@ Connection states, from AMQP 1.0 spec:
  |    S:HDR[!=R:HDR]    |                R:HDR[!=S:HDR]                 |
  +----------------------+-----------------------------------------------+
 
- </pre> R:<b>CTRL</b> = Received <b>CTRL</b> S:<b>CTRL</b> = Sent <b>CTRL</b> Also could be DISCARDING if an error condition triggered the CLOSE
+ </pre> R:<b>CTRL</b> = Received <b>CTRL</b> S:<b>CTRL</b> = Sent <b>CTRL</b> Also could be DISCARDING if an error condition triggered the CLOSE
 
 <a name="Frame"></a>
 #class: Frame

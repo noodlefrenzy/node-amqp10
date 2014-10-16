@@ -47,7 +47,7 @@ function assertDecoders(tests) {
     for (var idx in tests) {
         var curTest = tests[idx];
         var dec = types.decoders[curTest[0]];
-        var actual = dec(curTest[1]);
+        var actual = dec(curTest[1], codec);
         debug('Decoded 0x'+curTest[1].toString('hex')+' => '+JSON.stringify(actual));
         if (curTest[3]) {
             curTest[3](actual, curTest[2]).should.be.true;
@@ -120,9 +120,8 @@ describe('Types', function() {
 
         it('should decode lists', function() {
             var toTest = [
-                [ 0x45, new Buffer([]), [] ]
-                // Not yet coded.
-                //[ 0xC0, buf([0xB, 0x2, 0x71, builder.prototype.appendInt32BE, 123, 0x71, builder.prototype.appendInt32BE, 456]), [ 123, 456 ] ]
+                [ 0x45, new Buffer([]), [] ],
+                [ 0xC0, buf([0xB, 0x2, 0x71, builder.prototype.appendInt32BE, 123, 0x71, builder.prototype.appendInt32BE, 456]), [ 123, 456 ] ]
             ];
 
             assertDecoders(toTest);
