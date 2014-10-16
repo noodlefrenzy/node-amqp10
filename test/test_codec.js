@@ -136,9 +136,21 @@ describe('Codec', function() {
         it('should encode described types', function() {
             var buffer = new Buffer(9);
             codec.encode(new DescribedType('D1', 'V1'), buffer, 0);
-            var expected = newBuf([0x00, 0xA1, 0x2, builder.prototype.appendString, 'D1', 0xA1, 0x2, builder.prototpe.appendString, 'V1']);
+            var expected = newBuf([0x00, 0xA1, 0x2, builder.prototype.appendString, 'D1', 0xA1, 0x2, builder.prototype.appendString, 'V1']);
             expected.toString('hex').should.eql(buffer.toString('hex'));
         });
+        it('should encode objects as lists when asked', function() {
+            var toEncode = {
+                foo: 'V1',
+                bar: 'V2',
+                encodeOrdering: [ 'foo', 'bar' ]
+            };
+            var expected = newBuf([0xC0, 0x9, 0x2, 0xA1, 0x2, builder.prototype.appendString, 'V1', 0xA1, 0x2, builder.prototype.appendString, 'V2']);
+            var actual = new Buffer(expected.length);
+            var bytes = codec.encode(toEncode, actual, 0);
+            bytes.should.eql(expected.length);
+            actual.toString('hex').should.eql(expected.toString('hex'));
+        })
     });
 
     describe('random', function() {

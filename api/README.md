@@ -7,13 +7,13 @@
 * [class: Codec](#Codec)
   * [new Codec()](#new_Codec)
   * [codec._isInteger(n)](#Codec#_isInteger)
-  * [codec._readFullValue(buf, [offset])](#Codec#_readFullValue)
+  * [codec._readFullValue(buf, [offset], [doNotConsume])](#Codec#_readFullValue)
   * [codec.decode(buf, [offset])](#Codec#decode)
   * [codec.encode(val, buf, [offset], [forceType])](#Codec#encode)
 * [class: Connection](#Connection)
   * [new Connection()](#new_Connection)
 * [class: DescribedType](#DescribedType)
-  * [new DescribedType()](#new_DescribedType)
+  * [new DescribedType(descriptor, value)](#new_DescribedType)
 * [class: Frame](#Frame)
   * [new Frame()](#new_Frame)
   * [frame._buildOutgoing(options)](#Frame#_buildOutgoing)
@@ -52,7 +52,7 @@ Started this before I found cbarrick's version.  Keeping it around in case his d
 * [class: Codec](#Codec)
   * [new Codec()](#new_Codec)
   * [codec._isInteger(n)](#Codec#_isInteger)
-  * [codec._readFullValue(buf, [offset])](#Codec#_readFullValue)
+  * [codec._readFullValue(buf, [offset], [doNotConsume])](#Codec#_readFullValue)
   * [codec.decode(buf, [offset])](#Codec#decode)
   * [codec.encode(val, buf, [offset], [forceType])](#Codec#encode)
 
@@ -71,15 +71,16 @@ Acquired from http://stackoverflow.com/questions/3885817/how-to-check-if-a-numbe
 **Returns**: `boolean` - True if integral.  
 **Access**: private  
 <a name="Codec#_readFullValue"></a>
-##codec._readFullValue(buf, [offset])
+##codec._readFullValue(buf, [offset], [doNotConsume])
 Reads a full value's worth of bytes from a circular or regular buffer, or returns undefined if not enough bytes are there.Note that for Buffers, the returned Buffer will be a slice (so backed by the original storage)!
 
 **Params**
 
 - buf `Buffer` | `CBuffer` - Buffer or circular buffer to read from.  If a Buffer is given, it is assumed to be full.  
 - \[offset=0\] `integer` - Offset - only valid for Buffer, not CBuffer.  
+- \[doNotConsume=false\] `boolean` - If set to true, will peek bytes instead of reading them - useful for leaving                                         circular buffer in original state for described values that are not yet complete.  
 
-**Returns**: `Array` - Buffer of full value + number of bytes read  
+**Returns**: `Array` - Buffer of full value + number of bytes read.                                         For described types, will return [ [ descriptor-buffer, value-buffer ], total-bytes ].  
 **Access**: private  
 <a name="Codec#decode"></a>
 ##codec.decode(buf, [offset])
@@ -93,7 +94,7 @@ Decode a single entity from a buffer (starting at offset 0).  Only simple values
 **Returns**: `Array` - Single decoded value + number of bytes consumed.  
 <a name="Codec#encode"></a>
 ##codec.encode(val, buf, [offset], [forceType])
-Encode the given value as an AMQP 1.0 bitstring.
+Encode the given value as an AMQP 1.0 bitstring.We do a best-effort to determine type.  Objects will be encoded as <code>maps</code>, unless:+ They are DescribedTypes, in which case they will be encoded as such.+ They contain an encodeOrdering array, in which case they will be encoded as a <code>list</code> of their values  in the specified order.+ They are Int64s, in which case they will be encoded as <code>longs</code>.
 
 **Params**
 
@@ -223,10 +224,10 @@ Connection states, from AMQP 1.0 spec:
 **Members**
 
 * [class: DescribedType](#DescribedType)
-  * [new DescribedType()](#new_DescribedType)
+  * [new DescribedType(descriptor, value)](#new_DescribedType)
 
 <a name="new_DescribedType"></a>
-##new DescribedType()
+##new DescribedType(descriptor, value)
 Described type, as described in the AMQP 1.0 spec as follows:
 <pre>
              constructor                       untyped bytes
@@ -246,6 +247,11 @@ Described type, as described in the AMQP 1.0 spec as follows:
    for the str8-utf8 encoding
 
 </pre> (Note: this example shows a string-typed descriptor, which should be  considered reserved)
+
+**Params**
+
+- descriptor  - Descriptor for the type (can be any valid AMQP type, including another described type).  
+- value  - Value of the described type (can also be any valid AMQP type, including another described type).  
 
 <a name="Frame"></a>
 #class: Frame
