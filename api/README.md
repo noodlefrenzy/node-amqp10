@@ -18,6 +18,7 @@
 * [class: Types](#Types)
   * [new Types()](#new_Types)
   * [types._listEncoder()](#Types#_listEncoder)
+    * [_listEncoder~tempBuffer](#Types#_listEncoder..tempBuffer)
   * [types._initTypesArray()](#Types#_initTypesArray)
   * [types._initEncodersDecoders()](#Types#_initEncodersDecoders)
 
@@ -269,6 +270,7 @@ Populate the internal buffer with contents built based on the options.  SIZE and
 * [class: Types](#Types)
   * [new Types()](#new_Types)
   * [types._listEncoder()](#Types#_listEncoder)
+    * [_listEncoder~tempBuffer](#Types#_listEncoder..tempBuffer)
   * [types._initTypesArray()](#Types#_initTypesArray)
   * [types._initEncodersDecoders()](#Types#_initEncodersDecoders)
 
