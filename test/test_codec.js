@@ -23,42 +23,49 @@ describe('Codec', function() {
         it('should match fixed values', function () {
             var buffer = newBuf([0x50, 0x05]);
             var actual = codec.decode(buffer);
-            actual.should.eql(5);
+            actual[0].should.eql(5);
+            actual[1].should.eql(2);
         });
 
         it('should match simple values', function() {
-            (codec.decode(newBuf([0x40])) === null).should.be.true;
-            codec.decode(newBuf([0x41])).should.be.true;
-            codec.decode(newBuf([0x42])).should.be.false;
-            codec.decode(newBuf([0x43])).should.eql(0);
-            codec.decode(newBuf([0x44])).should.eql(0);
+            (codec.decode(newBuf([0x40]))[0] === null).should.be.true;
+            codec.decode(newBuf([0x41]))[0].should.be.true;
+            codec.decode(newBuf([0x42]))[0].should.be.false;
+            codec.decode(newBuf([0x43]))[0].should.eql(0);
+            codec.decode(newBuf([0x44]))[0].should.eql(0);
         });
 
         it('should match longs', function() {
             var buffer = newBuf([0x80, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80]);
             var actual = codec.decode(buffer);
-            actual.should.eql(new Int64(new Buffer([0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80])));
+            actual[0].should.eql(new Int64(new Buffer([0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80])));
+            actual[1].should.eql(9);
         });
 
         it('should match floats', function() {
             var expected = new Buffer([0x01, 0x02, 0x03, 0x04]).readFloatBE(0);
             var buffer = newBuf([0x72, 0x01, 0x02, 0x03, 0x04]);
             var actual = codec.decode(buffer);
-            actual.should.eql(expected);
+            actual[0].should.eql(expected);
+            actual[1].should.eql(5);
 
             expected = new Buffer([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]).readDoubleBE(0);
             buffer = newBuf([0x82, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]);
             actual = codec.decode(buffer);
-            actual.should.eql(expected);
+            actual[0].should.eql(expected);
+            actual[1].should.eql(9);
         });
 
         it('should match strings', function() {
             var buffer = newBuf([0xA1, 0x3, 0x46, 0x4F, 0x4F]);
             var actual = codec.decode(buffer);
-            actual.should.eql("FOO");
+            actual[0].should.eql("FOO");
+            actual[1].should.eql(5);
+
             buffer = newBuf([0xB1, 0x0, 0x0, 0x0, 0x3, 0x46, 0x4F, 0x4F]);
             actual = codec.decode(buffer);
-            actual.should.eql("FOO");
+            actual[0].should.eql("FOO");
+            actual[1].should.eql(8);
         });
 
         it('should fail when not implemented', function() {

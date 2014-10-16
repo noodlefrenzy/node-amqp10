@@ -19,7 +19,8 @@ module.exports = function(grunt) {
         jsdoc2md: {
             indexed: {
                 options: {
-                    index: true
+                    index: true,
+                    private: true
                 },
                 src: ['amqp_client.js', 'lib/**/*.js'],
                 dest: 'api/README.md'

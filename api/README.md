@@ -1,31 +1,32 @@
 #Index
 
-**Modules**
-
-* [types](#module_types)
-
 **Classes**
 
 * [class: CircularBuffer](#CircularBuffer)
   * [new CircularBuffer(initialSize)](#new_CircularBuffer)
 * [class: Codec](#Codec)
   * [new Codec()](#new_Codec)
-  * [codec.decode(cbuf)](#Codec#decode)
-  * [codec.encode(val, buf, offset, [forceType])](#Codec#encode)
+  * [codec._readFullValue(buf, [offset])](#Codec#_readFullValue)
+  * [codec.decode(buf, [offset])](#Codec#decode)
+  * [codec._isInteger(n)](#Codec#_isInteger)
+  * [codec.encode(val, buf, [offset], [forceType])](#Codec#encode)
 * [class: Connection](#Connection)
   * [new Connection()](#new_Connection)
 * [class: Frame](#Frame)
   * [new Frame()](#new_Frame)
+  * [frame._buildOutgoing(options)](#Frame#_buildOutgoing)
+* [class: Types](#Types)
+  * [new Types()](#new_Types)
+  * [types._listEncoder()](#Types#_listEncoder)
+  * [types._initTypesArray()](#Types#_initTypesArray)
+  * [types._initEncodersDecoders()](#Types#_initEncodersDecoders)
 
 **Functions**
 
 * [encoder(val, buf, offset, [codec])](#encoder)
+  * [encoder~encoded](#encoder..encoded)
 * [decoder(buf, [codec])](#decoder)
  
-<a name="module_types"></a>
-#types
-List of all types.  Each contains a number of encodings, one of which contains an encoder method and all contain decoders.
-
 <a name="CircularBuffer"></a>
 #class: CircularBuffer
 **Members**
@@ -47,34 +48,58 @@ Started this before I found cbarrick's version.  Keeping it around in case his d
 
 * [class: Codec](#Codec)
   * [new Codec()](#new_Codec)
-  * [codec.decode(cbuf)](#Codec#decode)
-  * [codec.encode(val, buf, offset, [forceType])](#Codec#encode)
+  * [codec._readFullValue(buf, [offset])](#Codec#_readFullValue)
+  * [codec.decode(buf, [offset])](#Codec#decode)
+  * [codec._isInteger(n)](#Codec#_isInteger)
+  * [codec.encode(val, buf, [offset], [forceType])](#Codec#encode)
 
 <a name="new_Codec"></a>
 ##new Codec()
 Build a codec.
 
+<a name="Codec#_readFullValue"></a>
+##codec._readFullValue(buf, [offset])
+Reads a full value's worth of bytes from a circular or regular buffer, or returns undefined if not enough bytes are there.Note that for Buffers, the returned Buffer will be a slice (so backed by the original storage)!
+
+**Params**
+
+- buf `Buffer` | `CBuffer` - Buffer or circular buffer to read from.  If a Buffer is given, it is assumed to be full.  
+- \[offset=0\] `integer` - Offset - only valid for Buffer, not CBuffer.  
+
+**Returns**: `Array` - Buffer of full value + number of bytes read  
+**Access**: private  
 <a name="Codec#decode"></a>
-##codec.decode(cbuf)
+##codec.decode(buf, [offset])
 Decode a single entity from a buffer (starting at offset 0).  Only simple values currently supported.
 
 **Params**
 
-- cbuf `*` - The circular buffer to decode.  Will decode a single value per call.  
+- buf `Buffer` | `CBuffer` - The buffer/circular buffer to decode.  Will decode a single value per call.  
+- \[offset=0\] `integer` - The offset to read from (only used for Buffers).  
 
-**Returns**:  - Single decoded value.  
+**Returns**: `Array` - Single decoded value + number of bytes consumed.  
+<a name="Codec#_isInteger"></a>
+##codec._isInteger(n)
+Acquired from http://stackoverflow.com/questions/3885817/how-to-check-if-a-number-is-float-or-integer
+
+**Params**
+
+- n `number` - Number to test.  
+
+**Returns**: `boolean` - True if integral.  
+**Access**: private  
 <a name="Codec#encode"></a>
-##codec.encode(val, buf, offset, [forceType])
+##codec.encode(val, buf, [offset], [forceType])
 Encode the given value as an AMQP 1.0 bitstring.
 
 **Params**
 
-- val   
-- buf   
-- offset   
+- val  - Value to encode.  
+- buf  - Buffer to write into.  
+- \[offset=0\]  - Offset at which to start writing.  
 - \[forceType\] `string` - If set, forces the encoder for the given type.  
 
-**Returns**:  - N/A  
+**Returns**: `integer` - New offset.  
 <a name="Connection"></a>
 #class: Connection
 **Members**
@@ -196,6 +221,7 @@ Connection states, from AMQP 1.0 spec:
 
 * [class: Frame](#Frame)
   * [new Frame()](#new_Frame)
+  * [frame._buildOutgoing(options)](#Frame#_buildOutgoing)
 
 <a name="new_Frame"></a>
 ##new Frame()
@@ -227,6 +253,63 @@ Encapsulates all convenience methods required for encoding a frame to put it out
 
  </pre>
 
+<a name="Frame#_buildOutgoing"></a>
+##frame._buildOutgoing(options)
+Populate the internal buffer with contents built based on the options.  SIZE and DOFF will be inferredbased on the options given.
+
+**Params**
+
+- options `Object` - Following options are expected/[supported]:                             - [type]: Assumed to be 0x0 - AMQP                             - payload: Buffer of bytes to be sent                             - [extendedHeader]: Buffer of bytes for the extended header.                             AMQP-frame-specific:                             - channel: Channel number                             - performative: AMQP frame details                             Non-AMQP-frame-specific:                             - typeSpecificHeader: 2-byte integer for bytes 7 & 8 of header.  
+
+**Access**: private  
+<a name="Types"></a>
+#class: Types
+**Members**
+
+* [class: Types](#Types)
+  * [new Types()](#new_Types)
+  * [types._listEncoder()](#Types#_listEncoder)
+  * [types._initTypesArray()](#Types#_initTypesArray)
+  * [types._initEncodersDecoders()](#Types#_initEncodersDecoders)
+
+<a name="new_Types"></a>
+##new Types()
+Type definitions, encoders, and decoders - used extensively by [Codec](#Codec).
+
+<a name="Types#_listEncoder"></a>
+##types._listEncoder()
+Encoder for list types, specified in AMQP 1.0 as:
+ <pre>
+ +----------= count items =----------+
+ |                                   |
+ n OCTETs   n OCTETs   |                                   |
+ +----------+----------+--------------+------------+-------+
+ |   size   |  count   |      ...    /|    item    |\ ...  |
+ +----------+----------+------------/ +------------+ \-----+
+ / /              \ \
+ / /                \ \
+ / /                  \ \
+ +-------------+----------+
+ | constructor |   data   |
+ +-------------+----------+
+
+ Subcategory     n
+ =================
+ 0xC             1
+ 0xD             4
+ </pre>
+
+**Access**: private  
+<a name="Types#_initTypesArray"></a>
+##types._initTypesArray()
+Initialize list of all types.  Each contains a number of encodings, one of which contains an encoder method and all contain decoders.
+
+**Access**: private  
+<a name="Types#_initEncodersDecoders"></a>
+##types._initEncodersDecoders()
+Initialize all encoders and decoders based on type array.
+
+**Access**: private  
 <a name="encoder"></a>
 #encoder(val, buf, offset, [codec])
 Encoder methods are used for all examples of that type and are expected to encode to the proper type (e.g. a uint willencode to the fixed-zero-value, the short uint, or the full uint as appropriate).
