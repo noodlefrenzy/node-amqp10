@@ -6,12 +6,14 @@
   * [new CircularBuffer(initialSize)](#new_CircularBuffer)
 * [class: Codec](#Codec)
   * [new Codec()](#new_Codec)
+  * [codec._isInteger(n)](#Codec#_isInteger)
   * [codec._readFullValue(buf, [offset])](#Codec#_readFullValue)
   * [codec.decode(buf, [offset])](#Codec#decode)
-  * [codec._isInteger(n)](#Codec#_isInteger)
   * [codec.encode(val, buf, [offset], [forceType])](#Codec#encode)
 * [class: Connection](#Connection)
   * [new Connection()](#new_Connection)
+* [class: DescribedType](#DescribedType)
+  * [new DescribedType()](#new_DescribedType)
 * [class: Frame](#Frame)
   * [new Frame()](#new_Frame)
   * [frame._buildOutgoing(options)](#Frame#_buildOutgoing)
@@ -49,15 +51,25 @@ Started this before I found cbarrick's version.  Keeping it around in case his d
 
 * [class: Codec](#Codec)
   * [new Codec()](#new_Codec)
+  * [codec._isInteger(n)](#Codec#_isInteger)
   * [codec._readFullValue(buf, [offset])](#Codec#_readFullValue)
   * [codec.decode(buf, [offset])](#Codec#decode)
-  * [codec._isInteger(n)](#Codec#_isInteger)
   * [codec.encode(val, buf, [offset], [forceType])](#Codec#encode)
 
 <a name="new_Codec"></a>
 ##new Codec()
 Build a codec.
 
+<a name="Codec#_isInteger"></a>
+##codec._isInteger(n)
+Acquired from http://stackoverflow.com/questions/3885817/how-to-check-if-a-number-is-float-or-integer
+
+**Params**
+
+- n `number` - Number to test.  
+
+**Returns**: `boolean` - True if integral.  
+**Access**: private  
 <a name="Codec#_readFullValue"></a>
 ##codec._readFullValue(buf, [offset])
 Reads a full value's worth of bytes from a circular or regular buffer, or returns undefined if not enough bytes are there.Note that for Buffers, the returned Buffer will be a slice (so backed by the original storage)!
@@ -79,16 +91,6 @@ Decode a single entity from a buffer (starting at offset 0).  Only simple values
 - \[offset=0\] `integer` - The offset to read from (only used for Buffers).  
 
 **Returns**: `Array` - Single decoded value + number of bytes consumed.  
-<a name="Codec#_isInteger"></a>
-##codec._isInteger(n)
-Acquired from http://stackoverflow.com/questions/3885817/how-to-check-if-a-number-is-float-or-integer
-
-**Params**
-
-- n `number` - Number to test.  
-
-**Returns**: `boolean` - True if integral.  
-**Access**: private  
 <a name="Codec#encode"></a>
 ##codec.encode(val, buf, [offset], [forceType])
 Encode the given value as an AMQP 1.0 bitstring.
@@ -215,6 +217,35 @@ Connection states, from AMQP 1.0 spec:
  +----------------------+-----------------------------------------------+
 
  </pre> R:<b>CTRL</b> = Received <b>CTRL</b> S:<b>CTRL</b> = Sent <b>CTRL</b> Also could be DISCARDING if an error condition triggered the CLOSE
+
+<a name="DescribedType"></a>
+#class: DescribedType
+**Members**
+
+* [class: DescribedType](#DescribedType)
+  * [new DescribedType()](#new_DescribedType)
+
+<a name="new_DescribedType"></a>
+##new DescribedType()
+Described type, as described in the AMQP 1.0 spec as follows:
+<pre>
+             constructor                       untyped bytes
+                  |                                 |
+      +-----------+-----------+   +-----------------+-----------------+
+      |                       |   |                                   |
+ ...  0x00 0xA1 0x03 "URL" 0xA1   0x1E "http://example.org/hello-world"  ...
+      |             |  |     |                                   |
+      +------+------+  |     |                                   |
+             |         |     |                                   |
+        descriptor     |     +------------------+----------------+
+             |                        |
+             |         string value encoded according
+             |           to the str8-utf8 encoding
+             |
+     primitive format code
+   for the str8-utf8 encoding
+
+</pre> (Note: this example shows a string-typed descriptor, which should be  considered reserved)
 
 <a name="Frame"></a>
 #class: Frame
