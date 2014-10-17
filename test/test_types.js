@@ -1,6 +1,7 @@
 var should      = require('should'),
     debug       = require('debug')('amqp10-test-types'),
     builder     = require('buffer-builder'),
+    Int64       = require('node-int64'),
 
     types       = require('../lib/types'),
     codec       = require('../lib/codec');
@@ -68,7 +69,8 @@ describe('Types', function() {
                 [ 'uint', 100, buf([0x52, builder.prototype.appendUInt8, 100]) ],
                 [ 'uint', 0, buf([0x43]) ],
                 [ 'int', -10000, buf([0x71, builder.prototype.appendInt32BE, -10000]) ],
-                [ 'double', 123.45, buf([0x82, builder.prototype.appendDoubleBE, 123.45]) ]
+                [ 'double', 123.45, buf([0x82, builder.prototype.appendDoubleBE, 123.45]) ],
+                [ 'long', new Int64(0xFFFFFFFF, 0xFFFFFFFF), buf([0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]) ]
             ];
 
             assertEncoders(toTest);
@@ -101,7 +103,9 @@ describe('Types', function() {
                 [ 0x56, buf([0x01]), true ],
                 [ 0x70, buf([builder.prototype.appendInt32BE, 123]), 123 ],
                 [ 0x82, buf([builder.prototype.appendDoubleBE, 123.45]), 123.45 ],
-                [ 0x55, buf([0x23]), 0x23 ]
+                [ 0x55, buf([0x23]), 0x23 ],
+                [ 0x81, buf([0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]), new Int64(0xFFFFFFFF, 0xFFFFFFFF),
+                    function(a,b) { return (a instanceof Int64) && a.toOctetString() == b.toOctetString(); }]
             ];
 
             assertDecoders(toTest);
