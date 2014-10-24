@@ -153,6 +153,39 @@ describe('Codec', function() {
         })
     });
 
+    describe('#encode(buffer-builder)', function() {
+        it('should encode strings', function () {
+            var bufb = new builder();
+            codec.encode('FOO', bufb, 0);
+            bufb.get().toString('hex').should.eql((new Buffer([0xA1, 0x03, 0x46, 0x4F, 0x4F])).toString('hex'));
+        });
+        it('should encode numbers', function() {
+            var bufb = new builder();
+            codec.encode(123.456, bufb, 0);
+            var expected = new Buffer(9);
+            expected[0] = 0x82;
+            expected.writeDoubleBE(123.456, 1);
+            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+        });
+        it('should encode described types', function() {
+            var bufb = new builder();
+            codec.encode(new DescribedType('D1', 'V1'), bufb, 0);
+            var expected = newBuf([0x00, 0xA1, 0x2, builder.prototype.appendString, 'D1', 0xA1, 0x2, builder.prototype.appendString, 'V1']);
+            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+        });
+        it('should encode objects as lists when asked', function() {
+            var toEncode = {
+                foo: 'V1',
+                bar: 'V2',
+                encodeOrdering: [ 'foo', 'bar' ]
+            };
+            var expected = newBuf([0xC0, 0x9, 0x2, 0xA1, 0x2, builder.prototype.appendString, 'V1', 0xA1, 0x2, builder.prototype.appendString, 'V2']);
+            var bufb = new builder();
+            codec.encode(toEncode, bufb, 0);
+            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+        })
+    });
+
     describe('random', function() {
         it('should detect buffer vs. cbuffer', function() {
             var buf = new Buffer(5);

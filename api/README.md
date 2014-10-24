@@ -16,7 +16,9 @@
   * [new DescribedType(descriptor, value)](#new_DescribedType)
 * [class: Frame](#Frame)
   * [new Frame()](#new_Frame)
-  * [frame._buildOutgoing(options)](#Frame#_buildOutgoing)
+  * [frame._buildOutgoing()](#Frame#_buildOutgoing)
+* [class: AMQPFrame](#AMQPFrame)
+  * [new AMQPFrame()](#new_AMQPFrame)
 * [class: Types](#Types)
   * [new Types()](#new_Types)
   * [types._listEncoder()](#Types#_listEncoder)
@@ -99,8 +101,8 @@ Encode the given value as an AMQP 1.0 bitstring.We do a best-effort to determi
 **Params**
 
 - val  - Value to encode.  
-- buf  - Buffer to write into.  
-- \[offset=0\]  - Offset at which to start writing.  
+- buf  - Buffer (or buffer-builder) to write into.  
+- \[offset=0\]  - Offset at which to start writing.  Only needed for buffer.  
 - \[forceType\] `string` - If set, forces the encoder for the given type.  
 
 **Returns**: `integer` - New offset.  
@@ -259,7 +261,7 @@ Described type, as described in the AMQP 1.0 spec as follows:
 
 * [class: Frame](#Frame)
   * [new Frame()](#new_Frame)
-  * [frame._buildOutgoing(options)](#Frame#_buildOutgoing)
+  * [frame._buildOutgoing()](#Frame#_buildOutgoing)
 
 <a name="new_Frame"></a>
 ##new Frame()
@@ -292,14 +294,49 @@ Encapsulates all convenience methods required for encoding a frame to put it out
  </pre>
 
 <a name="Frame#_buildOutgoing"></a>
-##frame._buildOutgoing(options)
+##frame._buildOutgoing()
 Populate the internal buffer with contents built based on the options.  SIZE and DOFF will be inferredbased on the options given.
 
-**Params**
-
-- options `Object` - Following options are expected/[supported]:                             - [type]: Assumed to be 0x0 - AMQP                             - payload: Buffer of bytes to be sent                             - [extendedHeader]: Buffer of bytes for the extended header.                             AMQP-frame-specific:                             - channel: Channel number                             - performative: AMQP frame details                             Non-AMQP-frame-specific:                             - typeSpecificHeader: 2-byte integer for bytes 7 & 8 of header.  
-
 **Access**: private  
+<a name="AMQPFrame"></a>
+#class: AMQPFrame
+**Members**
+
+* [class: AMQPFrame](#AMQPFrame)
+  * [new AMQPFrame()](#new_AMQPFrame)
+
+<a name="new_AMQPFrame"></a>
+##new AMQPFrame()
+AMQP Frames are slight variations on the one above, with the first part of the payload taken upby the AMQP <i>performative</i> (details of the specific frame type).  For some frames, that's the entire payload.
+<pre>
+      +0       +1       +2       +3
+        +-----------------------------------+ -.
+      0 |                SIZE               |  |
+        +-----------------------------------+  |---> Frame Header
+      4 |  DOFF  |  TYPE  |     CHANNEL     |  |      (8 bytes)
+        +-----------------------------------+ -'
+        +-----------------------------------+ -.
+      8 |                ...                |  |
+        .                                   .  |---> Extended Header
+        .             <IGNORED>             .  |  (DOFF * 4 - 8) bytes
+        |                ...                |  |
+        +-----------------------------------+ -'
+        +-----------------------------------+ -.
+ 4*DOFF |           PERFORMATIVE:           |  |
+        .      Open / Begin / Attach        .  |
+        .   Flow / Transfer / Disposition   .  |
+        .      Detach / End / Close         .  |
+        |-----------------------------------|  |
+        .                                   .  |---> Frame Body
+        .                                   .  |  (SIZE - DOFF * 4) bytes
+        .             PAYLOAD               .  |
+        .                                   .  |
+        .                           ________|  |
+        |                ...       |           |
+        +--------------------------+          -'
+
+</pre>
+
 <a name="Types"></a>
 #class: Types
 **Members**
