@@ -15,8 +15,7 @@
     "debug": "^2.0.0",
     "node-int64": "noodlefrenzy/node-int64",
     "readable-stream": "^1.0.32",
-    "stately.js": "^1.2.0",
-    "xml2js": "^0.4.4"
+    "stately.js": "^1.2.0"
   },
   "devDependencies": {
     "grunt": "^0.4.5",
@@ -26,7 +25,8 @@
     "grunt-jsdoc-to-markdown": "^0.4.2",
     "grunt-simple-mocha": "^0.4.0",
     "mocha": "^1.21.4",
-    "should": "^4.0.4"
+    "should": "^4.0.4",
+    "xml2js": "^0.4.4"
   },
   "scripts": {},
   "author": {

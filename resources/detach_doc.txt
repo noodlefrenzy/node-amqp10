@@ -1,10 +1,10 @@
 /**
  * <h2>detach performative</h2>
  * <i>detach the Link Endpoint from the Session</i>
- * 
+ * <p>
  *           Detach the Link Endpoint from the Session. This un-maps the handle and makes it available
  *           for use by other Links.
- *         
+ *         </p>
  * <h3>Descriptor</h3>
  * <dl>
  * <dt>Name</dt>
@@ -18,14 +18,14 @@
  * <tr><td>&nbsp;</td><td colspan="2"><i>the local handle of the link to be detached</i></td></tr>
  * <tr><td>closed</td><td>boolean</td><td>false</td></tr>
  * <tr><td>&nbsp;</td><td colspan="2"><i>if true then the sender has closed the link</i>
- * See .
- * closing-a-link</td></tr>
+ * <p>See .</p>
+ * <p>closing-a-link</p></td></tr>
  * <tr><td>error</td><td>error</td><td>false</td></tr>
  * <tr><td>&nbsp;</td><td colspan="2"><i>error causing the detach</i>
- * 
+ * <p>
  *             If set, this field indicates that the Link is being detached due to an error condition.
  *             The value of the field should contain details on the cause of the error.
- *           </td></tr>
+ *           </p></td></tr>
  * </table>
  *
  * @constructor

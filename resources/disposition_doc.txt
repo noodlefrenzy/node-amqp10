@@ -1,25 +1,25 @@
 /**
  * <h2>disposition performative</h2>
  * <i>inform remote peer of delivery state changes</i>
- * 
+ * <p>
  *           The disposition frame is used to inform the remote peer of local changes in the state of
  *           deliveries. The disposition frame may reference deliveries from many different links
  *           associated with a session, although all links MUST have the directionality indicated by
  *           the specified .
- *         
- * 
+ *         </p>
+ * <p>
  *           Note that it is possible for a disposition sent from sender to receiver to refer to a
  *           delivery which has not yet completed (i.e. a delivery which is spread over multiple
  *           frames and not all frames have yet been sent). The use of such interleaving is
  *           discouraged in favor of carrying the modified state on the next 
  *           performative for the delivery.
- *         
- * transfer
- * 
+ *         </p>
+ * <p>transfer</p>
+ * <p>
  *           The disposition performative may refer to deliveries on links that are no longer attached.
  *           As long as the links have not been closed or detached with an error then the deliveries
  *           are still "live" and the updated state MUST be applied.
- *         
+ *         </p>
  * <h3>Descriptor</h3>
  * <dl>
  * <dt>Name</dt>
@@ -31,40 +31,40 @@
  * <table>
  * <tr><th>Name</th><th>Type</th><th>Mandatory?</th></tr><tr><td>role</td><td>role</td><td>true</td></tr>
  * <tr><td>&nbsp;</td><td colspan="2"><i>directionality of disposition</i>
- * 
+ * <p>
  *             The role identifies whether the disposition frame contains information
  *             about  link endpoints or  link endpoints.
- *           </td></tr>
+ *           </p></td></tr>
  * <tr><td>first</td><td>delivery-number</td><td>true</td></tr>
  * <tr><td>&nbsp;</td><td colspan="2"><i>lower bound of deliveries</i>
- * 
+ * <p>
  *             Identifies the lower bound of delivery-ids for the deliveries in this set.
- *           </td></tr>
+ *           </p></td></tr>
  * <tr><td>last</td><td>delivery-number</td><td>false</td></tr>
  * <tr><td>&nbsp;</td><td colspan="2"><i>upper bound of deliveries</i>
- * 
+ * <p>
  *             Identifies the upper bound of delivery-ids for the deliveries in this set. If not set,
  *             this is taken to be the same as .
- *           </td></tr>
+ *           </p></td></tr>
  * <tr><td>settled</td><td>boolean</td><td>false</td></tr>
  * <tr><td>&nbsp;</td><td colspan="2"><i>indicates deliveries are settled</i>
- * 
+ * <p>
  *             If true, indicates that the referenced deliveries are considered settled by the issuing
  *             endpoint.
- *           </td></tr>
+ *           </p></td></tr>
  * <tr><td>state</td><td>*</td><td>false</td></tr>
  * <tr><td>&nbsp;</td><td colspan="2"><i>indicates state of deliveries</i>
- * 
+ * <p>
  *             Communicates the state of all the deliveries referenced by this disposition.
- *           </td></tr>
+ *           </p></td></tr>
  * <tr><td>batchable</td><td>boolean</td><td>false</td></tr>
  * <tr><td>&nbsp;</td><td colspan="2"><i>batchable hint</i>
- * 
+ * <p>
  *             If true, then the issuer is hinting that there is no need for the peer to urgently
  *             communicate the impact of the updated delivery states. This hint may be used to
  *             artificially increase the amount of batching an implementation uses when communicating
  *             delivery states, and thereby save bandwidth.
- *           </td></tr>
+ *           </p></td></tr>
  * </table>
  *
  * @constructor
