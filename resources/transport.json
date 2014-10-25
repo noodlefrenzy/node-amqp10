@@ -1,0 +1,1637 @@
+[
+ {
+  "$": {
+   "class": "composite",
+   "name": "open",
+   "source": "list",
+   "provides": "frame",
+   "label": "negotiate Connection parameters"
+  },
+  "doc": [
+   {
+    "p": [
+     "\n          The first frame sent on a connection in either direction MUST contain an Open body. (Note\n          that the Connection header which is sent first on the Connection is *not* a frame.) The\n          fields indicate the capabilities and limitations of the sending peer.\n        "
+    ]
+   }
+  ],
+  "descriptor": [
+   {
+    "$": {
+     "name": "amqp:open:list",
+     "code": "0x00000000:0x00000010"
+    }
+   }
+  ],
+  "field": [
+   {
+    "$": {
+     "name": "container-id",
+     "type": "string",
+     "mandatory": "true",
+     "label": "the id of the source container"
+    }
+   },
+   {
+    "$": {
+     "name": "hostname",
+     "type": "string",
+     "label": "the name of the target host"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            The dns name of the host (either fully qualified or relative) to which the sending peer\n            is connecting. It is not mandatory to provide the hostname. If no hostname is provided\n            the receiving peer should select a default based on its own configuration. This field\n            can be used by AMQP proxies to determine the correct back-end service to connect\n            the client to.\n          ",
+       {
+        "_": "\n            This field may already have been specified by the  frame, if a\n            SASL layer is used, or, the server name indication extension as described in\n            RFC-4366, if a TLS layer is used, in which case this field SHOULD be null or contain\n            the same value. It is undefined what a different value to those already specific means.\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "sasl-init"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "max-frame-size",
+     "type": "uint",
+     "default": "4294967295",
+     "label": "proposed maximum frame size"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            The largest frame size that the sending peer is able to accept on this Connection. If\n            this field is not set it means that the peer does not impose any specific limit. A peer\n            MUST NOT send frames larger than its partner can handle. A peer that receives an\n            oversized frame MUST close the Connection with the framing-error error-code.\n          ",
+       {
+        "_": "\n            Both peers MUST accept frames of up to  octets\n            large.\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "MIN-MAX-FRAME-SIZE"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "channel-max",
+     "type": "ushort",
+     "default": "65535",
+     "label": "the maximum channel number that may be used on the Connection"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            The channel-max value is the highest channel number that may be used on the Connection.\n            This value plus one is the maximum number of Sessions that can be simultaneously active\n            on the Connection. A peer MUST not use channel numbers outside the range that its\n            partner can handle. A peer that receives a channel number outside the supported range\n            MUST close the Connection with the framing-error error-code.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "idle-time-out",
+     "type": "milliseconds",
+     "label": "idle time-out"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            The idle time-out required by the sender. A value of zero is the same as if it was\n            not set (null). If the receiver is unable or unwilling to support the idle time-out\n            then it should close the connection with an error explaining why (eg, because it is\n            too small).\n          ",
+       "\n            If the value is not set, then the sender does not have an idle time-out. However,\n            senders doing this should be aware that implementations MAY choose to use an\n            internal default to efficiently manage a peer's resources.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "outgoing-locales",
+     "type": "ietf-language-tag",
+     "multiple": "true",
+     "label": "locales available for outgoing text"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            A list of the locales that the peer supports for sending informational text. This\n            includes Connection, Session and Link error descriptions. A peer MUST support at least\n            the  locale (see ). Since this value is\n            always supported, it need not be supplied in the outgoing-locales. A null value or an\n            empty list implies that only  is supported.\n          ",
+        "i": [
+         "en-US",
+         "en-US"
+        ],
+        "xref": [
+         {
+          "$": {
+           "name": "ietf-language-tag"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "incoming-locales",
+     "type": "ietf-language-tag",
+     "multiple": "true",
+     "label": "desired locales for incoming text in decreasing level of preference"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            A list of locales that the sending peer permits for incoming informational text. This\n            list is ordered in decreasing level of preference. The receiving partner will chose the\n            first (most preferred) incoming locale from those which it supports. If none of the\n            requested locales are supported,  will be chosen. Note that \n            need not be supplied in this list as it is always the fallback. A peer may determine\n            which of the permitted incoming locales is chosen by examining the partner's supported\n            locales as specified in the outgoing-locales field. A null value or an empty list\n            implies that only  is supported.\n          ",
+        "i": [
+         "en-US",
+         "en-US",
+         "en-US"
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "offered-capabilities",
+     "type": "symbol",
+     "multiple": "true",
+     "label": "the extension capabilities the sender supports"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            If the receiver of the offered-capabilities requires an extension capability which is\n            not present in the offered-capability list then it MUST close the connection.\n          ",
+       {
+        "_": "\n            A list of commonly defined connection capabilities and their meanings can be found here:\n            .\n          ",
+        "xref": [
+         {
+          "$": {
+           "type": "extern",
+           "name": "http://www.amqp.org/specification/1.0/connection-capabilities"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "desired-capabilities",
+     "type": "symbol",
+     "multiple": "true",
+     "label": "the extension capabilities the sender may use if the receiver supports them"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            The desired-capability list defines which extension capabilities the sender MAY use if\n            the receiver offers them (i.e. they are in the offered-capabilities list received by the\n            sender of the desired-capabilities). If the receiver of the desired-capabilities offers\n            extension capabilities which are not present in the desired-capability list it received,\n            then it can be sure those (undesired) capabilities will not be used on the\n            Connection.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "properties",
+     "type": "fields",
+     "label": "connection properties"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            The properties map contains a set of fields intended to indicate information about the\n            connection and its container.\n          ",
+       {
+        "_": "\n            A list of commonly defined connection properties and their meanings can be found here:\n            \n          ",
+        "xref": [
+         {
+          "$": {
+           "type": "extern",
+           "name": "http://www.amqp.org/specification/1.0/connection-properties"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "$": {
+   "class": "composite",
+   "name": "begin",
+   "source": "list",
+   "provides": "frame",
+   "label": "begin a Session on a channel"
+  },
+  "doc": [
+   {
+    "p": [
+     "\n          Indicate that a Session has begun on the channel.\n        "
+    ]
+   }
+  ],
+  "descriptor": [
+   {
+    "$": {
+     "name": "amqp:begin:list",
+     "code": "0x00000000:0x00000011"
+    }
+   }
+  ],
+  "field": [
+   {
+    "$": {
+     "name": "remote-channel",
+     "type": "ushort",
+     "label": "the remote channel for this Session"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            If a Session is locally initiated, the remote-channel MUST NOT be set. When an endpoint\n            responds to a remotely initiated Session, the remote-channel MUST be set to the channel\n            on which the remote Session sent the begin.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "next-outgoing-id",
+     "type": "transfer-number",
+     "mandatory": "true",
+     "label": "the transfer-id of the first transfer id the sender will send"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "See .",
+        "xref": [
+         {
+          "$": {
+           "type": "doc",
+           "name": "session-flow-control"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "incoming-window",
+     "type": "uint",
+     "mandatory": "true",
+     "label": "the initial incoming-window of the sender"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "See .",
+        "xref": [
+         {
+          "$": {
+           "name": "session-flow-control"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "outgoing-window",
+     "type": "uint",
+     "mandatory": "true",
+     "label": "the initial outgoing-window of the sender"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "See .",
+        "xref": [
+         {
+          "$": {
+           "name": "session-flow-control"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "handle-max",
+     "type": "handle",
+     "default": "4294967295",
+     "label": "the maximum handle value that may be used on the Session"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            The handle-max value is the highest handle value that may be used on the Session.\n            A peer MUST NOT attempt to attach a Link using a handle value outside the range that its\n            partner can handle. A peer that receives a handle outside the supported range MUST close\n            the Connection with the framing-error error-code.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "offered-capabilities",
+     "type": "symbol",
+     "multiple": "true",
+     "label": "the extension capabilities the sender supports"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            A list of commonly defined session capabilities and their meanings can be found here:\n            .\n          ",
+        "xref": [
+         {
+          "$": {
+           "type": "extern",
+           "name": "http://www.amqp.org/specification/1.0/session-capabilities"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "desired-capabilities",
+     "type": "symbol",
+     "multiple": "true",
+     "label": "the extension capabilities the sender may use if the receiver supports them"
+    }
+   },
+   {
+    "$": {
+     "name": "properties",
+     "type": "fields",
+     "label": "session properties"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            The properties map contains a set of fields intended to indicate information about the\n            session and its container.\n          ",
+       {
+        "_": "\n            A list of commonly defined session properties and their meanings can be found here:\n            .\n          ",
+        "xref": [
+         {
+          "$": {
+           "type": "extern",
+           "name": "http://www.amqp.org/specification/1.0/session-properties"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "$": {
+   "class": "composite",
+   "name": "attach",
+   "source": "list",
+   "provides": "frame",
+   "label": "attach a Link to a Session"
+  },
+  "doc": [
+   {
+    "p": [
+     {
+      "_": "\n          The  frame indicates that a Link Endpoint has been\n          attached to the Session. The opening flag is used to indicate that the Link Endpoint is\n          newly created.\n        ",
+      "xref": [
+       {
+        "$": {
+         "type": "type",
+         "name": "attach"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "descriptor": [
+   {
+    "$": {
+     "name": "amqp:attach:list",
+     "code": "0x00000000:0x00000012"
+    }
+   }
+  ],
+  "field": [
+   {
+    "$": {
+     "name": "name",
+     "type": "string",
+     "mandatory": "true",
+     "label": "the name of the link"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            This name uniquely identifies the link from the container of the source to the container\n            of the target node, e.g. if the container of the source node is A, and the container of\n            the target node is B, the link may be globally identified by the (ordered) tuple\n            .\n          ",
+        "i": [
+         "(A,B,<name>)"
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "handle",
+     "type": "handle",
+     "mandatory": "true"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            The handle MUST NOT be used for other open Links. An attempt to attach using a handle\n            which is already associated with a Link MUST be responded to with an immediate\n             carrying a Handle-in-use .\n           ",
+        "xref": [
+         {
+          "$": {
+           "name": "close"
+          }
+         },
+         {
+          "$": {
+           "name": "session-error"
+          }
+         }
+        ]
+       },
+       "\n             To make it easier to monitor AMQP link attach frames, it is recommended that\n             implementations always assign the lowest available handle to this field.\n           "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "role",
+     "type": "role",
+     "mandatory": "true",
+     "label": "role of the link endpoint"
+    }
+   },
+   {
+    "$": {
+     "name": "snd-settle-mode",
+     "type": "sender-settle-mode",
+     "default": "mixed",
+     "label": "settlement mode for the Sender"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            Determines the settlement policy for deliveries sent at the Sender. When set at the\n            Receiver this indicates the desired value for the settlement mode at the Sender.  When\n            set at the Sender this indicates the actual settlement mode in use.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "rcv-settle-mode",
+     "type": "receiver-settle-mode",
+     "default": "first",
+     "label": "the settlement mode of the Receiver"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            Determines the settlement policy for unsettled deliveries received at the Receiver. When\n            set at the Sender this indicates the desired value for the settlement mode at the\n            Receiver. When set at the Receiver this indicates the actual settlement mode in use.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "source",
+     "type": "*",
+     "requires": "source",
+     "label": "the source for Messages"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            If no source is specified on an outgoing Link, then there is no source currently\n            attached to the Link. A Link with no source will never produce outgoing Messages.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "target",
+     "type": "*",
+     "requires": "target",
+     "label": "the target for Messages"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            If no target is specified on an incoming Link, then there is no target currently\n            attached to the Link. A Link with no target will never permit incoming Messages.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "unsettled",
+     "type": "map",
+     "label": "unsettled delivery state"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            This is used to indicate any unsettled delivery states when a suspended link is resumed.\n            The map is keyed by delivery-tag with values indicating the delivery state. The local\n            and remote delivery states for a given delivery-tag MUST be compared to resolve any\n            in-doubt deliveries. If necessary, deliveries MAY be resent, or resumed based on the\n            outcome of this comparison. See .\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "resuming-deliveries"
+          }
+         }
+        ]
+       },
+       {
+        "_": "\n            If the local unsettled map is too large to be encoded within a frame of the agreed\n            maximum frame size then the session may be ended with the frame-size-too-small error\n            (see ). The endpoint SHOULD make use of the ability to send an\n            incomplete unsettled map (see below) to avoid sending an error.\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "amqp-error"
+          }
+         }
+        ]
+       },
+       "\n            The unsettled map MUST NOT contain null valued keys.\n          ",
+       "\n            When reattaching (as opposed to resuming), the unsettled map MUST be null.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "incomplete-unsettled",
+     "type": "boolean",
+     "default": "false"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            If set to true this field indicates that the unsettled map provided is not complete.\n            When the map is incomplete the recipient of the map cannot take the absence of a\n            delivery tag from the map as evidence of settlement. On receipt of an incomplete\n            unsettled map a sending endpoint MUST NOT send any new deliveries (i.e. deliveries where\n            resume is not set to true) to its partner (and a receiving endpoint which sent an\n            incomplete unsettled map MUST detach with an error on receiving a transfer which does\n            not have the resume flag set to true).\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "initial-delivery-count",
+     "type": "sequence-no"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            This MUST NOT be null if role is sender, and it is ignored if the role is receiver. See\n            .\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "flow-control"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "max-message-size",
+     "type": "ulong",
+     "label": "the maximum message size supported by the link endpoint"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            This field indicates the maximum message size supported by the link endpoint. Any\n            attempt to deliver a message larger than this results in a message-size-exceeded\n            . If this field is zero or unset, there is no maximum size\n            imposed by the link endpoint.\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "link-error"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "offered-capabilities",
+     "type": "symbol",
+     "multiple": "true",
+     "label": "the extension capabilities the sender supports"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            A list of commonly defined session capabilities and their meanings can be found here:\n            .\n          ",
+        "xref": [
+         {
+          "$": {
+           "type": "extern",
+           "name": "http://www.amqp.org/specification/1.0/link-capabilities"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "desired-capabilities",
+     "type": "symbol",
+     "multiple": "true",
+     "label": "the extension capabilities the sender may use if the receiver supports them"
+    }
+   },
+   {
+    "$": {
+     "name": "properties",
+     "type": "fields",
+     "label": "link properties"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            The properties map contains a set of fields intended to indicate information about the\n            link and its container.\n          ",
+       {
+        "_": "\n            A list of commonly defined link properties and their meanings can be found here:\n            \n          ",
+        "xref": [
+         {
+          "$": {
+           "type": "extern",
+           "name": "http://www.amqp.org/specification/1.0/link-properties"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "$": {
+   "class": "composite",
+   "name": "flow",
+   "source": "list",
+   "provides": "frame",
+   "label": "update link state"
+  },
+  "doc": [
+   {
+    "p": [
+     "Updates the flow state for the specified Link."
+    ]
+   }
+  ],
+  "descriptor": [
+   {
+    "$": {
+     "name": "amqp:flow:list",
+     "code": "0x00000000:0x00000013"
+    }
+   }
+  ],
+  "field": [
+   {
+    "$": {
+     "name": "next-incoming-id",
+     "type": "transfer-number"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            Identifies the expected transfer-id of the next incoming  frame.\n            This value is not set if and only if the sender has not yet received the\n             frame for the session. See\n             for more details.\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "transfer"
+          }
+         },
+         {
+          "$": {
+           "name": "begin"
+          }
+         },
+         {
+          "$": {
+           "type": "doc",
+           "name": "session-flow-control"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "incoming-window",
+     "type": "uint",
+     "mandatory": "true"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            Defines the maximum number of incoming  frames that the endpoint\n            can currently receive. See  for more\n            details.\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "transfer"
+          }
+         },
+         {
+          "$": {
+           "type": "doc",
+           "name": "session-flow-control"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "next-outgoing-id",
+     "type": "transfer-number",
+     "mandatory": "true"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            The transfer-id that will be assigned to the next outgoing \n            frame. See  for more details.\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "transfer"
+          }
+         },
+         {
+          "$": {
+           "type": "doc",
+           "name": "session-flow-control"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "outgoing-window",
+     "type": "uint",
+     "mandatory": "true"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            Defines the maximum number of outgoing  frames that the endpoint\n            could potentially currently send, if it was not constrained by restrictions imposed by\n            its peer's incoming-window. See  for more\n            details.\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "transfer"
+          }
+         },
+         {
+          "$": {
+           "type": "doc",
+           "name": "session-flow-control"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "handle",
+     "type": "handle"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            If set, indicates that the flow frame carries flow state information for the local Link\n            Endpoint associated with the given handle.  If not set, the flow frame is carrying only\n            information pertaining to the Session Endpoint.\n          ",
+       {
+        "_": "\n            If set to a handle that is not currently associated with an attached Link, the\n            recipient MUST respond by ending the session with an  session error.\n          ",
+        "xref": [
+         {
+          "$": {
+           "choice": "unattached-handle",
+           "name": "session-error"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "delivery-count",
+     "type": "sequence-no",
+     "label": "the endpoint's delivery-count"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            When the handle field is not set, this field MUST NOT be set.\n          ",
+       "\n            When the handle identifies that the flow state is being sent from the Sender Link\n            Endpoint to Receiver Link Endpoint this field MUST be set to the current delivery-count\n            of the Link Endpoint.\n          ",
+       {
+        "_": "\n            When the flow state is being sent from the Receiver Endpoint to the Sender Endpoint this\n            field MUST be set to the last known value of the corresponding Sending Endpoint. In the\n            event that the Receiving Link Endpoint has not yet  seen the initial\n             frame from the Sender this field MUST NOT be set.\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "attach"
+          }
+         }
+        ]
+       },
+       {
+        "_": "\n            See  for more details.\n          ",
+        "xref": [
+         {
+          "$": {
+           "type": "doc",
+           "name": "flow-control"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "link-credit",
+     "type": "uint",
+     "label": "the current maximum number of Messages that can be received"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            The current maximum number of Messages that can be handled at the Receiver\n            Endpoint of the Link. Only the receiver endpoint can independently set this value. The\n            sender endpoint sets this to the last known value seen from the receiver. See\n             for more details.\n          ",
+        "xref": [
+         {
+          "$": {
+           "type": "doc",
+           "name": "flow-control"
+          }
+         }
+        ]
+       },
+       "\n            When the handle field is not set, this field MUST NOT be set.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "available",
+     "type": "uint",
+     "label": "the number of available Messages"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            The number of Messages awaiting credit at the link sender endpoint. Only the\n            sender can independently set this value. The receiver sets this to the last known value\n            seen from the sender. See  for more details.\n          ",
+        "xref": [
+         {
+          "$": {
+           "type": "doc",
+           "name": "flow-control"
+          }
+         }
+        ]
+       },
+       "\n            When the handle field is not set, this field MUST NOT be set.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "drain",
+     "type": "boolean",
+     "default": "false",
+     "label": "indicates drain mode"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            When flow state is sent from the sender to the receiver, this field contains the actual\n            drain mode of the sender. When flow state is sent from the receiver to the sender, this\n            field contains the desired drain mode of the receiver. See  for more details.\n          ",
+        "xref": [
+         {
+          "$": {
+           "type": "doc",
+           "name": "flow-control"
+          }
+         }
+        ]
+       },
+       "\n            When the handle field is not set, this field MUST NOT be set.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "echo",
+     "type": "boolean",
+     "default": "false",
+     "label": "request link state from other endpoint"
+    }
+   },
+   {
+    "$": {
+     "name": "properties",
+     "type": "fields",
+     "label": "link state properties"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            A list of commonly defined link state properties and their meanings can be found here:\n            \n          ",
+        "xref": [
+         {
+          "$": {
+           "type": "extern",
+           "name": "http://www.amqp.org/specification/1.0/link-state-properties"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "$": {
+   "class": "composite",
+   "name": "transfer",
+   "source": "list",
+   "provides": "frame",
+   "label": "transfer a Message"
+  },
+  "doc": [
+   {
+    "p": [
+     "\n          The transfer frame is used to send Messages across a Link. Messages may be carried by a\n          single transfer up to the maximum negotiated frame size for the Connection. Larger\n          Messages may be split across several transfer frames.\n        "
+    ]
+   }
+  ],
+  "descriptor": [
+   {
+    "$": {
+     "name": "amqp:transfer:list",
+     "code": "0x00000000:0x00000014"
+    }
+   }
+  ],
+  "field": [
+   {
+    "$": {
+     "name": "handle",
+     "type": "handle",
+     "mandatory": "true"
+    },
+    "doc": [
+     {
+      "p": [
+       "Specifies the Link on which the Message is transferred."
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "delivery-id",
+     "type": "delivery-number",
+     "label": "alias for delivery-tag"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            The delivery-id MUST be supplied on the first transfer of a multi-transfer delivery. On\n            continuation transfers the delivery-id MAY be omitted. It is an error if the delivery-id\n            on a continuation transfer differs from the delivery-id on the first transfer of a\n            delivery.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "delivery-tag",
+     "type": "delivery-tag"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            Uniquely identifies the delivery attempt for a given Message on this Link. This field\n            MUST be specified for the first transfer of a multi transfer message and may only be\n            omitted for continuation transfers.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "message-format",
+     "type": "message-format",
+     "label": "indicates the message format"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            This field MUST be specified for the first transfer of a multi transfer message and may\n            only be omitted for continuation transfers.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "settled",
+     "type": "boolean"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n             If not set on the first (or only) transfer for a delivery, then the settled flag MUST\n             be interpreted as being false. For subsequent transfers if the settled flag is left\n             unset then it MUST be interpreted as true if and only if the value of the settled flag\n             on any of the preceding transfers was true; if no preceding transfer was sent with\n             settled being true then the value when unset MUST be taken as false.\n          ",
+       {
+        "_": "\n             If the negotiated value for snd-settle-mode at attachment is , then this field MUST be true on at least\n             one transfer frame for a delivery (i.e. the delivery must be settled at the Sender at\n             the point the delivery has been completely transferred).\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "sender-settle-mode",
+           "choice": "settled"
+          }
+         }
+        ]
+       },
+       {
+        "_": "\n             If the negotiated value for snd-settle-mode at attachment is , then this field MUST be false (or\n             unset) on every transfer frame for a delivery (unless the delivery is aborted).\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "sender-settle-mode",
+           "choice": "unsettled"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "more",
+     "type": "boolean",
+     "default": "false",
+     "label": "indicates that the Message has more content"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            Note that if both the more and aborted fields are set to true, the aborted flag takes\n            precedence. That is a receiver should ignore the value of the more field if the\n            transfer is marked as aborted. A sender SHOULD NOT set the more flag to true if it\n            also sets the aborted flag to true.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "rcv-settle-mode",
+     "type": "receiver-settle-mode"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            If , this indicates that the\n            Receiver MUST settle the delivery once it has arrived without waiting for the Sender to\n            settle first.\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "receiver-settle-mode",
+           "choice": "first"
+          }
+         }
+        ]
+       },
+       {
+        "_": "\n            If , this indicates that the\n            Receiver MUST NOT settle until sending its disposition to the Sender and receiving a\n            settled disposition from the sender.\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "receiver-settle-mode",
+           "choice": "second"
+          }
+         }
+        ]
+       },
+       "\n            If not set, this value is defaulted to the value negotiated on link attach.\n          ",
+       {
+        "_": "\n            If the negotiated link value is ,\n            then it is illegal to set this field to .\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "receiver-settle-mode",
+           "choice": "first"
+          }
+         },
+         {
+          "$": {
+           "name": "receiver-settle-mode",
+           "choice": "second"
+          }
+         }
+        ]
+       },
+       "\n            If the message is being sent settled by the Sender, the value of this field is ignored.\n          ",
+       "\n            The (implicit or explicit) value of this field does not form part of the transfer state,\n            and is not retained if a link is suspended and subsequently resumed.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "state",
+     "type": "*",
+     "requires": "delivery-state",
+     "label": "the state of the delivery at the sender"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            When set this informs the receiver of the state of the delivery at the sender. This is\n            particularly useful when transfers of unsettled deliveries are resumed after a resuming\n            a link. Setting the state on the transfer can be thought of as being equivalent to\n            sending a disposition immediately before the  performative, i.e.\n            it is the state of the delivery (not the transfer) that existed at the point the frame\n            was sent.\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "transfer"
+          }
+         }
+        ]
+       },
+       {
+        "_": "\n            Note that if the  performative (or an earlier  performative referring to the delivery) indicates that the delivery\n            has attained a terminal state, then no future  or  sent by the sender can alter that terminal state.\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "transfer"
+          }
+         },
+         {
+          "$": {
+           "name": "disposition"
+          }
+         },
+         {
+          "$": {
+           "name": "transfer"
+          }
+         },
+         {
+          "$": {
+           "name": "disposition"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "resume",
+     "type": "boolean",
+     "default": "false",
+     "label": "indicates a resumed delivery"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            If true, the resume flag indicates that the transfer is being used to reassociate an\n            unsettled delivery from a dissociated link endpoint. See\n             for more details.\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "resuming-deliveries"
+          }
+         }
+        ]
+       },
+       "\n            The receiver MUST ignore resumed deliveries that are not in its local unsettled map. The\n            sender MUST NOT send resumed transfers for deliveries not in its local unsettled map.\n          ",
+       "\n            If a resumed delivery spans more than one transfer performative, then the resume flag\n            MUST be set to true on the first transfer of the resumed delivery.  For subsequent\n            transfers for the same delivery the resume flag may be set to true, or may be omitted.\n          ",
+       "\n            In the case where the exchange of unsettled maps makes clear that all message data has\n            been successfully transferred to the receiver, and that only the final state (and\n            potentially settlement) at the sender needs to be conveyed, then a resumed delivery may\n            carry no payload and instead act solely as a vehicle for carrying the terminal state of\n            the delivery at the sender.\n           "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "aborted",
+     "type": "boolean",
+     "default": "false",
+     "label": "indicates that the Message is aborted"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            Aborted Messages should be discarded by the recipient (any payload within the frame\n            carrying the performative MUST be ignored). An aborted Message is implicitly settled.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "batchable",
+     "type": "boolean",
+     "default": "false",
+     "label": "batchable hint"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            If true, then the issuer is hinting that there is no need for the peer to urgently\n            communicate updated delivery state. This hint may be used to artificially increase the\n            amount of batching an implementation uses when communicating delivery states, and\n            thereby save bandwidth.\n          ",
+       {
+        "_": "\n            If the message being delivered is too large to fit within a single frame, then the\n            setting of batchable to true on any of the  performatives for the\n            delivery is equivalent to setting batchable to true for all the \n            performatives for the delivery.\n          ",
+        "xref": [
+         {
+          "$": {
+           "name": "transfer"
+          }
+         },
+         {
+          "$": {
+           "name": "transfer"
+          }
+         }
+        ]
+       },
+       "\n            The batchable value does not form part of the transfer state, and is not retained if\n            a link is suspended and subsequently resumed.\n          "
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "$": {
+   "class": "composite",
+   "name": "disposition",
+   "source": "list",
+   "provides": "frame",
+   "label": "inform remote peer of delivery state changes"
+  },
+  "doc": [
+   {
+    "p": [
+     {
+      "_": "\n          The disposition frame is used to inform the remote peer of local changes in the state of\n          deliveries. The disposition frame may reference deliveries from many different links\n          associated with a session, although all links MUST have the directionality indicated by\n          the specified .\n        ",
+      "i": [
+       "role"
+      ]
+     },
+     {
+      "_": "\n          Note that it is possible for a disposition sent from sender to receiver to refer to a\n          delivery which has not yet completed (i.e. a delivery which is spread over multiple\n          frames and not all frames have yet been sent). The use of such interleaving is\n          discouraged in favor of carrying the modified state on the next \n          performative for the delivery.\n        ",
+      "xref": [
+       {
+        "$": {
+         "name": "transfer"
+        }
+       }
+      ]
+     },
+     "\n          The disposition performative may refer to deliveries on links that are no longer attached.\n          As long as the links have not been closed or detached with an error then the deliveries\n          are still \"live\" and the updated state MUST be applied.\n        "
+    ]
+   }
+  ],
+  "descriptor": [
+   {
+    "$": {
+     "name": "amqp:disposition:list",
+     "code": "0x00000000:0x00000015"
+    }
+   }
+  ],
+  "field": [
+   {
+    "$": {
+     "name": "role",
+     "type": "role",
+     "mandatory": "true",
+     "label": "directionality of disposition"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            The role identifies whether the disposition frame contains information\n            about  link endpoints or  link endpoints.\n          ",
+        "i": [
+         "sending",
+         "receiving"
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "first",
+     "type": "delivery-number",
+     "mandatory": "true",
+     "label": "lower bound of deliveries"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            Identifies the lower bound of delivery-ids for the deliveries in this set.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "last",
+     "type": "delivery-number",
+     "label": "upper bound of deliveries"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "\n            Identifies the upper bound of delivery-ids for the deliveries in this set. If not set,\n            this is taken to be the same as .\n          ",
+        "i": [
+         "first"
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "settled",
+     "type": "boolean",
+     "default": "false",
+     "label": "indicates deliveries are settled"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            If true, indicates that the referenced deliveries are considered settled by the issuing\n            endpoint.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "state",
+     "type": "*",
+     "requires": "delivery-state",
+     "label": "indicates state of deliveries"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            Communicates the state of all the deliveries referenced by this disposition.\n          "
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "batchable",
+     "type": "boolean",
+     "default": "false",
+     "label": "batchable hint"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            If true, then the issuer is hinting that there is no need for the peer to urgently\n            communicate the impact of the updated delivery states. This hint may be used to\n            artificially increase the amount of batching an implementation uses when communicating\n            delivery states, and thereby save bandwidth.\n          "
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "$": {
+   "class": "composite",
+   "name": "detach",
+   "source": "list",
+   "provides": "frame",
+   "label": "detach the Link Endpoint from the Session"
+  },
+  "doc": [
+   {
+    "p": [
+     "\n          Detach the Link Endpoint from the Session. This un-maps the handle and makes it available\n          for use by other Links.\n        "
+    ]
+   }
+  ],
+  "descriptor": [
+   {
+    "$": {
+     "name": "amqp:detach:list",
+     "code": "0x00000000:0x00000016"
+    }
+   }
+  ],
+  "field": [
+   {
+    "$": {
+     "name": "handle",
+     "type": "handle",
+     "mandatory": "true",
+     "label": "the local handle of the link to be detached"
+    }
+   },
+   {
+    "$": {
+     "name": "closed",
+     "type": "boolean",
+     "default": "false",
+     "label": "if true then the sender has closed the link"
+    },
+    "doc": [
+     {
+      "p": [
+       {
+        "_": "See .",
+        "xref": [
+         {
+          "$": {
+           "name": "closing-a-link"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "$": {
+     "name": "error",
+     "type": "error",
+     "label": "error causing the detach"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            If set, this field indicates that the Link is being detached due to an error condition.\n            The value of the field should contain details on the cause of the error.\n          "
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "$": {
+   "class": "composite",
+   "name": "end",
+   "source": "list",
+   "provides": "frame",
+   "label": "end the Session"
+  },
+  "doc": [
+   {
+    "p": [
+     "Indicates that the Session has ended."
+    ]
+   }
+  ],
+  "descriptor": [
+   {
+    "$": {
+     "name": "amqp:end:list",
+     "code": "0x00000000:0x00000017"
+    }
+   }
+  ],
+  "field": [
+   {
+    "$": {
+     "name": "error",
+     "type": "error",
+     "label": "error causing the end"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            If set, this field indicates that the Session is being ended due to an error condition.\n            The value of the field should contain details on the cause of the error.\n          "
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "$": {
+   "class": "composite",
+   "name": "close",
+   "source": "list",
+   "provides": "frame",
+   "label": "signal a Connection close"
+  },
+  "doc": [
+   {
+    "p": [
+     "\n          Sending a close signals that the sender will not be sending any more frames (or bytes of\n          any other kind) on the Connection. Orderly shutdown requires that this frame MUST be\n          written by the sender. It is illegal to send any more frames (or bytes of any other kind)\n          after sending a close frame.\n        "
+    ]
+   }
+  ],
+  "descriptor": [
+   {
+    "$": {
+     "name": "amqp:close:list",
+     "code": "0x00000000:0x00000018"
+    }
+   }
+  ],
+  "field": [
+   {
+    "$": {
+     "name": "error",
+     "type": "error",
+     "label": "error causing the close"
+    },
+    "doc": [
+     {
+      "p": [
+       "\n            If set, this field indicates that the Connection is being closed due to an error\n            condition. The value of the field should contain details on the cause of the error.\n          "
+      ]
+     }
+    ]
+   }
+  ]
+ }
+]
