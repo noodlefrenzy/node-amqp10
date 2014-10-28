@@ -121,20 +121,25 @@ describe('Codec', function() {
     describe('#encode(buffer-builder)', function() {
         it('should encode strings', function () {
             var bufb = new builder();
-            codec.encode('FOO', bufb, 0);
+            codec.encode('FOO', bufb);
             bufb.get().toString('hex').should.eql((new Buffer([0xA1, 0x03, 0x46, 0x4F, 0x4F])).toString('hex'));
         });
         it('should encode numbers', function() {
             var bufb = new builder();
-            codec.encode(123.456, bufb, 0);
+            codec.encode(123.456, bufb);
             var expected = new Buffer(9);
             expected[0] = 0x82;
             expected.writeDoubleBE(123.456, 1);
             bufb.get().toString('hex').should.eql(expected.toString('hex'));
+
+            bufb = new builder();
+            codec.encode(new Int64(0x12, 0x34), bufb);
+            var expected = newBuf([0x81, builder.prototype.appendInt32BE, 0x12, builder.prototype.appendInt32BE, 0x34]);
+            bufb.get().toString('hex').should.eql(expected.toString('hex'));
         });
         it('should encode described types', function() {
             var bufb = new builder();
-            codec.encode(new DescribedType('D1', 'V1'), bufb, 0);
+            codec.encode(new DescribedType('D1', 'V1'), bufb);
             var expected = newBuf([0x00, 0xA1, 0x2, builder.prototype.appendString, 'D1', 0xA1, 0x2, builder.prototype.appendString, 'V1']);
             bufb.get().toString('hex').should.eql(expected.toString('hex'));
         });
@@ -146,31 +151,22 @@ describe('Codec', function() {
             };
             var expected = newBuf([0xC0, 0x9, 0x2, 0xA1, 0x2, builder.prototype.appendString, 'V1', 0xA1, 0x2, builder.prototype.appendString, 'V2']);
             var bufb = new builder();
-            codec.encode(toEncode, bufb, 0);
+            codec.encode(toEncode, bufb);
             bufb.get().toString('hex').should.eql(expected.toString('hex'));
         });
         it('should encode forced-types when asked', function() {
             var toEncode = new ForcedType('uint', 0x123);
             var expected = newBuf([0x70, 0x00, 0x00, 0x01, 0x23]);
             var bufb = new builder();
-            codec.encode(toEncode, bufb, 0);
+            codec.encode(toEncode, bufb);
             bufb.get().toString('hex').should.eql(expected.toString('hex'));
         });
         it('should encode null', function() {
             var toEncode = null;
             var expected = newBuf([0x40]);
             var bufb = new builder();
-            codec.encode(toEncode, bufb, 0);
+            codec.encode(toEncode, bufb);
             bufb.get().toString('hex').should.eql(expected.toString('hex'));
-        });
-    });
-
-    describe('random', function() {
-        it('should detect buffer vs. cbuffer', function() {
-            var buf = new Buffer(5);
-            var cbuf = newCBuf([0x01]);
-            (buf instanceof Buffer).should.be.ok;
-            (cbuf instanceof CBuffer).should.be.ok;
         });
     });
 });

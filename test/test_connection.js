@@ -1,8 +1,16 @@
 var debug       = require('debug')('amqp10-test_connection'),
     should      = require('should'),
+    builder     = require('buffer-builder'),
     Connection  = require('../lib/connection'),
     constants   = require('../lib/constants'),
-    MockServer  = require('./mock_amqp');
+    MockServer  = require('./mock_amqp'),
+
+    OpenFrame   = require('../lib/frames/open_frame');
+
+function openBuf() {
+    var open = new OpenFrame();
+    return open.outgoing();
+}
 
 describe('Connection', function() {
     describe('#_parseAddress()', function() {
@@ -60,7 +68,7 @@ describe('Connection', function() {
 
     describe('#_open()', function() {
         // NOTE: Only works if you have a local AMQP server running
-/*
+        /*
         it('should connect to activemq', function(done) {
             var conn = new Connection();
             conn.open('amqp://localhost/');
@@ -82,7 +90,7 @@ describe('Connection', function() {
 
         it('should connect to mock server', function(done) {
             server = new MockServer();
-            server.setSequence([ constants.amqp_version ], [ constants.amqp_version ]);
+            server.setSequence([ constants.amqp_version, openBuf() ], [ constants.amqp_version ]);
             var conn = new Connection();
             server.setup(conn);
             var transitions = [];
@@ -98,7 +106,7 @@ describe('Connection', function() {
 
         it('should cope with aggressive server handshake', function(done) {
             server = new MockServer();
-            server.setSequence([ constants.amqp_version ], [ constants.amqp_version ], true);
+            server.setSequence([ constants.amqp_version, openBuf() ], [ constants.amqp_version ], true);
             var conn = new Connection();
             server.setup(conn);
             var transitions = [];

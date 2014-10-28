@@ -92,6 +92,7 @@ MockServer.prototype._sendNext = function() {
 };
 
 MockServer.prototype._testData = function() {
+    this.requestsExpected.length.should.be.greaterThan(0, 'More data received than expected');
     var expected = this.requestsExpected[0];
     if (this.data.length >= expected.length) {
         expected = this.requestsExpected.shift();
