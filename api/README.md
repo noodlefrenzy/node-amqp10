@@ -200,45 +200,46 @@ Connection states, from AMQP 1.0 spec:
  <dt>END</dt>
  <dd><p>In this state it is illegal for either endpoint to write anything more onto the
  Connection. The Connection may be safely closed and discarded.</p></dd>
- </dl>Connection negotiation state diagram from AMQP 1.0 spec:<pre>
+ </dl>Connection negotiation state diagram from AMQP 1.0 spec:
+ <pre>
               R:HDR +=======+ S:HDR             R:HDR[!=S:HDR]
            +--------| START |-----+    +--------------------------------+
            |        +=======+     |    |                                |
           \|/                    \|/   |                                |
       +==========+             +==========+ S:OPEN                      |
- +----| HDR_RCVD |             | HDR_SENT |------+                      |
+ +----| HDR-RCVD |             | HDR-SENT |------+                      |
  |    +==========+             +==========+      |      R:HDR[!=S:HDR]  |
  |   S:HDR |                      | R:HDR        |    +-----------------+
  |         +--------+      +------+              |    |                 |
  |                 \|/    \|/                   \|/   |                 |
  |                +==========+               +-----------+ S:CLOSE      |
- |                | HDR_EXCH |               | OPEN_PIPE |----+         |
+ |                | HDR-EXCH |               | OPEN-PIPE |----+         |
  |                +==========+               +-----------+    |         |
  |           R:OPEN |      | S:OPEN              | R:HDR      |         |
  |         +--------+      +------+      +-------+            |         |
  |        \|/                    \|/    \|/                  \|/        |
  |   +===========+             +===========+ S:CLOSE       +---------+  |
- |   | OPEN_RCVD |             | OPEN_SENT |-----+         | OC_PIPE |--+
+ |   | OPEN-RCVD |             | OPEN-SENT |-----+         | OC-PIPE |--+
  |   +===========+             +===========+     |         +---------+  |
  |  S:OPEN |                      | R:OPEN      \|/           | R:HDR   |
  |         |       +========+     |          +------------+   |         |
- |         +------>| OPENED |< ---+          | CLOSE_PIPE |< -+         |
+ |         +----- >| OPENED |< ---+          | CLOSE-PIPE |< -+         |
  |                 +========+                +------------+             |
  |           R:CLOSE |    | S:CLOSE              | R:OPEN               |
  |         +---------+    +-------+              |                      |
  |        \|/                    \|/             |                      |
  |   +============+          +=============+     |                      |
- |   | CLOSE_RCVD |          | CLOSE_SENT* |< ---+                      |
+ |   | CLOSE-RCVD |          | CLOSE-SENT* |< ---+                      |
  |   +============+          +=============+                            |
  | S:CLOSE |                      | R:CLOSE                             |
  |         |         +=====+      |                                     |
- |         +-------->| END |< ----+                                     |
+ |         +------- >| END |< ----+                                     |
  |                   +=====+                                            |
  |                     /|\                                              |
  |    S:HDR[!=R:HDR]    |                R:HDR[!=S:HDR]                 |
  +----------------------+-----------------------------------------------+
 
- </pre> R:<b>CTRL</b> = Received <b>CTRL</b> S:<b>CTRL</b> = Sent <b>CTRL</b> Also could be DISCARDING if an error condition triggered the CLOSE
+ </pre>R:<b>CTRL</b> = Received <b>CTRL</b>S:<b>CTRL</b> = Sent <b>CTRL</b>Also could be DISCARDING if an error condition triggered the CLOSE
 
 <a name="DescribedType"></a>
 #class: DescribedType
@@ -256,18 +257,18 @@ Described type, as described in the AMQP 1.0 spec as follows:
       +-----------+-----------+   +-----------------+-----------------+
       |                       |   |                                   |
  ...  0x00 0xA1 0x03 "URL" 0xA1   0x1E "http://example.org/hello-world"  ...
-      |             |  |     |                                   |
-      +------+------+  |     |                                   |
-             |         |     |                                   |
-        descriptor     |     +------------------+----------------+
-             |                        |
-             |         string value encoded according
-             |           to the str8-utf8 encoding
-             |
-     primitive format code
-   for the str8-utf8 encoding
+           |             |  |     |                                   |
+           +------+------+  |     |                                   |
+                  |         |     |                                   |
+             descriptor     |     +------------------+----------------+
+                            |                        |
+                            |         string value encoded according
+                            |             to the str8-utf8 encoding
+                            |
+                 primitive format code
+               for the str8-utf8 encoding
 
-</pre> (Note: this example shows a string-typed descriptor, which should be  considered reserved)
+</pre>(Note: this example shows a string-typed descriptor, which should be considered reserved)
 
 **Params**
 
@@ -362,17 +363,18 @@ Described type, as described in the AMQP 1.0 spec as follows:
 
 <a name="new_Frame"></a>
 ##new Frame()
-Encapsulates all convenience methods required for encoding a frame to put it out on the wire, and decoding anincoming frame.Frames look like:<pre>
+Encapsulates all convenience methods required for encoding a frame to put it out on the wire, and decoding anincoming frame.Frames look like:
+ <pre>
              +0       +1       +2       +3
         +-----------------------------------+ -.
       0 |                SIZE               |  |
-        +-----------------------------------+  |---> Frame Header
-      4 |  DOFF  |  TYPE  | <TYPE-SPECIFIC> |  |      (8 bytes)
+        +-----------------------------------+  |-- > Frame Header
+      4 |  DOFF  |  TYPE  | &lt;TYPE-SPECIFIC&gt; |  |      (8 bytes)
         +-----------------------------------+ -'
         +-----------------------------------+ -.
       8 |                ...                |  |
-        .                                   .  |---> Extended Header
-        .          <TYPE-SPECIFIC>          .  |  (DOFF * 4 - 8) bytes
+        .                                   .  |-- > Extended Header
+        .          &lt;TYPE-SPECIFIC&gt;          .  |  (DOFF * 4 - 8) bytes
         |                ...                |  |
         +-----------------------------------+ -'
         +-----------------------------------+ -.
@@ -380,7 +382,7 @@ Encapsulates all convenience methods required for encoding a frame to put it out
         .                                   .  |
         .                                   .  |
         .                                   .  |
-        .          <TYPE-SPECIFIC>          .  |---> Frame Body
+        .          &lt;TYPE-SPECIFIC&gt;          .  |-- > Frame Body
         .                                   .  |  (SIZE - DOFF * 4) bytes
         .                                   .  |
         .                                   .  |
@@ -419,13 +421,13 @@ AMQP Frames are slight variations on the one above, with the first part of the p
       +0       +1       +2       +3
         +-----------------------------------+ -.
       0 |                SIZE               |  |
-        +-----------------------------------+  |---> Frame Header
+        +-----------------------------------+  |-- > Frame Header
       4 |  DOFF  |  TYPE  |     CHANNEL     |  |      (8 bytes)
         +-----------------------------------+ -'
         +-----------------------------------+ -.
       8 |                ...                |  |
-        .                                   .  |---> Extended Header
-        .             <IGNORED>             .  |  (DOFF * 4 - 8) bytes
+        .                                   .  |-- > Extended Header
+        .             &lt;IGNORED&gt;             .  |  (DOFF * 4 - 8) bytes
         |                ...                |  |
         +-----------------------------------+ -'
         +-----------------------------------+ -.
@@ -434,7 +436,7 @@ AMQP Frames are slight variations on the one above, with the first part of the p
         .   Flow / Transfer / Disposition   .  |
         .      Detach / End / Close         .  |
         |-----------------------------------|  |
-        .                                   .  |---> Frame Body
+        .                                   .  |-- > Frame Body
         .                                   .  |  (SIZE - DOFF * 4) bytes
         .             PAYLOAD               .  |
         .                                   .  |
@@ -496,23 +498,23 @@ Type definitions, encoders, and decoders - used extensively by [Codec](#Codec).
 ##types._listBuilder()
 Encoder for list types, specified in AMQP 1.0 as:
  <pre>
- +----------= count items =----------+
- |                                   |
- n OCTETs   n OCTETs   |                                   |
+                       +----------= count items =----------+
+                       |                                   |
+   n OCTETs   n OCTETs |                                   |
  +----------+----------+--------------+------------+-------+
  |   size   |  count   |      ...    /|    item    |\ ...  |
  +----------+----------+------------/ +------------+ \-----+
- / /              \ \
- / /                \ \
- / /                  \ \
- +-------------+----------+
- | constructor |   data   |
- +-------------+----------+
+                                   / /              \ \
+                                  / /                \ \
+                                 / /                  \ \
+                                +-------------+----------+
+                                | constructor |   data   |
+                                +-------------+----------+
 
- Subcategory     n
- =================
- 0xC             1
- 0xD             4
+              Subcategory     n
+              =================
+              0xC             1
+              0xD             4
  </pre>
 
 **Access**: private  
