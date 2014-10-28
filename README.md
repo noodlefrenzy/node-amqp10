@@ -26,6 +26,8 @@ submit an Issue or even a PR.  Trust me, I don't take criticism personally, and 
 +   Buffer comparisons are done via [Buffertools](https://github.com/bnoordhuis/node-buffertools).  Bit-twiddling is done
     via [node-butils](https://github.com/nlf/node-butils), if necessary.
 
+Further, detailed implementation nodes are available in the [API Readme](api/).
+
 ## Protocol Notes ##
 
 The [AMQP 1.0 Protocol](http://docs.oasis-open.org/amqp/core/v1.0/amqp-core-complete-v1.0.pdf) differs substantially 
