@@ -9,7 +9,7 @@
   * [codec._isInteger(n)](#Codec#_isInteger)
   * [codec._readFullValue(buf, [offset], [doNotConsume])](#Codec#_readFullValue)
   * [codec.decode(buf, [offset])](#Codec#decode)
-  * [codec.encode(val, buf, [offset], [forceType])](#Codec#encode)
+  * [codec.encode(val, buf, [forceType])](#Codec#encode)
 * [class: Connection](#Connection)
   * [new Connection()](#new_Connection)
 * [class: DescribedType](#DescribedType)
@@ -31,23 +31,25 @@
 * [class: Frame](#Frame)
   * [new Frame()](#new_Frame)
   * [frame._buildOutgoing()](#Frame#_buildOutgoing)
+  * [frame.readPerformative(describedType)](#Frame#readPerformative)
 * [class: AMQPFrame](#AMQPFrame)
   * [new AMQPFrame()](#new_AMQPFrame)
+  * [aMQPFrame.outgoing()](#AMQPFrame#outgoing)
+  * [aMQPFrame._getPerformative()](#AMQPFrame#_getPerformative)
+  * [aMQPFrame._getAdditionalPayload()](#AMQPFrame#_getAdditionalPayload)
 * [class: OpenFrame](#OpenFrame)
   * [new OpenFrame()](#new_OpenFrame)
 * [class: TransferFrame](#TransferFrame)
   * [new TransferFrame()](#new_TransferFrame)
 * [class: Types](#Types)
   * [new Types()](#new_Types)
-  * [types._listEncoder()](#Types#_listEncoder)
-    * [_listEncoder~tempBuffer](#Types#_listEncoder..tempBuffer)
+  * [types._listBuilder()](#Types#_listBuilder)
   * [types._initTypesArray()](#Types#_initTypesArray)
   * [types._initEncodersDecoders()](#Types#_initEncodersDecoders)
 
 **Functions**
 
-* [encoder(val, buf, offset, [codec])](#encoder)
-  * [encoder~encoded](#encoder..encoded)
+* [encoder(val, buf, [codec])](#encoder)
 * [decoder(buf, [codec])](#decoder)
  
 <a name="CircularBuffer"></a>
@@ -74,7 +76,7 @@ Started this before I found cbarrick's version.  Keeping it around in case his d
   * [codec._isInteger(n)](#Codec#_isInteger)
   * [codec._readFullValue(buf, [offset], [doNotConsume])](#Codec#_readFullValue)
   * [codec.decode(buf, [offset])](#Codec#decode)
-  * [codec.encode(val, buf, [offset], [forceType])](#Codec#encode)
+  * [codec.encode(val, buf, [forceType])](#Codec#encode)
 
 <a name="new_Codec"></a>
 ##new Codec()
@@ -113,17 +115,15 @@ Decode a single entity from a buffer (starting at offset 0).  Only simple values
 
 **Returns**: `Array` - Single decoded value + number of bytes consumed.  
 <a name="Codec#encode"></a>
-##codec.encode(val, buf, [offset], [forceType])
+##codec.encode(val, buf, [forceType])
 Encode the given value as an AMQP 1.0 bitstring.We do a best-effort to determine type.  Objects will be encoded as <code>maps</code>, unless:+ They are DescribedTypes, in which case they will be encoded as such.+ They contain an encodeOrdering array, in which case they will be encoded as a <code>list</code> of their values  in the specified order.+ They are Int64s, in which case they will be encoded as <code>longs</code>.
 
 **Params**
 
 - val  - Value to encode.  
-- buf  - Buffer (or buffer-builder) to write into.  
-- \[offset=0\]  - Offset at which to start writing.  Only needed for buffer.  
+- buf `builder` - buffer-builder to write into.  
 - \[forceType\] `string` - If set, forces the encoder for the given type.  
 
-**Returns**: `integer` - New offset.  
 <a name="Connection"></a>
 #class: Connection
 **Members**
@@ -357,6 +357,7 @@ Described type, as described in the AMQP 1.0 spec as follows:
 * [class: Frame](#Frame)
   * [new Frame()](#new_Frame)
   * [frame._buildOutgoing()](#Frame#_buildOutgoing)
+  * [frame.readPerformative(describedType)](#Frame#readPerformative)
 
 <a name="new_Frame"></a>
 ##new Frame()
@@ -393,12 +394,23 @@ Encapsulates all convenience methods required for encoding a frame to put it out
 Populate the internal buffer with contents built based on the options.  SIZE and DOFF will be inferredbased on the options given.
 
 **Access**: private  
+<a name="Frame#readPerformative"></a>
+##frame.readPerformative(describedType)
+Used to populate the frame performative from a DescribedType pulled off the wire.
+
+**Params**
+
+- describedType <code>[DescribedType](#DescribedType)</code> - Details of the frame performative, should populate internal values.  
+
 <a name="AMQPFrame"></a>
 #class: AMQPFrame
 **Members**
 
 * [class: AMQPFrame](#AMQPFrame)
   * [new AMQPFrame()](#new_AMQPFrame)
+  * [aMQPFrame.outgoing()](#AMQPFrame#outgoing)
+  * [aMQPFrame._getPerformative()](#AMQPFrame#_getPerformative)
+  * [aMQPFrame._getAdditionalPayload()](#AMQPFrame#_getAdditionalPayload)
 
 <a name="new_AMQPFrame"></a>
 ##new AMQPFrame()
@@ -432,6 +444,20 @@ AMQP Frames are slight variations on the one above, with the first part of the p
 
 </pre>
 
+<a name="AMQPFrame#outgoing"></a>
+##aMQPFrame.outgoing()
+Children can override this method to perform more finely-tuned outgoing buffer processing.
+
+<a name="AMQPFrame#_getPerformative"></a>
+##aMQPFrame._getPerformative()
+Children should implement this method to translate their internal (friendly) representation into therepresentation expected on the wire (a DescribedType(Descriptor, ...) with either a List of values(ForcedType'd as necessary) or an object containing an encodeOrdering[] array to clarify ordering).
+
+**Access**: private  
+<a name="AMQPFrame#_getAdditionalPayload"></a>
+##aMQPFrame._getAdditionalPayload()
+AMQP Frames consist of two sections of payload - the performative, and the additional actual payload.Some frames don't have any additional payload, but for those that do, they should override this to generate it.
+
+**Access**: private  
 <a name="OpenFrame"></a>
 #class: OpenFrame
 **Members**
@@ -460,8 +486,7 @@ AMQP Frames are slight variations on the one above, with the first part of the p
 
 * [class: Types](#Types)
   * [new Types()](#new_Types)
-  * [types._listEncoder()](#Types#_listEncoder)
-    * [_listEncoder~tempBuffer](#Types#_listEncoder..tempBuffer)
+  * [types._listBuilder()](#Types#_listBuilder)
   * [types._initTypesArray()](#Types#_initTypesArray)
   * [types._initEncodersDecoders()](#Types#_initEncodersDecoders)
 
@@ -469,8 +494,8 @@ AMQP Frames are slight variations on the one above, with the first part of the p
 ##new Types()
 Type definitions, encoders, and decoders - used extensively by [Codec](#Codec).
 
-<a name="Types#_listEncoder"></a>
-##types._listEncoder()
+<a name="Types#_listBuilder"></a>
+##types._listBuilder()
 Encoder for list types, specified in AMQP 1.0 as:
  <pre>
  +----------= count items =----------+
@@ -504,17 +529,15 @@ Initialize all encoders and decoders based on type array.
 
 **Access**: private  
 <a name="encoder"></a>
-#encoder(val, buf, offset, [codec])
+#encoder(val, buf, [codec])
 Encoder methods are used for all examples of that type and are expected to encode to the proper type (e.g. a uint willencode to the fixed-zero-value, the short uint, or the full uint as appropriate).
 
 **Params**
 
 - val  - Value to encode (for fixed value encoders (e.g. null) this will be ignored)  
-- buf `Buffer` - Buffer into which to write code and encoded value  
-- offset `integer` - Non-negative byte offset for buffer  
+- buf `builder` - Buffer-builder into which to write code and encoded value  
 - \[codec\] <code>[Codec](#Codec)</code> - If needed, the codec to encode other values (e.g. for lists/arrays)  
 
-**Returns**: `integer` - New offset value  
 <a name="decoder"></a>
 #decoder(buf, [codec])
 Decoder methods decode an incoming buffer into an appropriate concrete JS entity.

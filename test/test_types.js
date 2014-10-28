@@ -6,20 +6,6 @@ var should      = require('should'),
     types       = require('../lib/types'),
     codec       = require('../lib/codec');
 
-/*
- var buffer = builder([
- ['byte', [0x00, 0xA3, 0x11]],
- ['string', ['example:book:list']],
- ['byte', [0xC0, 0x40, 0x03, 0xA1, 0x15]],
- ['string', ['AMQP for & by Dummies']],
- ['byte', [0xE0, 0x25, 0x02, 0xA1, 0x0E]],
- ['string', ['Rob J. Godfrey']],
- ['byte', [0x13]],
- ['string', ['Rafael H. Schloming']],
- ['byte', [0x40]]
- ]);
- */
-
 function buf(contents) {
     var bufb = new builder();
     for (var idx = 0; idx < contents.length; idx++) {
@@ -36,9 +22,10 @@ function buf(contents) {
 function assertEncoders(tests, maxSize) {
     for (var idx in tests) {
         var curTest = tests[idx];
-        var enc = types.encoders[curTest[0]];
-        var actual = new Buffer(maxSize || 100);
-        actual = actual.slice(0, enc(curTest[1], actual, 0, codec));
+        var enc = types.builders[curTest[0]];
+        var actual = new builder();
+        enc(curTest[1], actual, codec);
+        actual = actual.get();
         debug('Encoded "'+curTest[0]+'" => 0x'+actual.toString('hex'));
         actual.toString('hex').should.eql(curTest[2].toString('hex'), idx + ': ' + curTest[0] + ' encoding failed');
     }
