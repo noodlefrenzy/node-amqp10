@@ -1,4 +1,5 @@
-var should      = require('should'),
+var assert      = require('assert'),
+    should      = require('should'),
     debug       = require('debug')('amqp10-test-types'),
     builder     = require('buffer-builder'),
     Int64       = require('node-int64'),
@@ -22,25 +23,45 @@ function buf(contents) {
 function assertEncoders(tests, maxSize) {
     for (var idx in tests) {
         var curTest = tests[idx];
-        var enc = types.builders[curTest[0]];
-        var actual = new builder();
-        enc(curTest[1], actual, codec);
-        actual = actual.get();
-        debug('Encoded "'+curTest[0]+'" => 0x'+actual.toString('hex'));
-        actual.toString('hex').should.eql(curTest[2].toString('hex'), idx + ': ' + curTest[0] + ' encoding failed');
+        try {
+            var enc = types.builders[curTest[0]];
+            (enc === undefined).should.be.false;
+            (typeof enc).should.eql('function');
+            var actual = new builder();
+            enc(curTest[1], actual, codec);
+            actual = actual.get();
+            debug('Encoded "' + curTest[0] + '" => 0x' + actual.toString('hex'));
+            actual.toString('hex').should.eql(curTest[2].toString('hex'), idx + ': ' + curTest[0] + ' encoding failed');
+        } catch (e) {
+            if (e instanceof assert.AssertionError) {
+                throw e;
+            } else {
+                throw new assert.AssertionError({ message: 'Failed with '+ e.message +' while testing encoding of '+JSON.stringify(curTest[1]) });
+            }
+        }
     }
 }
 
 function assertDecoders(tests) {
     for (var idx in tests) {
         var curTest = tests[idx];
-        var dec = types.decoders[curTest[0]];
-        var actual = dec(curTest[1], codec);
-        debug('Decoded 0x'+curTest[1].toString('hex')+' => '+JSON.stringify(actual));
-        if (curTest[3]) {
-            curTest[3](actual, curTest[2]).should.be.true;
-        } else {
-            actual.should.eql(curTest[2], idx + ': decoding failed');
+        try {
+            var dec = types.decoders[curTest[0]];
+            (dec === undefined).should.be.false;
+            (typeof dec).should.eql('function');
+            var actual = dec(curTest[1], codec);
+            debug('Decoded 0x'+curTest[1].toString('hex')+' => '+JSON.stringify(actual));
+            if (curTest[3]) {
+                curTest[3](actual, curTest[2]).should.be.true;
+            } else {
+                actual.should.eql(curTest[2], idx + ': decoding failed');
+            }
+        } catch (e) {
+            if (e instanceof assert.AssertionError) {
+                throw e;
+            } else {
+                throw new assert.AssertionError({ message: 'Failed with '+ e.message +' while testing decoding of '+curTest[1].toString('hex') });
+            }
         }
     }
 }
@@ -79,6 +100,31 @@ describe('Types', function() {
 
             assertEncoders(toTest);
         });
+
+        it('should encode maps', function() {
+            var toTest = [ ['map', {}, buf([0x40]) ],
+             [ 'map', { foo: 123, bar: 45.6 }, buf([0xD1,
+                 builder.prototype.appendUInt32BE, 0x1c, builder.prototype.appendUInt32BE, 0x04,
+                 0xA1, 0x03, builder.prototype.appendString, 'foo',
+                 0x71, builder.prototype.appendInt32BE, 123,
+                 0xA1, 0x03, builder.prototype.appendString, 'bar',
+                 0x82, builder.prototype.appendDoubleBE, 45.6]) ],
+             [ 'map',
+               {
+                 baz: { zap: 'bop' }
+               },
+               buf([0xD1,
+                   builder.prototype.appendUInt32BE, 0x1c, builder.prototype.appendUInt32BE, 0x02,
+                   0xA1, 0x03, builder.prototype.appendString, 'baz',
+                   0xD1, builder.prototype.appendUInt32BE, 0x0e, builder.prototype.appendUInt32BE, 0x02,
+                         0xA1, 0x03, builder.prototype.appendString, 'zap',
+                         0xA1, 0x03, builder.prototype.appendString, 'bop'
+               ])
+             ]
+            ];
+            debugger;
+            assertEncoders(toTest);
+        });
     });
 
     describe('#decoders()', function() {
@@ -115,6 +161,32 @@ describe('Types', function() {
                 [ 0xC0, buf([0xB, 0x2, 0x71, builder.prototype.appendInt32BE, 123, 0x71, builder.prototype.appendInt32BE, 456]), [ 123, 456 ] ]
             ];
 
+            assertDecoders(toTest);
+        });
+
+        it('should decode maps', function() {
+            var toTest = [
+                [ 0xD1,
+                    buf([builder.prototype.appendUInt32BE, 0x1c, builder.prototype.appendUInt32BE, 0x02,
+                        0xA1, 0x03, builder.prototype.appendString, 'baz',
+                        0xD1, builder.prototype.appendUInt32BE, 0x0e, builder.prototype.appendUInt32BE, 0x02,
+                        0xA1, 0x03, builder.prototype.appendString, 'zap',
+                        0xA1, 0x03, builder.prototype.appendString, 'bop'
+                    ]),
+                    {
+                        baz: { zap: 'bop' }
+                    }
+                ],
+                [ 0xD1,
+                    buf([
+                        builder.prototype.appendUInt32BE, 0x1c, builder.prototype.appendUInt32BE, 0x04,
+                        0xA1, 0x03, builder.prototype.appendString, 'foo',
+                        0x71, builder.prototype.appendInt32BE, 123,
+                        0xA1, 0x03, builder.prototype.appendString, 'bar',
+                        0x82, builder.prototype.appendDoubleBE, 45.6]),
+                    { foo: 123, bar: 45.6 }
+                ]
+            ];
             assertDecoders(toTest);
         });
     });

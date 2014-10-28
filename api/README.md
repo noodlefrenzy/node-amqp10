@@ -44,6 +44,8 @@
 * [class: Types](#Types)
   * [new Types()](#new_Types)
   * [types._listBuilder()](#Types#_listBuilder)
+  * [types._arrayBuilder()](#Types#_arrayBuilder)
+  * [types._mapBuilder()](#Types#_mapBuilder)
   * [types._initTypesArray()](#Types#_initTypesArray)
   * [types._initEncodersDecoders()](#Types#_initEncodersDecoders)
 
@@ -487,6 +489,8 @@ AMQP Frames consist of two sections of payload - the performative, and the addit
 * [class: Types](#Types)
   * [new Types()](#new_Types)
   * [types._listBuilder()](#Types#_listBuilder)
+  * [types._arrayBuilder()](#Types#_arrayBuilder)
+  * [types._mapBuilder()](#Types#_mapBuilder)
   * [types._initTypesArray()](#Types#_initTypesArray)
   * [types._initEncodersDecoders()](#Types#_initEncodersDecoders)
 
@@ -516,6 +520,35 @@ Encoder for list types, specified in AMQP 1.0 as:
  0xC             1
  0xD             4
  </pre>
+
+**Access**: private  
+<a name="Types#_arrayBuilder"></a>
+##types._arrayBuilder()
+All array encodings consist of a size followed by a count followed by an element constructorfollowed by <i>count</i> elements of encoded data formatted as required by the elementconstructor:
+ <pre>
+                                             +--= count elements =--+
+                                             |                      |
+   n OCTETs   n OCTETs                       |                      |
+ +----------+----------+---------------------+-------+------+-------+
+ |   size   |  count   | element-constructor |  ...  | data |  ...  |
+ +----------+----------+---------------------+-------+------+-------+
+
+                         Subcategory     n
+                         =================
+                         0xE             1
+                         0xF             4
+ </pre>
+
+**Access**: private  
+<a name="Types#_mapBuilder"></a>
+##types._mapBuilder()
+A map is encoded as a compound value where the constituent elements form alternating key value pairs.
+ <pre>
+  item 0   item 1      item n-1    item n
+ +-------+-------+----+---------+---------+
+ | key 1 | val 1 | .. | key n/2 | val n/2 |
+ +-------+-------+----+---------+---------+
+ </pre>Map encodings must contain an even number of items (i.e. an equal number of keys andvalues). A map in which there exist two identical key values is invalid. Unless known tobe otherwise, maps must be considered to be ordered - that is the order of the key-valuepairs is semantically important and two maps which are different only in the order inwhich their key-value pairs are encoded are not equal.
 
 **Access**: private  
 <a name="Types#_initTypesArray"></a>
