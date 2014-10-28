@@ -30,11 +30,10 @@
   * [new FlowFrame()](#new_FlowFrame)
 * [class: Frame](#Frame)
   * [new Frame()](#new_Frame)
-  * [frame._buildOutgoing()](#Frame#_buildOutgoing)
+  * [frame.outgoing()](#Frame#outgoing)
   * [frame.readPerformative(describedType)](#Frame#readPerformative)
 * [class: AMQPFrame](#AMQPFrame)
   * [new AMQPFrame()](#new_AMQPFrame)
-  * [aMQPFrame.outgoing()](#AMQPFrame#outgoing)
   * [aMQPFrame._getPerformative()](#AMQPFrame#_getPerformative)
   * [aMQPFrame._getAdditionalPayload()](#AMQPFrame#_getAdditionalPayload)
 * [class: OpenFrame](#OpenFrame)
@@ -223,17 +222,17 @@ Connection states, from AMQP 1.0 spec:
  |   +===========+             +===========+     |         +---------+  |
  |  S:OPEN |                      | R:OPEN      \|/           | R:HDR   |
  |         |       +========+     |          +------------+   |         |
- |         +------>| OPENED |<----+          | CLOSE_PIPE |<--+         |
+ |         +------>| OPENED |< ---+          | CLOSE_PIPE |< -+         |
  |                 +========+                +------------+             |
  |           R:CLOSE |    | S:CLOSE              | R:OPEN               |
  |         +---------+    +-------+              |                      |
  |        \|/                    \|/             |                      |
  |   +============+          +=============+     |                      |
- |   | CLOSE_RCVD |          | CLOSE_SENT* |<----+                      |
+ |   | CLOSE_RCVD |          | CLOSE_SENT* |< ---+                      |
  |   +============+          +=============+                            |
  | S:CLOSE |                      | R:CLOSE                             |
  |         |         +=====+      |                                     |
- |         +-------->| END |<-----+                                     |
+ |         +-------->| END |< ----+                                     |
  |                   +=====+                                            |
  |                     /|\                                              |
  |    S:HDR[!=R:HDR]    |                R:HDR[!=S:HDR]                 |
@@ -358,7 +357,7 @@ Described type, as described in the AMQP 1.0 spec as follows:
 
 * [class: Frame](#Frame)
   * [new Frame()](#new_Frame)
-  * [frame._buildOutgoing()](#Frame#_buildOutgoing)
+  * [frame.outgoing()](#Frame#outgoing)
   * [frame.readPerformative(describedType)](#Frame#readPerformative)
 
 <a name="new_Frame"></a>
@@ -391,8 +390,8 @@ Encapsulates all convenience methods required for encoding a frame to put it out
 
  </pre>
 
-<a name="Frame#_buildOutgoing"></a>
-##frame._buildOutgoing()
+<a name="Frame#outgoing"></a>
+##frame.outgoing()
 Populate the internal buffer with contents built based on the options.  SIZE and DOFF will be inferredbased on the options given.
 
 **Access**: private  
@@ -410,7 +409,6 @@ Used to populate the frame performative from a DescribedType pulled off the wire
 
 * [class: AMQPFrame](#AMQPFrame)
   * [new AMQPFrame()](#new_AMQPFrame)
-  * [aMQPFrame.outgoing()](#AMQPFrame#outgoing)
   * [aMQPFrame._getPerformative()](#AMQPFrame#_getPerformative)
   * [aMQPFrame._getAdditionalPayload()](#AMQPFrame#_getAdditionalPayload)
 
@@ -445,10 +443,6 @@ AMQP Frames are slight variations on the one above, with the first part of the p
         +--------------------------+          -'
 
 </pre>
-
-<a name="AMQPFrame#outgoing"></a>
-##aMQPFrame.outgoing()
-Children can override this method to perform more finely-tuned outgoing buffer processing.
 
 <a name="AMQPFrame#_getPerformative"></a>
 ##aMQPFrame._getPerformative()
