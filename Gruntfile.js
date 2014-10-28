@@ -30,6 +30,9 @@ module.exports = function(grunt) {
         env: {
             coverage: {
                 DIR_FOR_CODE_COVERAGE: '../coverage/instrument/'
+            },
+            test: {
+                DEBUG: 'amqp10*'
             }
         },
         clean: {
@@ -61,12 +64,13 @@ module.exports = function(grunt) {
 
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-env');
     grunt.loadNpmTasks('grunt-simple-mocha');
     grunt.loadNpmTasks("grunt-jsdoc-to-markdown");
     grunt.loadNpmTasks('grunt-istanbul');
 
-    grunt.registerTask('coverage', ['instrument', 'simplemocha:coverage', 'storeCoverage', 'makeReport']);
-    grunt.registerTask('test', ['simplemocha:all']);
+    grunt.registerTask('coverage', ['env:coverage', 'clean:coverage', 'instrument', 'simplemocha:coverage', 'storeCoverage', 'makeReport']);
+    grunt.registerTask('test', ['env:test', 'simplemocha:all']);
 
     grunt.registerTask('default', ['jshint', 'jsdoc2md', 'coverage']);
 };

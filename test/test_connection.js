@@ -51,7 +51,7 @@ describe('Connection', function() {
     });
 
     var assertTransitions = function(actual, expected) {
-        actual.length.should.eql(expected.length-1, "Wrong number of state transitions in " + JSON.stringify(actual) + " vs. " + JSON.stringify(expected));
+        actual.length.should.eql(expected.length-1, "Wrong number of state transitions: Actual " + JSON.stringify(actual) + " vs. Expected " + JSON.stringify(expected));
         for (var idx = 0; idx < expected.length - 1; ++idx) {
             var curTransition = expected[idx] + '=>' + expected[idx+1];
             actual[idx].should.eql(curTransition, "Wrong transition at step "+idx);
