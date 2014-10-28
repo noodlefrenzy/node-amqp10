@@ -17,6 +17,8 @@ submit an Issue or even a PR.  Trust me, I don't take criticism personally, and 
 
 +   I'm planning on using Node's built-in net/socket classes for communicating with the server.
 +   Data from the server will be written to a circular buffer based on [CBarrick's](https://github.com/cbarrick/CircularBuffer).
++   Outgoing data will be encoded using [this buffer builder](https://github.com/PeterReid/node-buffer-builder) - streaming
+    output won't really work since each outgoing payload needs to be prefixed with its encoded size.
 +   The connection state will be managed using [Stately.js](https://github.com/fschaefer/Stately.js), with state transitions
     swapping which callback gets invoked on receipt of new data. (e.g. post-connection, we write the AMQP version header
     and then install a callback to ensure the correct version.  Once incoming data is written to the circular buffer, this
