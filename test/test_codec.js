@@ -6,27 +6,13 @@ var Int64       = require('node-int64'),
 
     codec       = require('../lib/codec'),
     DescribedType = require('../lib/described_type'),
-    ForcedType  = require('../lib/forced_type');
+    ForcedType  = require('../lib/forced_type'),
 
-function newBuf(contents) {
-    var bufb = new builder();
-    for (var idx = 0; idx < contents.length; idx++) {
-        var cur = contents[idx];
-        if (typeof cur === 'function') {
-            cur.call(bufb, contents[++idx]);
-        } else {
-            bufb.appendUInt8(cur);
-        }
-    }
-    return bufb.get();
-}
+    tu          = require('./testing_utils');
 
-function newCBuf(contents) {
-    var buf = newBuf(contents);
-    var cbuf = new CBuffer({ size: buf.length, encoding: 'buffer' });
-    cbuf.write(buf);
-    return cbuf;
-}
+var newBuf = tu.newBuf;
+
+var newCBuf = tu.newCBuf;
 
 describe('Codec', function() {
     describe('#decode()', function() {

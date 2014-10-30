@@ -37,10 +37,10 @@ function buildDescriptor(descriptor) {
 }
 
 function buildField(field) {
-    var doc = '<tr><td>'+field.$.name+'</td><td>'+field.$.type+'</td><td>'+(field.$.mandatory?'true':'false')+'</td></tr>\n';
+    var doc = '<tr><td>'+field.$.name+'</td><td>'+field.$.type+'</td><td>'+(field.$.mandatory?'true':'false')+'</td><td>'+(field.$.multiple?'true':'false')+'</td></tr>\n';
     var desc = collapseDoc(field.$.label, field.doc);
     if (desc) {
-        doc += '<tr><td>&nbsp;</td><td colspan="2">'+desc+'</td></tr>\n';
+        doc += '<tr><td>&nbsp;</td><td colspan="3">'+desc+'</td></tr>\n';
     }
     return doc;
 }
@@ -65,8 +65,8 @@ function generatePerformatives() {
                     var descriptor = buildDescriptor(performative.descriptor);
                     var fullDoc = '<h2>' + name + ' performative</h2>\n' + desc + '\n' + descriptor;
                     if (performative.field) {
-                        var fields = '<table>\n';
-                        fields += '<tr><th>Name</th><th>Type</th><th>Mandatory?</th></tr>';
+                        var fields = '<table border="1">\n';
+                        fields += '<tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr>';
                         for (var fidx in performative.field) {
                             fields += buildField(performative.field[fidx]);
                         }

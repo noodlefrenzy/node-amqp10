@@ -5,20 +5,11 @@ var assert      = require('assert'),
     Int64       = require('node-int64'),
 
     types       = require('../lib/types'),
-    codec       = require('../lib/codec');
+    codec       = require('../lib/codec'),
 
-function buf(contents) {
-    var bufb = new builder();
-    for (var idx = 0; idx < contents.length; idx++) {
-        var cur = contents[idx];
-        if (typeof cur === 'function') {
-            cur.call(bufb, contents[++idx]);
-        } else {
-            bufb.appendUInt8(cur);
-        }
-    }
-    return bufb.get();
-}
+    tu          = require('./testing_utils');
+
+var buf = tu.newBuf;
 
 function assertEncoders(tests, maxSize) {
     for (var idx in tests) {

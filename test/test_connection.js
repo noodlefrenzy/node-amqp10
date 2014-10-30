@@ -77,7 +77,7 @@ describe('Connection', function() {
                 done();
             }, 1000);
         });
-*/
+        */
         var server = null;
 
         afterEach(function (done) {
