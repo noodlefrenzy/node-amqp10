@@ -86,6 +86,14 @@ describe('Types', function() {
             types.getCode(-300).should.eql(0x61);
         });
 
+        it('should fallthrough to most compressed type even with forced', function() {
+            types.getCode(0, 'ulong').should.eql(0x44);
+            types.getCode(123, 'ulong').should.eql(0x53);
+            types.getCode(300, 'ulong').should.eql(0x80);
+            // @todo Width should be cognizant of forced type.
+            //types.getCode(130, 'int').should.eql(0x71);
+        });
+
         it('should cope with Int64 values', function() {
             types.getCode(new Int64(0x0F, 0x0F)).should.eql(0x81);
         });
