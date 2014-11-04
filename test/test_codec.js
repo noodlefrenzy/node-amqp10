@@ -168,11 +168,32 @@ describe('Codec', function() {
         it('should encode amqp arrays', function() {
             var amqpArray = new AMQPArray([ 1, 2, 3], 0x71);
             var expected = newBuf([0xE0,
-                builder.prototype.appendUInt8, (4*3+1), builder.prototype.appendUInt8, 3,
+                /* size = (int32*3 + count + constructor) */ builder.prototype.appendUInt8, (4*3+1+1),
+                /* count */ builder.prototype.appendUInt8, 3, /* constructor */ 0x71,
                 builder.prototype.appendUInt32BE, 1, builder.prototype.appendUInt32BE, 2, builder.prototype.appendUInt32BE, 3
             ]);
             var bufb = new builder();
             codec.encode(amqpArray, bufb);
+            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+        });
+        it('should encode composite example from spec', function() {
+            // From Page 25 of AMQP 1.0 spec
+            var expected = newBuf([0x00, 0xA3, 0x11,
+                builder.prototype.appendString, 'example:book:list',
+                0xC0, 0x40, 0x03, 0xA1, 0x15,
+                builder.prototype.appendString, 'AMQP for & by Dummies',
+                0xE0, 0x25, 0x02, 0xA1, 0x0E,
+                builder.prototype.appendString, 'Rob J. Godfrey',
+                0x13,
+                builder.prototype.appendString, 'Rafael H. Schloming',
+                0x40]);
+            var bufb = new builder();
+            codec.encode(new DescribedType(new Symbol('example:book:list'),
+                [
+                    'AMQP for & by Dummies',
+                    new AMQPArray([ 'Rob J. Godfrey', 'Rafael H. Schloming'], 0xA1),
+                    null
+                ]), bufb);
             bufb.get().toString('hex').should.eql(expected.toString('hex'));
         });
     });
