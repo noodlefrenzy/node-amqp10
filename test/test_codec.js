@@ -88,7 +88,6 @@ describe('Codec', function() {
             actual[1].should.eql(4); // Count + contents
         });
 
-        /*
         it('should decode composite example from spec', function() {
             // From Page 25 of AMQP 1.0 spec
             var buffer = newBuf([0x00, 0xA3, 0x11,
@@ -102,16 +101,13 @@ describe('Codec', function() {
                 0x40]);
             console.log('Composite type: ' + buffer.toString('hex'));
             var actual = codec.decode(newCBuf(buffer));
-            actual.should.eql({
-                type: 'example:book:list',
-                value: [
+            actual[0].should.eql(new DescribedType(new Symbol('example:book:list'),
+                [
                     'AMQP for & by Dummies',
                     [ 'Rob J. Godfrey', 'Rafael H. Schloming'],
                     null
-                ]
-            });
+                ]));
         });
-        */
     });
 
     describe('#encode(buffer-builder)', function() {
