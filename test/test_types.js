@@ -95,7 +95,7 @@ describe('Types', function() {
         });
 
         it('should encode maps', function() {
-            var toTest = [ ['map', {}, buf([0x40]) ],
+            var toTest = [ ['map', {}, buf([0xc1, 0x1, 0x0]) ],
              [ 'map', { foo: 123, bar: 45.6 }, buf([0xD1,
                  builder.prototype.appendUInt32BE, 0x1c, builder.prototype.appendUInt32BE, 0x04,
                  0xA1, 0x03, builder.prototype.appendString, 'foo',
@@ -142,7 +142,9 @@ describe('Types', function() {
                 [ 0xa1, buf([3, builder.prototype.appendString, 'foo' ]), 'foo' ],
                 [ 0xb1, buf([builder.prototype.appendUInt32BE, 3, builder.prototype.appendString, 'foo' ]), 'foo' ],
                 [ 0xa3, buf([3, builder.prototype.appendString, 'foo' ]), new Symbol('foo') ],
-                [ 0xb3, buf([builder.prototype.appendUInt32BE, 3, builder.prototype.appendString, 'foo' ]), new Symbol('foo') ]
+                [ 0xb3, buf([builder.prototype.appendUInt32BE, 3, builder.prototype.appendString, 'foo' ]), new Symbol('foo') ],
+                [ 0xa1, buf([0]), ''], // Empty string
+                [ 0xa3, buf([0]), new Symbol('')], // Empty symbol
             ];
 
             assertDecoders(toTest);
@@ -178,7 +180,8 @@ describe('Types', function() {
                         0xA1, 0x03, builder.prototype.appendString, 'bar',
                         0x82, builder.prototype.appendDoubleBE, 45.6]),
                     { foo: 123, bar: 45.6 }
-                ]
+                ],
+                [ 0xC1, buf([0x1, 0x0]), {} ] // Empty map
             ];
             assertDecoders(toTest);
         });

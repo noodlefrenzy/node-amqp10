@@ -8,7 +8,7 @@ var debug       = require('debug')('amqp10-test_connection'),
     OpenFrame   = require('../lib/frames/open_frame');
 
 function openBuf() {
-    var open = new OpenFrame();
+    var open = new OpenFrame({ container_id: 'test', hostname: 'localhost' });
     return open.outgoing();
 }
 
@@ -16,7 +16,7 @@ describe('Connection', function() {
     describe('#_parseAddress()', function() {
 
         it('should match amqp(|s) no port no route', function () {
-            var conn = new Connection();
+            var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
 
             var addr = 'amqp://localhost/';
             var result = conn._parseAddress(addr);
@@ -36,7 +36,7 @@ describe('Connection', function() {
         });
 
         it('should match with port and with/without route', function () {
-            var conn = new Connection();
+            var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
 
             var addr = 'amqp://localhost:1234';
             var result = conn._parseAddress(addr);
@@ -69,12 +69,13 @@ describe('Connection', function() {
     describe('#_open()', function() {
         // NOTE: Only works if you have a local AMQP server running
         it('should connect to activemq', function(done) {
-            var conn = new Connection();
+            this.timeout(0);
+            var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
             conn.open('amqp://localhost/');
             setTimeout(function() {
                 conn.close();
                 done();
-            }, 1000);
+            }, 5000);
         });
 
         var server = null;
@@ -90,7 +91,7 @@ describe('Connection', function() {
         it('should connect to mock server', function(done) {
             server = new MockServer();
             server.setSequence([ constants.amqp_version, openBuf() ], [ constants.amqp_version ]);
-            var conn = new Connection();
+            var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
             server.setup(conn);
             var transitions = [];
             var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
@@ -106,7 +107,7 @@ describe('Connection', function() {
         it('should cope with aggressive server handshake', function(done) {
             server = new MockServer();
             server.setSequence([ constants.amqp_version, openBuf() ], [ constants.amqp_version ], true);
-            var conn = new Connection();
+            var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
             server.setup(conn);
             var transitions = [];
             var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
@@ -122,7 +123,7 @@ describe('Connection', function() {
         it('should cope with disconnects', function(done) {
             server = new MockServer();
             server.setSequence([ constants.amqp_version ], [ 'disconnect' ], true);
-            var conn = new Connection();
+            var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
             server.setup(conn);
             var transitions = [];
             var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
@@ -138,7 +139,7 @@ describe('Connection', function() {
         it('should cope with errors', function(done) {
             server = new MockServer();
             server.setSequence([ constants.amqp_version ], [ 'error' ]);
-            var conn = new Connection();
+            var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
             server.setup(conn);
             var transitions = [];
             var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };

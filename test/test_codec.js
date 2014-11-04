@@ -31,7 +31,7 @@ describe('Codec', function() {
             codec.decode(newCBuf([0x41]))[0].should.be.true;
             codec.decode(newCBuf([0x42]))[0].should.be.false;
             codec.decode(newCBuf([0x43]))[0].should.eql(0);
-            codec.decode(newCBuf([0x44]))[0].should.eql(0);
+            codec.decode(newCBuf([0x44]))[0].should.eql(new Int64(0,0));
         });
 
         it('should match longs', function() {
@@ -108,6 +108,17 @@ describe('Codec', function() {
                     null
                 ]));
         });
+
+        it('should decode open frame received from ActiveMQ', function() {
+            var buffer = newBuf([0x00,
+                0x53, 0x10,
+                0xc0, 0x0a, 0x03,
+                0xa1, 0x00,
+                0xa1, 0x00,
+                0x70, 0x00, 0x10, 0x00, 0x00]);
+            var actual = codec.decode(newCBuf(buffer));
+            actual[0].should.eql(new DescribedType(new Int64(0, 0x10), [ '', '', 0x00100000 ]));
+        })
     });
 
     describe('#encode(buffer-builder)', function() {
@@ -219,7 +230,7 @@ describe('Codec', function() {
             var expected = newBuf([0x00,
                 0x80, builder.prototype.appendUInt32BE, 0x0, builder.prototype.appendUInt32BE, 0x10, // Descriptor
                 // 0xD0, builder.prototype.appendUInt32BE, 0x0, builder.prototype.appendUInt32BE, 0x0, // List (size & count)
-                0xC0, (1 + 8 + 11 + 5 + 3 + 5 + 7 + 7 + 3), 10,
+                0xC0, (1 + 8 + 11 + 5 + 3 + 5 + 7 + 7 + 1 + 1 + 3), 10,
                 0xA1, 0x6, builder.prototype.appendString, 'client', // ID
                 0xA1, 0x9, builder.prototype.appendString, 'localhost', // Hostname
                 0x70, builder.prototype.appendUInt32BE, 512, // Max Frame Size
@@ -227,7 +238,7 @@ describe('Codec', function() {
                 0x70, builder.prototype.appendUInt32BE, 1000, // Idle Timeout
                 0xA3, 0x5, builder.prototype.appendString, 'en-US', // Outgoing Locales
                 0xA3, 0x5, builder.prototype.appendString, 'en-US', // Incoming Locales
-                0x40, 0x40, 0x40 // Capabilities & properties
+                0x40, 0x40, 0xc1, 0x1, 0x0 // Capabilities & properties
             ]);
             var bufb = new builder();
             codec.encode(performative, bufb);
