@@ -131,7 +131,12 @@ describe('Codec', function() {
 
             bufb = new builder();
             codec.encode(new Int64(0x12, 0x34), bufb);
-            var expected = newBuf([0x81, builder.prototype.appendInt32BE, 0x12, builder.prototype.appendInt32BE, 0x34]);
+            var expected = newBuf([0x80, builder.prototype.appendInt32BE, 0x12, builder.prototype.appendInt32BE, 0x34]);
+            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+
+            bufb = new builder();
+            codec.encode(new Int64(0xFFFFFFFF, 0xFFFFFF00), bufb);
+            var expected = newBuf([0x81, builder.prototype.appendInt32BE, 0xFFFFFFFF, builder.prototype.appendInt32BE, 0xFFFFFF00]);
             bufb.get().toString('hex').should.eql(expected.toString('hex'));
         });
         it('should encode described types', function() {
@@ -194,6 +199,38 @@ describe('Codec', function() {
                     new AMQPArray([ 'Rob J. Godfrey', 'Rafael H. Schloming'], 0xA1),
                     null
                 ]), bufb);
+            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+        });
+        it('should encode frame performative correctly', function() {
+            var performative = new DescribedType(new Int64(0x00000000, 0x00000010), {
+                id: 'client', /* string */
+                hostname: 'localhost', /* string */
+                max_frame_size: new ForcedType('uint', 512), /* uint */
+                channel_max: new ForcedType('ushort', 10), /* ushort */
+                idle_time_out: new ForcedType('uint', 1000), /* milliseconds */
+                outgoing_locales: new Symbol('en-US'), /* ietf-language-tag (symbol) */
+                incoming_locales: new Symbol('en-US'), /* ietf-language-tag (symbol) */
+                offered_capabilities: null, /* symbol */
+                desired_capabilities: null, /* symbol */
+                properties: {}, /* fields (map) */
+                encodeOrdering: [ 'id', 'hostname', 'max_frame_size', 'channel_max', 'idle_time_out', 'outgoing_locales',
+                    'incoming_locales', 'offered_capabilities', 'desired_capabilities', 'properties']
+            });
+            var expected = newBuf([0x00,
+                0x80, builder.prototype.appendUInt32BE, 0x0, builder.prototype.appendUInt32BE, 0x10, // Descriptor
+                // 0xD0, builder.prototype.appendUInt32BE, 0x0, builder.prototype.appendUInt32BE, 0x0, // List (size & count)
+                0xC0, (1 + 8 + 11 + 5 + 3 + 5 + 7 + 7 + 3), 10,
+                0xA1, 0x6, builder.prototype.appendString, 'client', // ID
+                0xA1, 0x9, builder.prototype.appendString, 'localhost', // Hostname
+                0x70, builder.prototype.appendUInt32BE, 512, // Max Frame Size
+                0x60, builder.prototype.appendUInt16BE, 10, // Channel Max
+                0x70, builder.prototype.appendUInt32BE, 1000, // Idle Timeout
+                0xA3, 0x5, builder.prototype.appendString, 'en-US', // Outgoing Locales
+                0xA3, 0x5, builder.prototype.appendString, 'en-US', // Incoming Locales
+                0x40, 0x40, 0x40 // Capabilities & properties
+            ]);
+            var bufb = new builder();
+            codec.encode(performative, bufb);
             bufb.get().toString('hex').should.eql(expected.toString('hex'));
         });
     });

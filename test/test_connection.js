@@ -68,7 +68,6 @@ describe('Connection', function() {
 
     describe('#_open()', function() {
         // NOTE: Only works if you have a local AMQP server running
-        /*
         it('should connect to activemq', function(done) {
             var conn = new Connection();
             conn.open('amqp://localhost/');
@@ -77,7 +76,7 @@ describe('Connection', function() {
                 done();
             }, 1000);
         });
-        */
+
         var server = null;
 
         afterEach(function (done) {
