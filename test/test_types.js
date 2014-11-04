@@ -7,6 +7,8 @@ var assert      = require('assert'),
     types       = require('../lib/types'),
     codec       = require('../lib/codec'),
 
+    Symbol      = require('../lib/types/symbol'),
+
     tu          = require('./testing_utils');
 
 var buf = tu.newBuf;
@@ -58,60 +60,6 @@ function assertDecoders(tests) {
 }
 
 describe('Types', function() {
-    describe('#getCode()', function() {
-        it('should special-case null', function() {
-            types.getCode(null).should.eql(0x40);
-        });
-
-        it('should cope with specific forced-types', function() {
-            types.getCode('foo', 0xA3).should.eql(0xA3);
-            types.getCode(0, 0x80).should.eql(0x80);
-        });
-
-        it('should cope with general forced-types', function() {
-            types.getCode('foo', 'symbol').should.eql(0xA3);
-            types.getCode(0, 'ulong').should.eql(0x44); // Special zero-val
-        });
-
-        it('should cope with booleans', function() {
-            types.getCode(true).should.eql(0x41);
-            types.getCode(false).should.eql(0x42);
-        });
-
-        it('should fallthrough to most compressed type', function() {
-            types.getCode(0).should.eql(0x43);
-            types.getCode(123).should.eql(0x50);
-            types.getCode(-123).should.eql(0x51);
-            types.getCode(300).should.eql(0x60);
-            types.getCode(-300).should.eql(0x61);
-        });
-
-        it('should fallthrough to most compressed type even with forced', function() {
-            types.getCode(0, 'ulong').should.eql(0x44);
-            types.getCode(123, 'ulong').should.eql(0x53);
-            types.getCode(300, 'ulong').should.eql(0x80);
-            // @todo Width should be cognizant of forced type.
-            //types.getCode(130, 'int').should.eql(0x71);
-        });
-
-        it('should cope with Int64 values', function() {
-            types.getCode(new Int64(0x0F, 0x0F)).should.eql(0x81);
-        });
-
-        it('should cope with lists', function() {
-            types.getCode([123, 'foo']).should.eql(0xD0);
-        });
-
-        it('should cope with arrays', function() {
-            types.getCode([]).should.eql(0x40);
-            types.getCode([123, 456]).should.eql(0xF0);
-        });
-
-        it('should cope with maps', function() {
-            types.getCode({ k1: 'v1', k2: 'v2' }).should.eql(0xD1);
-        });
-    });
-
     describe('#encoders', function() {
         it('should encode basic primitives', function() {
             var toTest = [
@@ -193,8 +141,8 @@ describe('Types', function() {
             var toTest = [
                 [ 0xa1, buf([3, builder.prototype.appendString, 'foo' ]), 'foo' ],
                 [ 0xb1, buf([builder.prototype.appendUInt32BE, 3, builder.prototype.appendString, 'foo' ]), 'foo' ],
-                [ 0xa3, buf([3, builder.prototype.appendString, 'foo' ]), 'foo' ],
-                [ 0xb3, buf([builder.prototype.appendUInt32BE, 3, builder.prototype.appendString, 'foo' ]), 'foo' ]
+                [ 0xa3, buf([3, builder.prototype.appendString, 'foo' ]), new Symbol('foo') ],
+                [ 0xb3, buf([builder.prototype.appendUInt32BE, 3, builder.prototype.appendString, 'foo' ]), new Symbol('foo') ]
             ];
 
             assertDecoders(toTest);

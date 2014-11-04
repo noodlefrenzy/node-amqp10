@@ -7,13 +7,11 @@
 * [class: Codec](#Codec)
   * [new Codec()](#new_Codec)
   * [codec._isInteger(n)](#Codec#_isInteger)
-  * [codec._readFullValue(buf, [offset], [doNotConsume])](#Codec#_readFullValue)
-  * [codec.decode(buf, [offset])](#Codec#decode)
+  * [codec._readFullValue(buf, [offset], [doNotConsume], [forcedCode])](#Codec#_readFullValue)
+  * [codec.decode(buf, [offset], [forcedCode])](#Codec#decode)
   * [codec.encode(val, buf, [forceType])](#Codec#encode)
 * [class: Connection](#Connection)
   * [new Connection()](#new_Connection)
-* [class: DescribedType](#DescribedType)
-  * [new DescribedType(descriptor, value)](#new_DescribedType)
 * [class: AttachFrame](#AttachFrame)
   * [new AttachFrame()](#new_AttachFrame)
 * [class: BeginFrame](#BeginFrame)
@@ -42,11 +40,19 @@
   * [new TransferFrame()](#new_TransferFrame)
 * [class: Types](#Types)
   * [new Types()](#new_Types)
-  * [types._listBuilder()](#Types#_listBuilder)
-  * [types._arrayBuilder()](#Types#_arrayBuilder)
-  * [types._mapBuilder()](#Types#_mapBuilder)
+  * [types._listBuilder(val, bufb, codec, [width])](#Types#_listBuilder)
+  * [types._arrayBuilder(val, bufb, codec, [width])](#Types#_arrayBuilder)
+  * [types._mapBuilder(val, bufb, codec, [width])](#Types#_mapBuilder)
   * [types._initTypesArray()](#Types#_initTypesArray)
   * [types._initEncodersDecoders()](#Types#_initEncodersDecoders)
+* [class: AMQPArray](#AMQPArray)
+  * [new AMQPArray(arr, elementType)](#new_AMQPArray)
+* [class: DescribedType](#DescribedType)
+  * [new DescribedType(descriptor, value)](#new_DescribedType)
+* [class: ForcedType](#ForcedType)
+  * [new ForcedType(typeName, value)](#new_ForcedType)
+* [class: Symbol](#Symbol)
+  * [new Symbol(str)](#new_Symbol)
 
 **Functions**
 
@@ -75,8 +81,8 @@ Started this before I found cbarrick's version.  Keeping it around in case his d
 * [class: Codec](#Codec)
   * [new Codec()](#new_Codec)
   * [codec._isInteger(n)](#Codec#_isInteger)
-  * [codec._readFullValue(buf, [offset], [doNotConsume])](#Codec#_readFullValue)
-  * [codec.decode(buf, [offset])](#Codec#decode)
+  * [codec._readFullValue(buf, [offset], [doNotConsume], [forcedCode])](#Codec#_readFullValue)
+  * [codec.decode(buf, [offset], [forcedCode])](#Codec#decode)
   * [codec.encode(val, buf, [forceType])](#Codec#encode)
 
 <a name="new_Codec"></a>
@@ -94,7 +100,7 @@ Acquired from http://stackoverflow.com/questions/3885817/how-to-check-if-a-numbe
 **Returns**: `boolean` - True if integral.  
 **Access**: private  
 <a name="Codec#_readFullValue"></a>
-##codec._readFullValue(buf, [offset], [doNotConsume])
+##codec._readFullValue(buf, [offset], [doNotConsume], [forcedCode])
 Reads a full value's worth of bytes from a circular or regular buffer, or returns undefined if not enough bytes are there.Note that for Buffers, the returned Buffer will be a slice (so backed by the original storage)!
 
 **Params**
@@ -102,17 +108,19 @@ Reads a full value's worth of bytes from a circular or regular buffer, or return
 - buf `Buffer` | `CBuffer` - Buffer or circular buffer to read from.  If a Buffer is given, it is assumed to be full.  
 - \[offset=0\] `integer` - Offset - only valid for Buffer, not CBuffer.  
 - \[doNotConsume=false\] `boolean` - If set to true, will peek bytes instead of reading them - useful for leaving                                         circular buffer in original state for described values that are not yet complete.  
+- \[forcedCode\] `Number` - If given, first byte is not assumed to be code and given code will be used - useful for arrays.  
 
 **Returns**: `Array` - Buffer of full value + number of bytes read.                                         For described types, will return [ [ descriptor-buffer, value-buffer ], total-bytes ].  
 **Access**: private  
 <a name="Codec#decode"></a>
-##codec.decode(buf, [offset])
+##codec.decode(buf, [offset], [forcedCode])
 Decode a single entity from a buffer (starting at offset 0).  Only simple values currently supported.
 
 **Params**
 
 - buf `Buffer` | `CBuffer` - The buffer/circular buffer to decode.  Will decode a single value per call.  
-- \[offset=0\] `integer` - The offset to read from (only used for Buffers).  
+- \[offset=0\] `Number` - The offset to read from (only used for Buffers).  
+- \[forcedCode\] `Number` - If given, will not consume first byte for code and will instead use this as the code. Useful for arrays.  
 
 **Returns**: `Array` - Single decoded value + number of bytes consumed.  
 <a name="Codec#encode"></a>
@@ -240,40 +248,6 @@ Connection states, from AMQP 1.0 spec:
  +----------------------+-----------------------------------------------+
 
  </pre>R:<b>CTRL</b> = Received <b>CTRL</b>S:<b>CTRL</b> = Sent <b>CTRL</b>Also could be DISCARDING if an error condition triggered the CLOSE
-
-<a name="DescribedType"></a>
-#class: DescribedType
-**Members**
-
-* [class: DescribedType](#DescribedType)
-  * [new DescribedType(descriptor, value)](#new_DescribedType)
-
-<a name="new_DescribedType"></a>
-##new DescribedType(descriptor, value)
-Described type, as described in the AMQP 1.0 spec as follows:
-<pre>
-             constructor                       untyped bytes
-                  |                                 |
-      +-----------+-----------+   +-----------------+-----------------+
-      |                       |   |                                   |
- ...  0x00 0xA1 0x03 "URL" 0xA1   0x1E "http://example.org/hello-world"  ...
-           |             |  |     |                                   |
-           +------+------+  |     |                                   |
-                  |         |     |                                   |
-             descriptor     |     +------------------+----------------+
-                            |                        |
-                            |         string value encoded according
-                            |             to the str8-utf8 encoding
-                            |
-                 primitive format code
-               for the str8-utf8 encoding
-
-</pre>(Note: this example shows a string-typed descriptor, which should be considered reserved)
-
-**Params**
-
-- descriptor  - Descriptor for the type (can be any valid AMQP type, including another described type).  
-- value  - Value of the described type (can also be any valid AMQP type, including another described type).  
 
 <a name="AttachFrame"></a>
 #class: AttachFrame
@@ -484,9 +458,9 @@ AMQP Frames consist of two sections of payload - the performative, and the addit
 
 * [class: Types](#Types)
   * [new Types()](#new_Types)
-  * [types._listBuilder()](#Types#_listBuilder)
-  * [types._arrayBuilder()](#Types#_arrayBuilder)
-  * [types._mapBuilder()](#Types#_mapBuilder)
+  * [types._listBuilder(val, bufb, codec, [width])](#Types#_listBuilder)
+  * [types._arrayBuilder(val, bufb, codec, [width])](#Types#_arrayBuilder)
+  * [types._mapBuilder(val, bufb, codec, [width])](#Types#_mapBuilder)
   * [types._initTypesArray()](#Types#_initTypesArray)
   * [types._initEncodersDecoders()](#Types#_initEncodersDecoders)
 
@@ -495,7 +469,7 @@ AMQP Frames consist of two sections of payload - the performative, and the addit
 Type definitions, encoders, and decoders - used extensively by [Codec](#Codec).
 
 <a name="Types#_listBuilder"></a>
-##types._listBuilder()
+##types._listBuilder(val, bufb, codec, [width])
 Encoder for list types, specified in AMQP 1.0 as:
  <pre>
                        +----------= count items =----------+
@@ -517,9 +491,16 @@ Encoder for list types, specified in AMQP 1.0 as:
               0xD             4
  </pre>
 
+**Params**
+
+- val `Array` - Value to encode.  
+- bufb `builder` - Buffer-builder to write encoded list into.  
+- codec <code>[Codec](#Codec)</code> - Codec to use for encoding list entries.  
+- \[width\] `Number` - Should be 1 or 4.  If given, builder assumes code already written, and will ensure array is encoded to the given byte-width type.  Useful for arrays.  
+
 **Access**: private  
 <a name="Types#_arrayBuilder"></a>
-##types._arrayBuilder()
+##types._arrayBuilder(val, bufb, codec, [width])
 All array encodings consist of a size followed by a count followed by an element constructorfollowed by <i>count</i> elements of encoded data formatted as required by the elementconstructor:
  <pre>
                                              +--= count elements =--+
@@ -535,9 +516,16 @@ All array encodings consist of a size followed by a count followed by an element
                          0xF             4
  </pre>
 
+**Params**
+
+- val <code>[AMQPArray](#AMQPArray)</code> - Value to encode.  
+- bufb `builder` - Buffer-builder to encode array into.  
+- codec <code>[Codec](#Codec)</code> - Codec to use for encoding array values.  Passed into encoder.  
+- \[width\] `Number` - Should be 1 or 4.  If given, builder assumes code already written, and will ensure array is encoded to the given byte-width type.  Useful for arrays.  
+
 **Access**: private  
 <a name="Types#_mapBuilder"></a>
-##types._mapBuilder()
+##types._mapBuilder(val, bufb, codec, [width])
 A map is encoded as a compound value where the constituent elements form alternating key value pairs.
  <pre>
   item 0   item 1      item n-1    item n
@@ -545,6 +533,13 @@ A map is encoded as a compound value where the constituent elements form alterna
  | key 1 | val 1 | .. | key n/2 | val n/2 |
  +-------+-------+----+---------+---------+
  </pre>Map encodings must contain an even number of items (i.e. an equal number of keys andvalues). A map in which there exist two identical key values is invalid. Unless known tobe otherwise, maps must be considered to be ordered - that is the order of the key-valuepairs is semantically important and two maps which are different only in the order inwhich their key-value pairs are encoded are not equal.
+
+**Params**
+
+- val `Object` - Value to encode.  
+- bufb `builder` - Buffer-builder to encode map into.  
+- codec <code>[Codec](#Codec)</code> - Codec to use for encoding keys and values.  
+- \[width\] `Number` - Should be 1 or 4.  If given, builder assumes code already written, and will ensure array is encoded to the given byte-width type.  Useful for arrays.  
 
 **Access**: private  
 <a name="Types#_initTypesArray"></a>
@@ -557,6 +552,87 @@ Initialize list of all types.  Each contains a number of encodings, one of which
 Initialize all encoders and decoders based on type array.
 
 **Access**: private  
+<a name="AMQPArray"></a>
+#class: AMQPArray
+**Members**
+
+* [class: AMQPArray](#AMQPArray)
+  * [new AMQPArray(arr, elementType)](#new_AMQPArray)
+
+<a name="new_AMQPArray"></a>
+##new AMQPArray(arr, elementType)
+Encoding for AMQP Arrays - homogeneous typed collections.  Provides the CODE for the element type.
+
+**Params**
+
+- arr `Array` - Array contents, should be encode-able to the given code type.  
+- elementType `Number` - BYTE code-point for the array values (e.g. 0xA1).  
+
+<a name="DescribedType"></a>
+#class: DescribedType
+**Members**
+
+* [class: DescribedType](#DescribedType)
+  * [new DescribedType(descriptor, value)](#new_DescribedType)
+
+<a name="new_DescribedType"></a>
+##new DescribedType(descriptor, value)
+Described type, as described in the AMQP 1.0 spec as follows:
+<pre>
+             constructor                       untyped bytes
+                  |                                 |
+      +-----------+-----------+   +-----------------+-----------------+
+      |                       |   |                                   |
+ ...  0x00 0xA1 0x03 "URL" 0xA1   0x1E "http://example.org/hello-world"  ...
+           |             |  |     |                                   |
+           +------+------+  |     |                                   |
+                  |         |     |                                   |
+             descriptor     |     +------------------+----------------+
+                            |                        |
+                            |         string value encoded according
+                            |             to the str8-utf8 encoding
+                            |
+                 primitive format code
+               for the str8-utf8 encoding
+
+</pre>(Note: this example shows a string-typed descriptor, which should be considered reserved)
+
+**Params**
+
+- descriptor  - Descriptor for the type (can be any valid AMQP type, including another described type).  
+- value  - Value of the described type (can also be any valid AMQP type, including another described type).  
+
+<a name="ForcedType"></a>
+#class: ForcedType
+**Members**
+
+* [class: ForcedType](#ForcedType)
+  * [new ForcedType(typeName, value)](#new_ForcedType)
+
+<a name="new_ForcedType"></a>
+##new ForcedType(typeName, value)
+ForcedType coerces the encoder to encode to the given type, regardless of what it might think.
+
+**Params**
+
+- typeName  - Symbolic name or specific code (e.g. 'long', or 0xA0)  
+- value  - Value to encode, should be compatible or bad things will occur  
+
+<a name="Symbol"></a>
+#class: Symbol
+**Members**
+
+* [class: Symbol](#Symbol)
+  * [new Symbol(str)](#new_Symbol)
+
+<a name="new_Symbol"></a>
+##new Symbol(str)
+Encoding for AMQP Symbol type, to differentiate from strings.  More terse than ForcedType.
+
+**Params**
+
+- str `String` - Symbol contents  
+
 <a name="encoder"></a>
 #encoder(val, buf, [codec])
 Encoder methods are used for all examples of that type and are expected to encode to the proper type (e.g. a uint willencode to the fixed-zero-value, the short uint, or the full uint as appropriate).

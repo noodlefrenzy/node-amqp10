@@ -5,8 +5,10 @@ var Int64       = require('node-int64'),
     builder     = require('buffer-builder'),
 
     codec       = require('../lib/codec'),
-    DescribedType = require('../lib/described_type'),
-    ForcedType  = require('../lib/forced_type'),
+    AMQPArray   = require('../lib/types/amqp_array'),
+    DescribedType = require('../lib/types/described_type'),
+    ForcedType  = require('../lib/types/forced_type'),
+    Symbol      = require('../lib/types/symbol'),
 
     tu          = require('./testing_utils');
 
@@ -78,6 +80,14 @@ describe('Codec', function() {
             actual[0].value.should.eql('http://example.org/hello-world');
         });
 
+        it('should decode forced-type values', function() {
+            var buffer = newBuf([0x03, builder.prototype.appendString, 'URL']);
+            var actual = codec.decode(buffer, 0, 0xA3);
+            actual[0].should.be.instanceof(Symbol);
+            actual[0].contents.should.eql('URL');
+            actual[1].should.eql(4); // Count + contents
+        });
+
         /*
         it('should decode composite example from spec', function() {
             // From Page 25 of AMQP 1.0 spec
@@ -108,7 +118,12 @@ describe('Codec', function() {
         it('should encode strings', function () {
             var bufb = new builder();
             codec.encode('FOO', bufb);
-            bufb.get().toString('hex').should.eql((new Buffer([0xA1, 0x03, 0x46, 0x4F, 0x4F])).toString('hex'));
+            bufb.get().toString('hex').should.eql(newBuf([0xA1, 0x03, 0x46, 0x4F, 0x4F]).toString('hex'));
+        });
+        it('should encode symbols', function() {
+            var bufb = new builder();
+            codec.encode(new Symbol('FOO'), bufb);
+            bufb.get().toString('hex').should.eql(newBuf([0xA3, 0x03, 0x46, 0x4F, 0x4F]).toString('hex'));
         });
         it('should encode numbers', function() {
             var bufb = new builder();
@@ -152,6 +167,16 @@ describe('Codec', function() {
             var expected = newBuf([0x40]);
             var bufb = new builder();
             codec.encode(toEncode, bufb);
+            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+        });
+        it('should encode amqp arrays', function() {
+            var amqpArray = new AMQPArray([ 1, 2, 3], 0x71);
+            var expected = newBuf([0xE0,
+                builder.prototype.appendUInt8, (4*3+1), builder.prototype.appendUInt8, 3,
+                builder.prototype.appendUInt32BE, 1, builder.prototype.appendUInt32BE, 2, builder.prototype.appendUInt32BE, 3
+            ]);
+            var bufb = new builder();
+            codec.encode(amqpArray, bufb);
             bufb.get().toString('hex').should.eql(expected.toString('hex'));
         });
     });

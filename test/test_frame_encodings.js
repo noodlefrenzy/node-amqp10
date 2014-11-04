@@ -4,8 +4,8 @@ var Int64       = require('node-int64'),
     builder     = require('buffer-builder'),
 
     codec       = require('../lib/codec'),
-    DescribedType = require('../lib/described_type'),
-    ForcedType  = require('../lib/forced_type'),
+    DescribedType = require('../lib/types/described_type'),
+    ForcedType  = require('../lib/types/forced_type'),
     FrameBase   = require('../lib/frames/frame'),
     OpenFrame   = require('../lib/frames/open_frame'),
 
