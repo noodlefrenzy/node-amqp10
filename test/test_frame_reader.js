@@ -54,6 +54,18 @@ describe('FrameReader', function() {
             newClose.error.should.be.instanceof(AMQPError);
         });
 
+        it('should read close frame from ActiveMQ', function() {
+            var cbuf = tu.newCBuf([0x00, 0x00, 0x00, 0x0c,
+                0x02, 0x00, 0x00, 0x00,
+                0x00,
+                0x53, 0x18, 0x45
+            ]);
+            var newClose = reader.read(cbuf);
+            (newClose === undefined).should.be.false;
+            newClose.should.be.instanceof(CloseFrame);
+            (newClose.error === undefined).should.be.true;
+        });
+
         it('should return undefined on incomplete buffer', function() {
             var cbuf = tu.newCBuf([0x00, 0x00, 0x00, 0x17,
                 0x02, 0x00, 0x00, 0x00,
