@@ -68,6 +68,7 @@ describe('Connection', function() {
 
     describe('#_open()', function() {
         // NOTE: Only works if you have a local AMQP server running
+        /*
         it('should connect to activemq', function(done) {
             this.timeout(0);
             var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
@@ -77,7 +78,7 @@ describe('Connection', function() {
                 done();
             }, 5000);
         });
-
+*/
         var server = null;
 
         afterEach(function (done) {

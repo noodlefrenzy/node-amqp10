@@ -6,6 +6,7 @@ var Int64       = require('node-int64'),
 
     codec       = require('../lib/codec'),
     AMQPArray   = require('../lib/types/amqp_array'),
+    AMQPError   = require('../lib/types/amqp_error'),
     DescribedType = require('../lib/types/described_type'),
     ForcedType  = require('../lib/types/forced_type'),
     Symbol      = require('../lib/types/symbol'),
@@ -75,9 +76,32 @@ describe('Codec', function() {
         it('should decode described types', function() {
             var buffer = newCBuf([0x00, 0xA1, 0x03, builder.prototype.appendString, 'URL', 0xA1, 0x1E, builder.prototype.appendString, 'http://example.org/hello-world' ]);
             var actual = codec.decode(buffer);
-            actual[0].should.be.an.instanceof(DescribedType);
+            actual[0].should.be.instanceof(DescribedType);
             actual[0].descriptor.should.eql('URL');
             actual[0].value.should.eql('http://example.org/hello-world');
+        });
+
+        it('should decode nested described types', function() {
+            var buffer = newCBuf([0x00, 0xA1, 3, builder.prototype.appendString, 'FOO', 0x00, 0xA1, 3, builder.prototype.appendString, 'BAR', 0xA1, 3, builder.prototype.appendString, 'BAZ']);
+            var actual = codec.decode(buffer);
+            actual[0].should.be.instanceof(DescribedType);
+            actual[0].value.should.be.instanceof(DescribedType);
+            actual[0].descriptor.should.eql('FOO');
+            actual[0].value.descriptor.should.eql('BAR');
+            actual[0].value.value.should.eql('BAZ');
+        });
+
+        it('should decode nested described and composites', function() {
+            // Described (int64(0x1), [ Described(int64(0x2), 'VAL') ])
+            var buffer = newCBuf([0x00, 0x53, 0x1, 0xC0, (1+1+2+1+1+3), 1, 0x00, 0x53, 0x2, 0xA1, 3, builder.prototype.appendString, 'VAL']);
+            var actual = codec.decode(buffer);
+            actual[0].should.be.instanceof(DescribedType);
+            actual[0].value.should.be.instanceof(Array);
+            actual[0].descriptor.should.eql(new Int64(0, 1));
+            actual[0].value.length.should.eql(1);
+            actual[0].value[0].should.be.instanceof(DescribedType);
+            actual[0].value[0].descriptor.should.eql(new Int64(0, 2));
+            actual[0].value[0].value.should.eql('VAL');
         });
 
         it('should decode forced-type values', function() {
@@ -118,7 +142,21 @@ describe('Codec', function() {
                 0x70, 0x00, 0x10, 0x00, 0x00]);
             var actual = codec.decode(newCBuf(buffer));
             actual[0].should.eql(new DescribedType(new Int64(0, 0x10), [ '', '', 0x00100000 ]));
-        })
+        });
+
+        it('should decode known type (AMQPError) from described type', function() {
+            var buffer = newBuf([0x00, 0x53, 0x1D,
+                0xD0, builder.prototype.appendUInt32BE, (4 + 2 + 19 + 2 + 4 + 3), builder.prototype.appendUInt32BE, 3,
+                0xA3, 19, builder.prototype.appendString, 'amqp:internal-error',
+                0xA1, 4, builder.prototype.appendString, 'test',
+                0xC1, 1, 0x0 // empty info map
+            ]);
+            var actual = codec.decode(newCBuf(buffer));
+            (actual === undefined).should.be.false;
+            actual[0].should.be.instanceof(AMQPError);
+            actual[0].condition.contents.should.eql('amqp:internal-error');
+            actual[0].description.should.eql('test');
+        });
     });
 
     describe('#encode(buffer-builder)', function() {
