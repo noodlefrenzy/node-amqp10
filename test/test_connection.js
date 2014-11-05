@@ -5,11 +5,19 @@ var debug       = require('debug')('amqp10-test_connection'),
     constants   = require('../lib/constants'),
     MockServer  = require('./mock_amqp'),
 
+    AMQPError   = require('../lib/types/amqp_error'),
+
+    CloseFrame  = require('../lib/frames/close_frame'),
     OpenFrame   = require('../lib/frames/open_frame');
 
 function openBuf() {
     var open = new OpenFrame({ container_id: 'test', hostname: 'localhost' });
     return open.outgoing();
+}
+
+function closeBuf(err) {
+    var close = new CloseFrame(err);
+    return close.outgoing();
 }
 
 describe('Connection', function() {
@@ -107,7 +115,7 @@ describe('Connection', function() {
 
         it('should cope with aggressive server handshake', function(done) {
             server = new MockServer();
-            server.setSequence([ constants.amqp_version, openBuf() ], [ constants.amqp_version ], true);
+            server.setSequence([ constants.amqp_version, openBuf() ], [ [ true, constants.amqp_version] ]);
             var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
             server.setup(conn);
             var transitions = [];
@@ -123,7 +131,7 @@ describe('Connection', function() {
 
         it('should cope with disconnects', function(done) {
             server = new MockServer();
-            server.setSequence([ constants.amqp_version ], [ 'disconnect' ], true);
+            server.setSequence([ constants.amqp_version ], [ 'disconnect' ]);
             var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
             server.setup(conn);
             var transitions = [];
@@ -149,6 +157,47 @@ describe('Connection', function() {
             server.assertSequence(function() {
                 conn.close();
                 assertTransitions(transitions, [ 'DISCONNECTED', 'START', 'HDR_SENT', 'DISCONNECTED' ]);
+                done();
+            });
+        });
+
+        it('should go through open/close cycle as asked', function(done) {
+            server = new MockServer();
+            server.setSequence([ constants.amqp_version, openBuf(), closeBuf() ], [ constants.amqp_version, openBuf(), [ true, closeBuf(new AMQPError(AMQPError.ConnectionForced, 'test')) ] ]);
+            var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
+            server.setup(conn);
+            var transitions = [];
+            var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
+            conn.connSM.bind(recordTransitions);
+            conn.open('amqp://localhost:'+server.port);
+            server.assertSequence(function() {
+                conn.close();
+                assertTransitions(transitions, [ 'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'OPENED', 'CLOSE_RCVD', 'DISCONNECTED' ]);
+                done();
+            });
+        });
+
+        it('should emit events', function(done) {
+            server = new MockServer();
+            server.setSequence([ constants.amqp_version, openBuf(), closeBuf() ], [ constants.amqp_version, openBuf(), [ true, closeBuf(new AMQPError(AMQPError.ConnectionForced, 'test')) ] ]);
+            var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
+            server.setup(conn);
+            var transitions = [];
+            var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
+            var events = [];
+            conn.on(Connection.Connected, function() { events.push(Connection.Connected); });
+            conn.on(Connection.Disconnected, function() { events.push(Connection.Disconnected); });
+            conn.on(Connection.FrameReceived, function(frame) { events.push([ Connection.FrameReceived, frame ]); });
+            conn.on(Connection.ErrorReceived, function(err) { events.push([ Connection.ErrorReceived, err ]); });
+            conn.connSM.bind(recordTransitions);
+            conn.open('amqp://localhost:'+server.port);
+            server.assertSequence(function() {
+                conn.close();
+                assertTransitions(transitions, [ 'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'OPENED', 'CLOSE_RCVD', 'DISCONNECTED' ]);
+                events.length.should.eql(3);
+                events[0].should.eql(Connection.Connected);
+                events[1].should.eql(Connection.Disconnected);
+                events[2][0].should.eql(Connection.ErrorReceived);
                 done();
             });
         });

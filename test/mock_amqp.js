@@ -65,14 +65,18 @@ MockServer.prototype.teardown = function() {
     }
 };
 
-MockServer.prototype.setSequence = function(reqs, resps, serverFirst) {
+MockServer.prototype.setSequence = function(reqs, resps) {
     this.requestsExpected = reqs;
     this.responsesToSend = resps;
-    this.serverGoesFirst = serverFirst;
 };
 
 MockServer.prototype._sendNext = function() {
     var toSend = this.responsesToSend.shift();
+    this._sendUntil(toSend);
+};
+
+MockServer.prototype._sendUntil = function(toSend) {
+    if (toSend instanceof Array) toSend = toSend[1];
     if (toSend && typeof toSend === 'string') {
         switch (toSend) {
             case 'disconnect':
@@ -85,9 +89,15 @@ MockServer.prototype._sendNext = function() {
                 this.conn.write(toSend, 'utf8', function() { debug('Wrote ' + toSend); });
         }
     } else if (toSend) {
+        debug('Sending ' + toSend.toString('hex'));
         this.conn.write(toSend);
     } else {
         debug('No data to send.');
+    }
+
+    if (this.responsesToSend.length && this.responsesToSend[0] instanceof Array && this.responsesToSend[0][0]) {
+        var nextToSend = this.responsesToSend.shift();
+        this._sendUntil(nextToSend);
     }
 };
 
