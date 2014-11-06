@@ -151,34 +151,34 @@ Connection states, from AMQP 1.0 spec:
  state an implementation would be in immediately after performing a socket connect or
  socket accept.</p></dd>
 
- <dt>HDR_RCVD</dt>
+ <dt>HDR-RCVD</dt>
  <dd><p>In this state the Connection header has been received from our peer, but we have not
  yet sent anything.</p></dd>
 
- <dt>HDR_SENT</dt>
+ <dt>HDR-SENT</dt>
  <dd><p>In this state the Connection header has been sent to our peer, but we have not yet
  received anything.</p></dd>
 
- <dt>OPEN_PIPE</dt>
+ <dt>OPEN-PIPE</dt>
  <dd><p>In this state we have sent both the Connection header and the open frame, but we have not yet received anything.
  </p></dd>
 
- <dt>OC_PIPE</dt>
+ <dt>OC-PIPE</dt>
  <dd><p>In this state we have sent the Connection header, the open
  frame, any pipelined Connection traffic, and the close frame,
  but we have not yet received anything.</p></dd>
 
- <dt>OPEN_RCVD</dt>
+ <dt>OPEN-RCVD</dt>
  <dd><p>In this state we have sent and received the Connection header, and received an
  open frame from our peer, but have not yet sent an
  open frame.</p></dd>
 
- <dt>OPEN_SENT</dt>
+ <dt>OPEN-SENT</dt>
  <dd><p>In this state we have sent and received the Connection header, and sent an
  open frame to our peer, but have not yet received an
  open frame.</p></dd>
 
- <dt>CLOSE_PIPE</dt>
+ <dt>CLOSE-PIPE</dt>
  <dd><p>In this state we have send and received the Connection header, sent an
  open frame, any pipelined Connection traffic, and the
  close frame, but we have not yet received an
@@ -188,14 +188,14 @@ Connection states, from AMQP 1.0 spec:
  <dd><p>In this state the Connection header and the open frame
  have both been sent and received.</p></dd>
 
- <dt>CLOSE_RCVD</dt>
+ <dt>CLOSE-RCVD</dt>
  <dd><p>In this state we have received a close frame indicating
  that our partner has initiated a close. This means we will never have to read anything
  more from this Connection, however we can continue to write frames onto the Connection.
  If desired, an implementation could do a TCP half-close at this point to shutdown the
  read side of the Connection.</p></dd>
 
- <dt>CLOSE_SENT</dt>
+ <dt>CLOSE-SENT</dt>
  <dd><p>In this state we have sent a close frame to our partner.
  It is illegal to write anything more onto the Connection, however there may still be
  incoming frames. If desired, an implementation could do a TCP half-close at this point
@@ -463,28 +463,73 @@ AMQP Frames consist of two sections of payload - the performative, and the addit
 
 <a name="new_Session"></a>
 ##new Session(conn)
-A Session is a bidirectional sequential conversation between two containers that provides agrouping for related links. Sessions serve as the context for link communication. Any numberof links of any directionality can be <i>attached</i> to a given Session. However, a linkmay be attached to at most one Session at a time.
+A Session is a bidirectional sequential conversation between two containers that provides agrouping for related links. Sessions serve as the context for link communication. Any numberof links of any directionality can be <i>attached</i> to a given Session. However, a linkmay be attached to at most one Session at a time.Session states, from AMQP 1.0 spec:
+ <dl>
+ <dt>UNMAPPED</dt>
+ <dd><p>In the UNMAPPED state, the Session endpoint is not mapped to any incoming or outgoing
+ channels on the Connection endpoint. In this state an endpoint cannot send or receive
+ frames.</p></dd>
+
+ <dt>BEGIN-SENT</dt>
+ <dd><p>In the BEGIN-SENT state, the Session endpoint is assigned an outgoing channel number,
+ but there is no entry in the incoming channel map. In this state the endpoint may send
+ frames but cannot receive them.</p></dd>
+
+ <dt>BEGIN-RCVD</dt>
+ <dd><p>In the BEGIN-RCVD state, the Session endpoint has an entry in the incoming channel
+ map, but has not yet been assigned an outgoing channel number. The endpoint may receive
+ frames, but cannot send them.</p></dd>
+
+ <dt>MAPPED</dt>
+ <dd><p>In the MAPPED state, the Session endpoint has both an outgoing channel number and an
+ entry in the incoming channel map. The endpoint may both send and receive
+ frames.</p></dd>
+
+ <dt>END-SENT</dt>
+ <dd><p>In the END-SENT state, the Session endpoint has an entry in the incoming channel map,
+ but is no longer assigned an outgoing channel number. The endpoint may receive frames,
+ but cannot send them.</p></dd>
+
+ <dt>END-RCVD</dt>
+ <dd><p>In the END-RCVD state, the Session endpoint is assigned an outgoing channel number,
+ but there is no entry in the incoming channel map. The endpoint may send frames, but
+ cannot receive them.</p></dd>
+
+ <dt>DISCARDING</dt>
+ <dd><p>The DISCARDING state is a variant of the END-SENT state where the <code>end</code>
+ is triggered by an error. In this case any incoming frames on the session MUST be
+ silently discarded until the peer's <code>end</code> frame is received.</p></dd>
+ </dl>
+
  <pre>
- Link A-------+                          +----- >Link A
-              |                          |
-             \|/       (attached)        |
- Link B< -- Session <--------------> Session < --Link B
-
-
- Link C----- >*        (detached)        *----- >Link C
- </pre>Messages transferred on a link are sequentially identified within the Session. A session maybe viewed as multiplexing link traffic, much like a connection multiplexes session traffic.However, unlike the sessions on a connection, links on a session are not entirelyindependent since they share a common delivery sequence scoped to the session. This commonsequence allows endpoints to efficiently refer to sets of deliveries regardless of theoriginating link. This is of particular benefit when a single application is receivingmessages along a large number of different links. In this case the sessionprovides <i>aggregation</i> of otherwise independent links into a single stream that can beefficiently acknowledged by the receiving application.Sessions are established by creating a Session Endpoint, assigning it to an unused channelnumber, and sending a <code>begin</code> announcing the association of theSession Endpoint with the outgoing channel. Upon receiving the <code>begin</code>the partner will check the remote-channel field and find it empty. Thisindicates that the begin is referring to remotely initiated Session. The partner willtherefore allocate an unused outgoing channel for the remotely initiated Session andindicate this by sending its own <code>begin</code> setting theremote-channel field to the incoming channel of the remotely initiated Session.To make it easier to monitor AMQP sessions, it is recommended that implementations alwaysassign the lowest available unused channel number.The remote-channel field of a <code>begin</code> frame MUST be empty for alocally initiated Session, and MUST be set when announcing the endpoint created as a resultof a remotely initiated Session.
- <pre>
- Endpoint                                      Endpoint
- =====================================================================
- [CH3] BEGIN(name=...,        -------- >
-             remote-channel=null)
-                                     +-- [CH7] BEGIN(name=...,
-                                    /                remote-channel=3)
-                                   /
-                              < --+
-
-                              ...
- </pre>
+                         UNMAPPED< ------------------+
+                            |                        |
+                    +-------+-------+                |
+            S:BEGIN |               | R:BEGIN        |
+                    |               |                |
+                   \|/             \|/               |
+                BEGIN-SENT      BEGIN-RCVD           |
+                    |               |                |
+                    |               |                |
+            R:BEGIN |               | S:BEGIN        |
+                    +-------+-------+                |
+                            |                        |
+                           \|/                       |
+                          MAPPED                     |
+                            |                        |
+              +-------------+-------------+          |
+ S:END(error) |       S:END |             | R:END    |
+              |             |             |          |
+             \|/           \|/           \|/         |
+          DISCARDING     END-SENT      END-RCVD      |
+              |             |             |          |
+              |             |             |          |
+        R:END |       R:END |             | S:END    |
+              +-------------+-------------+          |
+                            |                        |
+                            |                        |
+                            +------------------------+
+  </pre>There is no obligation to retain a Session Endpoint when it is in the UNMAPPED state, i.e.the UNMAPPED state is equivalent to a NONEXISTENT state.Note: This implementation *assumes* it is the client, and thus will always be the one BEGIN-ing a Session.
 
 **Params**
 

@@ -4,6 +4,7 @@ var Int64       = require('node-int64'),
     builder     = require('buffer-builder'),
     CBuffer     = require('cbarrick-circular-buffer'),
 
+    constants   = require('../lib/constants'),
     codec       = require('../lib/codec'),
 
     AMQPError   = require('../lib/types/amqp_error'),
@@ -11,6 +12,7 @@ var Int64       = require('node-int64'),
     ForcedType  = require('../lib/types/forced_type'),
     reader      = require('../lib/frames/frame_reader'),
 
+    BeginFrame  = require('../lib/frames/begin_frame'),
     CloseFrame  = require('../lib/frames/close_frame'),
     OpenFrame   = require('../lib/frames/open_frame'),
 
@@ -32,7 +34,7 @@ describe('FrameReader', function() {
             var newOpen = reader.read(cbuf);
             (newOpen === undefined).should.be.false;
             newOpen.should.be.instanceof(OpenFrame);
-            newOpen.max_frame_size.should.eql(0x00100000);
+            newOpen.maxFrameSize.should.eql(0x00100000);
         });
 
         it('should read close frame with error', function() {
@@ -64,6 +66,29 @@ describe('FrameReader', function() {
             (newClose === undefined).should.be.false;
             newClose.should.be.instanceof(CloseFrame);
             (newClose.error === undefined).should.be.true;
+        });
+
+        it('should read begin frame', function() {
+            var frameSize = (1+3+2+2+2+2);
+            var cbuf = tu.newCBuf([0x00, 0x00, 0x00, (8+3+2+frameSize),
+                0x02, 0x00, 0x00, 0x05,
+                0x00, 0x53, 0x11, // Begin
+                0xC0, frameSize, 5, // List
+                0x60, builder.prototype.appendUInt16BE, 10,
+                0x52, 2,
+                0x52, 10,
+                0x52, 11,
+                0x52, 100
+            ]);
+            var newBegin = reader.read(cbuf);
+            (newBegin === undefined).should.be.false;
+            newBegin.should.be.instanceof(BeginFrame);
+            newBegin.channel.should.eql(5);
+            newBegin.remoteChannel.should.eql(10);
+            newBegin.nextOutgoingId.should.eql(2);
+            newBegin.incomingWindow.should.eql(10);
+            newBegin.outgoingWindow.should.eql(11);
+            newBegin.handleMax.should.eql(100);
         });
 
         it('should return undefined on incomplete buffer', function() {

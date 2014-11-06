@@ -254,16 +254,16 @@ describe('Codec', function() {
             var performative = new DescribedType(new Int64(0x00000000, 0x00000010), {
                 id: 'client', /* string */
                 hostname: 'localhost', /* string */
-                max_frame_size: new ForcedType('uint', 512), /* uint */
-                channel_max: new ForcedType('ushort', 10), /* ushort */
-                idle_time_out: new ForcedType('uint', 1000), /* milliseconds */
-                outgoing_locales: new Symbol('en-US'), /* ietf-language-tag (symbol) */
-                incoming_locales: new Symbol('en-US'), /* ietf-language-tag (symbol) */
-                offered_capabilities: null, /* symbol */
-                desired_capabilities: null, /* symbol */
+                maxFrameSize: new ForcedType('uint', 512), /* uint */
+                channelMax: new ForcedType('ushort', 10), /* ushort */
+                idleTimeout: new ForcedType('uint', 1000), /* milliseconds */
+                outgoingLocales: new Symbol('en-US'), /* ietf-language-tag (symbol) */
+                incomingLocales: new Symbol('en-US'), /* ietf-language-tag (symbol) */
+                offeredCapabilities: null, /* symbol */
+                desiredCapabilities: null, /* symbol */
                 properties: {}, /* fields (map) */
-                encodeOrdering: [ 'id', 'hostname', 'max_frame_size', 'channel_max', 'idle_time_out', 'outgoing_locales',
-                    'incoming_locales', 'offered_capabilities', 'desired_capabilities', 'properties']
+                encodeOrdering: [ 'id', 'hostname', 'maxFrameSize', 'channelMax', 'idleTimeout', 'outgoingLocales',
+                    'incomingLocales', 'offeredCapabilities', 'desiredCapabilities', 'properties']
             });
             var expected = newBuf([0x00,
                 0x80, builder.prototype.appendUInt32BE, 0x0, builder.prototype.appendUInt32BE, 0x10, // Descriptor
