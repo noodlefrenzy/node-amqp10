@@ -215,13 +215,13 @@ Connection states, from AMQP 1.0 spec:
               R:HDR +=======+ S:HDR             R:HDR[!=S:HDR]
            +--------| START |-----+    +--------------------------------+
            |        +=======+     |    |                                |
-          \|/                    \|/   |                                |
+          \\|/                    \\|/   |                                |
       +==========+             +==========+ S:OPEN                      |
  +----| HDR-RCVD |             | HDR-SENT |------+                      |
  |    +==========+             +==========+      |      R:HDR[!=S:HDR]  |
  |   S:HDR |                      | R:HDR        |    +-----------------+
  |         +--------+      +------+              |    |                 |
- |                 \|/    \|/                   \|/   |                 |
+ |                 \\|/    \\|/                   \\|/   |                 |
  |                +==========+               +-----------+ S:CLOSE      |
  |                | HDR-EXCH |               | OPEN-PIPE |----+         |
  |                +==========+               +-----------+    |         |
@@ -507,20 +507,20 @@ A Session is a bidirectional sequential conversation between two containers that
                     +-------+-------+                |
             S:BEGIN |               | R:BEGIN        |
                     |               |                |
-                   \|/             \|/               |
+                   \\|/             \\|/               |
                 BEGIN-SENT      BEGIN-RCVD           |
                     |               |                |
                     |               |                |
             R:BEGIN |               | S:BEGIN        |
                     +-------+-------+                |
                             |                        |
-                           \|/                       |
+                           \\|/                       |
                           MAPPED                     |
                             |                        |
               +-------------+-------------+          |
  S:END(error) |       S:END |             | R:END    |
               |             |             |          |
-             \|/           \|/           \|/         |
+             \\|/           \\|/           \\|/         |
           DISCARDING     END-SENT      END-RCVD      |
               |             |             |          |
               |             |             |          |
