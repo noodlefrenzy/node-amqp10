@@ -95,30 +95,30 @@ describe('Session', function() {
                 done();
             });
         });
-/*
+
         it('should emit events', function(done) {
             server = new MockServer();
-            server.setSequence([ constants.amqpVersion, openBuf(), closeBuf() ], [ constants.amqpVersion, openBuf(), [ true, closeBuf(new AMQPError(AMQPError.ConnectionForced, 'test')) ] ]);
+            server.setSequence([ constants.amqpVersion, openBuf(), beginBuf(), endBuf(), closeBuf() ],
+                [ constants.amqpVersion, openBuf(), beginBuf({ remoteChannel: 5 }), [ true, endBuf(new AMQPError(AMQPError.ConnectionForced, 'test')) ], [ true, closeBuf()] ]);
             var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
             server.setup(conn);
-            var transitions = [];
-            var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
             var events = [];
-            conn.on(Connection.Connected, function() { events.push(Connection.Connected); });
-            conn.on(Connection.Disconnected, function() { events.push(Connection.Disconnected); });
-            conn.on(Connection.FrameReceived, function(frame) { events.push([ Connection.FrameReceived, frame ]); });
-            conn.on(Connection.ErrorReceived, function(err) { events.push([ Connection.ErrorReceived, err ]); });
-            conn.connSM.bind(recordTransitions);
+            conn.on(Connection.Connected, function() {
+                var session = new Session(conn);
+                session.on(Session.Mapped, function() { events.push(Session.Mapped); });
+                session.on(Session.ErrorReceived, function(err) { events.push([ Session.ErrorReceived, err ]); });
+                session.on(Session.Unmapped, function() { events.push(Session.Unmapped); });
+                session.begin({ nextOutgoingId: 1, incomingWindow: 100, outgoingWindow: 100 });
+            });
             conn.open('amqp://localhost:'+server.port);
             server.assertSequence(function() {
                 conn.close();
-                assertTransitions(transitions, [ 'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'OPENED', 'CLOSE_RCVD', 'DISCONNECTED' ]);
                 events.length.should.eql(3);
-                events[0].should.eql(Connection.Connected);
-                events[1].should.eql(Connection.Disconnected);
-                events[2][0].should.eql(Connection.ErrorReceived);
+                events[0].should.eql(Session.Mapped);
+                events[1][0].should.eql(Session.ErrorReceived);
+                events[2].should.eql(Session.Unmapped);
                 done();
             });
-        });*/
+        });
     });
 });
