@@ -107,6 +107,7 @@ MockServer.prototype._testData = function() {
     if (this.data.length >= expected.length) {
         expected = this.requestsExpected.shift();
         var actual = this.data.read(expected.length);
+        debug('Receiving ' + actual.toString('hex'));
         actual.toString('hex').should.eql(expected.toString('hex'));
         this._sendNext();
     }

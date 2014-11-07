@@ -11,7 +11,7 @@ var debug       = require('debug')('amqp10-test_connection'),
     OpenFrame   = require('../lib/frames/open_frame');
 
 function openBuf() {
-    var open = new OpenFrame({ container_id: 'test', hostname: 'localhost' });
+    var open = new OpenFrame({ containerId: 'test', hostname: 'localhost' });
     return open.outgoing();
 }
 
@@ -24,7 +24,7 @@ describe('Connection', function() {
     describe('#_parseAddress()', function() {
 
         it('should match amqp(|s) no port no route', function () {
-            var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
+            var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
 
             var addr = 'amqp://localhost/';
             var result = conn._parseAddress(addr);
@@ -44,7 +44,7 @@ describe('Connection', function() {
         });
 
         it('should match with port and with/without route', function () {
-            var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
+            var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
 
             var addr = 'amqp://localhost:1234';
             var result = conn._parseAddress(addr);
@@ -79,7 +79,7 @@ describe('Connection', function() {
         /*
         it('should connect to activemq', function(done) {
             this.timeout(0);
-            var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
+            var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
             conn.open('amqp://localhost/');
             setTimeout(function() {
                 conn.close();
@@ -99,8 +99,8 @@ describe('Connection', function() {
 
         it('should connect to mock server', function(done) {
             server = new MockServer();
-            server.setSequence([ constants.amqp_version, openBuf() ], [ constants.amqp_version ]);
-            var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
+            server.setSequence([ constants.amqpVersion, openBuf() ], [ constants.amqpVersion ]);
+            var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
             server.setup(conn);
             var transitions = [];
             var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
@@ -115,8 +115,8 @@ describe('Connection', function() {
 
         it('should cope with aggressive server handshake', function(done) {
             server = new MockServer();
-            server.setSequence([ constants.amqp_version, openBuf() ], [ [ true, constants.amqp_version] ]);
-            var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
+            server.setSequence([ constants.amqpVersion, openBuf() ], [ [ true, constants.amqpVersion] ]);
+            var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
             server.setup(conn);
             var transitions = [];
             var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
@@ -131,8 +131,8 @@ describe('Connection', function() {
 
         it('should cope with disconnects', function(done) {
             server = new MockServer();
-            server.setSequence([ constants.amqp_version ], [ 'disconnect' ]);
-            var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
+            server.setSequence([ constants.amqpVersion ], [ 'disconnect' ]);
+            var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
             server.setup(conn);
             var transitions = [];
             var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
@@ -147,8 +147,8 @@ describe('Connection', function() {
 
         it('should cope with errors', function(done) {
             server = new MockServer();
-            server.setSequence([ constants.amqp_version ], [ 'error' ]);
-            var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
+            server.setSequence([ constants.amqpVersion ], [ 'error' ]);
+            var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
             server.setup(conn);
             var transitions = [];
             var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
@@ -163,8 +163,8 @@ describe('Connection', function() {
 
         it('should go through open/close cycle as asked', function(done) {
             server = new MockServer();
-            server.setSequence([ constants.amqp_version, openBuf(), closeBuf() ], [ constants.amqp_version, openBuf(), [ true, closeBuf(new AMQPError(AMQPError.ConnectionForced, 'test')) ] ]);
-            var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
+            server.setSequence([ constants.amqpVersion, openBuf(), closeBuf() ], [ constants.amqpVersion, openBuf(), [ true, closeBuf(new AMQPError(AMQPError.ConnectionForced, 'test')) ] ]);
+            var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
             server.setup(conn);
             var transitions = [];
             var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
@@ -179,8 +179,8 @@ describe('Connection', function() {
 
         it('should emit events', function(done) {
             server = new MockServer();
-            server.setSequence([ constants.amqp_version, openBuf(), closeBuf() ], [ constants.amqp_version, openBuf(), [ true, closeBuf(new AMQPError(AMQPError.ConnectionForced, 'test')) ] ]);
-            var conn = new Connection({ container_id: 'test', hostname: 'localhost' });
+            server.setSequence([ constants.amqpVersion, openBuf(), closeBuf() ], [ constants.amqpVersion, openBuf(), [ true, closeBuf(new AMQPError(AMQPError.ConnectionForced, 'test')) ] ]);
+            var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
             server.setup(conn);
             var transitions = [];
             var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
