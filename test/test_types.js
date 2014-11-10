@@ -47,7 +47,8 @@ function assertDecoders(tests) {
             if (curTest[3]) {
                 curTest[3](actual, curTest[2]).should.be.true;
             } else {
-                actual.should.eql(curTest[2], idx + ': decoding failed');
+                actual.should.eql(curTest[2], '[' + idx + '] (0x' + curTest[0].toString(16) + ', ' +
+                    curTest[1].toString('hex') +  '): decoding failed');
             }
         } catch (e) {
             if (e instanceof assert.AssertionError) {
