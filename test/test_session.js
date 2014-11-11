@@ -22,15 +22,17 @@ function openBuf(options) {
     return open.outgoing();
 }
 
-function beginBuf(options) {
+function beginBuf(options, channel) {
     var opts = { nextOutgoingId: 1, incomingWindow: 100, outgoingWindow: 100 };
     for (var prop in options) { opts[prop] = options[prop]; }
     var begin = new BeginFrame(opts);
+    begin.channel = channel;
     return begin.outgoing();
 }
 
-function endBuf(err) {
+function endBuf(err, channel) {
     var end = new EndFrame(err);
+    end.channel = channel;
     return end.outgoing();
 }
 
@@ -61,8 +63,8 @@ describe('Session', function() {
 
         it('should go through begin/end cycle as asked', function(done) {
             server = new MockServer();
-            server.setSequence([ constants.amqpVersion, openBuf(), beginBuf(), endBuf(), closeBuf() ],
-                [ constants.amqpVersion, openBuf(), beginBuf({ remoteChannel: 5 }), [ true, endBuf(new AMQPError(AMQPError.ConnectionForced, 'test')) ], [ true, closeBuf()] ]);
+            server.setSequence([ constants.amqpVersion, openBuf(), beginBuf({}, 1), endBuf(null, 1), closeBuf() ],
+                [ constants.amqpVersion, openBuf(), beginBuf({ remoteChannel: 1 }, 5), [ true, endBuf(new AMQPError(AMQPError.ConnectionForced, 'test'), 5) ], [ true, closeBuf()] ]);
             var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
             server.setup(conn);
             var transitions = [];
@@ -86,8 +88,8 @@ describe('Session', function() {
 
         it('should emit events', function(done) {
             server = new MockServer();
-            server.setSequence([ constants.amqpVersion, openBuf(), beginBuf(), endBuf(), closeBuf() ],
-                [ constants.amqpVersion, openBuf(), beginBuf({ remoteChannel: 5 }), [ true, endBuf(new AMQPError(AMQPError.ConnectionForced, 'test')) ], [ true, closeBuf()] ]);
+            server.setSequence([ constants.amqpVersion, openBuf(), beginBuf({}, 1), endBuf(null, 1), closeBuf() ],
+                [ constants.amqpVersion, openBuf(), beginBuf({ remoteChannel: 1 }, 5), [ true, endBuf(new AMQPError(AMQPError.ConnectionForced, 'test'), 5) ], [ true, closeBuf()] ]);
             var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
             server.setup(conn);
             var events = [];

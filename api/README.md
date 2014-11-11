@@ -370,7 +370,7 @@ Encapsulates all convenience methods required for encoding a frame to put it out
 
 <a name="Frame#outgoing"></a>
 ##frame.outgoing()
-Populate the internal buffer with contents built based on the options.  SIZE and DOFF will be inferredbased on the options given.00 00 00 39 // size == 0x3902 00 00 00 // DOFF == 200 81 00 0000 00 00 0000 10 c0 250a 40 40 7000 00 02 0060 00 0a 8300 00 00 0000 00 03 e8a1 05 65 6e2d 55 53 a105 65 6e 2d55 53 40 4040
+Populate the internal buffer with contents built based on the options.  SIZE and DOFF will be inferredbased on the options given.
 
 **Access**: private  
 <a name="Frame#readPerformative"></a>
