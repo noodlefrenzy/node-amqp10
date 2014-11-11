@@ -49,18 +49,6 @@ describe('Session', function() {
     };
 
     describe('#begin()', function() {
-        // NOTE: Only works if you have a local AMQP server running
-        /*
-         it('should connect to activemq', function(done) {
-         this.timeout(0);
-         var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
-         conn.open('amqp://localhost/');
-         setTimeout(function() {
-         conn.close();
-         done();
-         }, 5000);
-         });
-         */
         var server = null;
 
         afterEach(function (done) {
@@ -113,7 +101,7 @@ describe('Session', function() {
             conn.open('amqp://localhost:'+server.port);
             server.assertSequence(function() {
                 conn.close();
-                events.length.should.eql(3);
+                events.length.should.eql(3, JSON.stringify(events));
                 events[0].should.eql(Session.Mapped);
                 events[1][0].should.eql(Session.ErrorReceived);
                 events[2].should.eql(Session.Unmapped);
