@@ -1,16 +1,19 @@
 var debug       = require('debug')('amqp10-test_connection'),
     should      = require('should'),
     builder     = require('buffer-builder'),
-    Connection  = require('../lib/connection'),
-    constants   = require('../lib/constants'),
-    MockServer  = require('./mock_amqp'),
 
+    constants   = require('../lib/constants'),
+
+    MockServer  = require('./mock_amqp'),
     AMQPError   = require('../lib/types/amqp_error'),
 
     CloseFrame  = require('../lib/frames/close_frame'),
-    OpenFrame   = require('../lib/frames/open_frame');
+    OpenFrame   = require('../lib/frames/open_frame'),
 
-function openBuf() {
+    Connection  = require('../lib/connection'),
+    Session     = require('../lib/session');
+
+    function openBuf() {
     var open = new OpenFrame({ containerId: 'test', hostname: 'localhost' });
     return open.outgoing();
 }
@@ -81,12 +84,27 @@ describe('Connection', function() {
             this.timeout(0);
             var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
             conn.open('amqp://localhost/');
-            setTimeout(function() {
-                conn.close();
+            conn.on(Connection.Connected, function() {
+                var session = new Session(conn);
+                session.on(Session.Mapped, function() {
+                    session.end();
+                });
+                session.on(Session.Unmapped, function() {
+                    conn.close();
+                });
+                session.begin({
+                    nextOutgoingId: 1,
+                    incomingWindow: 100,
+                    outgoingWindow: 100
+                });
+            });
+            conn.on(Connection.Disconnected, function() {
+                console.log('Disconnected');
                 done();
-            }, 5000);
+            });
         });
-*/
+        */
+
         var server = null;
 
         afterEach(function (done) {
