@@ -11,6 +11,7 @@ var Int64       = require('node-int64'),
     ForcedType  = require('../lib/types/forced_type'),
     Symbol      = require('../lib/types/symbol'),
 
+    AttachFrame = require('../lib/frames/attach_frame'),
     BeginFrame  = require('../lib/frames/begin_frame'),
     OpenFrame   = require('../lib/frames/open_frame'),
 
@@ -67,3 +68,30 @@ describe('BeginFrame', function() {
    });
 });
 
+/*
+describe('AttachFrame', function() {
+    describe('#outgoing()', function() {
+        it('should encode performative correctly', function() {
+            var attach = new AttachFrame({
+                name: 'test',
+                role: constants.linkRole.sender,
+                source: new Source({ address: null, dynamic: true }),
+                target: new Target({ address: 'testtgt' }),
+                initialDeliveryCount: 1 });
+            attach.channel = 1;
+            var actual = attach.outgoing();
+            var frameSize = 8 + 1 + 9 + 2 + listSize;
+            var listSize = 0;
+            var expected = tu.newBuf([
+                0x00, 0x00, 0x00, frameSize,
+                0x02, 0x00, 0x00, 0x01,
+                0x00,
+                0x80, 0x00, 0x00, 0x00, 0x00,
+                      0x00, 0x00, 0x00, 0x12,
+                0xc0, listSize, 12,
+
+            ]);
+        });
+    });
+});
+*/

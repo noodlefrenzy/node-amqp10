@@ -6,6 +6,8 @@ var debug       = require('debug')('amqp10-test_connection'),
 
     MockServer  = require('./mock_amqp'),
     AMQPError   = require('../lib/types/amqp_error'),
+    Source      = require('../lib/types/source_target').Source,
+    Target      = require('../lib/types/source_target').Target,
 
     CloseFrame  = require('../lib/frames/close_frame'),
     OpenFrame   = require('../lib/frames/open_frame'),
@@ -93,7 +95,7 @@ describe('Connection', function() {
                     session.end();
                 });
                 session.on(Session.Mapped, function() {
-                    link = session.attachLink({ name: 'test', role: constants.linkRole.sender, source: { address: null, dynamic: true }, target: { address: 'testtgt' }, initialDeliveryCount: 1 });
+                    link = session.attachLink({ name: 'test', role: constants.linkRole.sender, source: new Source({ address: null, dynamic: true }), target: new Target({ address: 'testtgt' }), initialDeliveryCount: 1 });
                 });
                 session.on(Session.Unmapped, function() {
                     conn.close();

@@ -12,6 +12,7 @@ var Int64       = require('node-int64'),
     ForcedType  = require('../lib/types/forced_type'),
     reader      = require('../lib/frames/frame_reader'),
 
+    AttachFrame = require('../lib/frames/attach_frame'),
     BeginFrame  = require('../lib/frames/begin_frame'),
     CloseFrame  = require('../lib/frames/close_frame'),
     OpenFrame   = require('../lib/frames/open_frame'),
@@ -89,6 +90,28 @@ describe('FrameReader', function() {
             newBegin.incomingWindow.should.eql(10);
             newBegin.outgoingWindow.should.eql(11);
             newBegin.handleMax.should.eql(100);
+        });
+
+        it('should read attach frame from ActiveMQ', function() {
+            var cbuf = tu.newCBuf([
+                0x00, 0x00, 0x00, 0x1e,
+                0x02, 0x00, 0x00, 0x00,
+                0x00, 0x53, 0x12,
+                0xc0, 0x11, 0x06,
+                0xa1, 0x04, 0x74, 0x65, 0x73, 0x74,
+                0x43, 0x41,
+                0x50, 0x02,
+                0x50, 0x00,
+                0x00, 0x53, 0x28, 0x45
+            ]);
+            var newAttach = reader.read(cbuf);
+            newAttach.should.be.instanceof(AttachFrame);
+            newAttach.channel.should.eql(0);
+            newAttach.name.should.eql('test');
+            newAttach.handle.should.eql(0);
+            newAttach.role.should.eql(true);
+            newAttach.senderSettleMode.should.eql(constants.senderSettleMode.mixed);
+            newAttach.receiverSettleMode.should.eql(constants.receiverSettleMode.autoSettle);
         });
 
         it('should return undefined on incomplete buffer', function() {
