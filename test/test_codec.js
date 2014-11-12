@@ -188,10 +188,29 @@ describe('Codec', function() {
             var expected = newBuf([0x81, builder.prototype.appendInt32BE, 0xFFFFFFFF, builder.prototype.appendInt32BE, 0xFFFFFF00]);
             bufb.get().toString('hex').should.eql(expected.toString('hex'));
         });
+        it('should encode lists', function() {
+            var list = [ 1, 'foo' ];
+            var expected = newBuf([0xC0, (1+5+5), 2, 0x71, 0, 0, 0, 1, 0xA1, 3, builder.prototype.appendString, 'foo' ]);
+            var bufb = new builder();
+            codec.encode(list, bufb);
+            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+
+            list = [];
+            expected = newBuf([0x45]);
+            bufb = new builder();
+            codec.encode(list, bufb);
+            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+        });
         it('should encode described types', function() {
             var bufb = new builder();
             codec.encode(new DescribedType('D1', 'V1'), bufb);
             var expected = newBuf([0x00, 0xA1, 0x2, builder.prototype.appendString, 'D1', 0xA1, 0x2, builder.prototype.appendString, 'V1']);
+            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+        });
+        it('should encode described types with no values', function() {
+            var bufb = new builder();
+            codec.encode(new DescribedType(new Int64(0x0, 0x26)), bufb);
+            var expected = newBuf([0x00, 0x80, 0, 0, 0, 0, 0, 0, 0, 0x26, 0x45]);
             bufb.get().toString('hex').should.eql(expected.toString('hex'));
         });
         it('should encode objects as lists when asked', function() {
@@ -214,6 +233,13 @@ describe('Codec', function() {
         });
         it('should encode null', function() {
             var toEncode = null;
+            var expected = newBuf([0x40]);
+            var bufb = new builder();
+            codec.encode(toEncode, bufb);
+            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+        });
+        it('should encode ForcedType with null value as null', function() {
+            var toEncode = new ForcedType('uint', null);
             var expected = newBuf([0x40]);
             var bufb = new builder();
             codec.encode(toEncode, bufb);

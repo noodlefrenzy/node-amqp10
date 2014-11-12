@@ -6,7 +6,6 @@
   * [new CircularBuffer(initialSize)](#new_CircularBuffer)
 * [class: Codec](#Codec)
   * [new Codec()](#new_Codec)
-  * [codec._isInteger(n)](#Codec#_isInteger)
   * [codec._readFullValue(buf, [offset], [doNotConsume], [forcedCode])](#Codec#_readFullValue)
   * [codec.decode(buf, [offset], [forcedCode])](#Codec#decode)
   * [codec.encode(val, buf, [forceType])](#Codec#encode)
@@ -82,7 +81,6 @@ Started this before I found cbarrick's version.  Keeping it around in case his d
 
 * [class: Codec](#Codec)
   * [new Codec()](#new_Codec)
-  * [codec._isInteger(n)](#Codec#_isInteger)
   * [codec._readFullValue(buf, [offset], [doNotConsume], [forcedCode])](#Codec#_readFullValue)
   * [codec.decode(buf, [offset], [forcedCode])](#Codec#decode)
   * [codec.encode(val, buf, [forceType])](#Codec#encode)
@@ -91,16 +89,6 @@ Started this before I found cbarrick's version.  Keeping it around in case his d
 ##new Codec()
 Build a codec.
 
-<a name="Codec#_isInteger"></a>
-##codec._isInteger(n)
-Acquired from http://stackoverflow.com/questions/3885817/how-to-check-if-a-number-is-float-or-integer
-
-**Params**
-
-- n `number` - Number to test.  
-
-**Returns**: `boolean` - True if integral.  
-**Access**: private  
 <a name="Codec#_readFullValue"></a>
 ##codec._readFullValue(buf, [offset], [doNotConsume], [forcedCode])
 Reads a full value's worth of bytes from a circular or regular buffer, or returns undefined if not enough bytes are there.Note that for Buffers, the returned Buffer will be a slice (so backed by the original storage)!
