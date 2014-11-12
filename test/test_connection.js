@@ -86,11 +86,20 @@ describe('Connection', function() {
             conn.open('amqp://localhost/');
             conn.on(Connection.Connected, function() {
                 var session = new Session(conn);
-                session.on(Session.Mapped, function() {
+                session.on(Session.LinkAttached, function(link) {
+                    session.detachLink(link);
+                });
+                session.on(Session.LinkDetached, function() {
                     session.end();
+                });
+                session.on(Session.Mapped, function() {
+                    link = session.attachLink({ name: 'test', role: constants.linkRole.sender, source: { address: null, dynamic: true }, target: { address: 'testtgt' }, initialDeliveryCount: 1 });
                 });
                 session.on(Session.Unmapped, function() {
                     conn.close();
+                });
+                session.on(Session.ErrorReceived, function(err) {
+                    console.log(err);
                 });
                 session.begin({
                     nextOutgoingId: 1,
