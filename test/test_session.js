@@ -12,6 +12,7 @@ var debug       = require('debug')('amqp10-test_connection'),
     AttachFrame = require('../lib/frames/attach_frame'),
     BeginFrame  = require('../lib/frames/begin_frame'),
     CloseFrame  = require('../lib/frames/close_frame'),
+    DetachFrame = require('../lib/frames/detach_frame'),
     EndFrame    = require('../lib/frames/end_frame'),
     OpenFrame   = require('../lib/frames/open_frame'),
 
@@ -28,6 +29,32 @@ function beginBuf(options, channel) {
     var begin = new BeginFrame(opts);
     begin.channel = channel;
     return begin.outgoing();
+}
+
+function src(options) {
+    var opts = { address: 'test-src' };
+    if (options) for (var prop in options) { opts[prop] = options[prop]; }
+    return opts;
+}
+
+function tgt(options) {
+    var opts = { address: 'test-tgt' };
+    if (options) for (var prop in options) { opts[prop] = options[prop]; }
+    return opts;
+}
+
+function attachBuf(options, channel) {
+    var opts = { name: 'test', source: src(), target: tgt() };
+    for (var prop in options) { opts[prop] = options[prop]; }
+    var attach = new AttachFrame(opts);
+    attach.channel = channel;
+    return attach.outgoing();
+}
+
+function detachBuf(options, channel) {
+    var detach = new DetachFrame(options);
+    detach.channel = channel;
+    return detach.outgoing();
 }
 
 function endBuf(err, channel) {
@@ -107,6 +134,40 @@ describe('Session', function() {
                 events[0].should.eql(Session.Mapped);
                 events[1][0].should.eql(Session.ErrorReceived);
                 events[2].should.eql(Session.Unmapped);
+                done();
+            });
+        });
+
+        it('should create link', function(done) {
+            server = new MockServer();
+            server.setSequence([ constants.amqpVersion, openBuf(), beginBuf({}, 1), attachBuf({ handle: 1, role: constants.linkRole.sender, initialDeliveryCount: 1 }, 1), detachBuf({ handle: 1}, 1), endBuf(null, 1), closeBuf() ],
+                [ constants.amqpVersion, openBuf(), beginBuf({ remoteChannel: 1 }, 5), attachBuf({ handle: 3, role: constants.linkRole.receiver }, 5),
+                    [true, detachBuf({ handle: 3, error: new AMQPError(AMQPError.LinkDetachForced, 'test') }, 5) ],
+                    [ true, endBuf(new AMQPError(AMQPError.ConnectionForced, 'test'), 5) ], [ true, closeBuf()] ]);
+            var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
+            server.setup(conn);
+            var transitions = [];
+            var sessionTransitions = [];
+            var linkTransitions = [];
+            var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
+            var recordSessionTransitions = function(evt, oldS, newS) { sessionTransitions.push(oldS+'=>'+newS); };
+            var recordLinkTransitions = function(evt, oldS, newS) { linkTransitions.push(oldS+'=>'+newS); };
+            conn.connSM.bind(recordTransitions);
+            conn.on(Connection.Connected, function() {
+                var session = new Session(conn);
+                session.sessionSM.bind(recordSessionTransitions);
+                session.on(Session.Mapped, function() {
+                    var link = session.attachLink({ name: 'test', role: constants.linkRole.sender, initialDeliveryCount: 1, source: src(), target: tgt() });
+                    link.linkSM.bind(recordLinkTransitions);
+                });
+                session.begin({ nextOutgoingId: 1, incomingWindow: 100, outgoingWindow: 100 });
+            });
+            conn.open('amqp://localhost:'+server.port);
+            server.assertSequence(function() {
+                conn.close();
+                assertTransitions(transitions, [ 'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'OPENED', 'CLOSE_RCVD', 'DISCONNECTED' ]);
+                assertTransitions(sessionTransitions, [ 'UNMAPPED', 'BEGIN_SENT', 'MAPPED', 'END_RCVD', 'UNMAPPED' ]);
+                assertTransitions(linkTransitions, [ 'ATTACHING', 'ATTACHED', 'DETACHING', 'DETACHED' ]);
                 done();
             });
         });

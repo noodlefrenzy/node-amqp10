@@ -13,7 +13,9 @@ var MockServer = function(port) {
     this.port = port || 4321;
     this.data = new cbuf({ size: 1024, encoding: 'buffer' });
     this.requestsExpected = [];
+    this.requestIdx = 0;
     this.responsesToSend = [];
+    this.responseIdx = 0;
     this.serverGoesFirst = false;
     this.listenAttempts = 0;
     this.client = null;
@@ -71,7 +73,7 @@ MockServer.prototype.setSequence = function(reqs, resps) {
 };
 
 MockServer.prototype._sendNext = function() {
-    var toSend = this.responsesToSend.shift();
+    var toSend = this.responsesToSend[this.responseIdx++];
     this._sendUntil(toSend);
 };
 
@@ -95,8 +97,8 @@ MockServer.prototype._sendUntil = function(toSend) {
         debug('No data to send.');
     }
 
-    if (this.responsesToSend.length && this.responsesToSend[0] instanceof Array && this.responsesToSend[0][0]) {
-        var nextToSend = this.responsesToSend.shift();
+    if (this.responseIdx < this.responsesToSend.length && this.responsesToSend[this.responseIdx] instanceof Array && this.responsesToSend[this.responseIdx][0]) {
+        var nextToSend = this.responsesToSend[this.responseIdx++];
         this._sendUntil(nextToSend);
     }
 };
@@ -105,10 +107,10 @@ MockServer.prototype._testData = function() {
     this.requestsExpected.length.should.be.greaterThan(0, 'More data received than expected');
     var expected = this.requestsExpected[0];
     if (this.data.length >= expected.length) {
-        expected = this.requestsExpected.shift();
+        expected = this.requestsExpected[this.requestIdx++];
         var actual = this.data.read(expected.length);
         debug('Receiving ' + actual.toString('hex'));
-        actual.toString('hex').should.eql(expected.toString('hex'));
+        actual.toString('hex').should.eql(expected.toString('hex'), 'Req ' + (this.requestIdx-1));
         this._sendNext();
     }
 };
