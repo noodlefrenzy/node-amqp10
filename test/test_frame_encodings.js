@@ -10,6 +10,8 @@ var Int64       = require('node-int64'),
     DescribedType = require('../lib/types/described_type'),
     ForcedType  = require('../lib/types/forced_type'),
     Symbol      = require('../lib/types/symbol'),
+    Source      = require('../lib/types/source_target').Source,
+    Target      = require('../lib/types/source_target').Target,
 
     AttachFrame = require('../lib/frames/attach_frame'),
     BeginFrame  = require('../lib/frames/begin_frame'),
@@ -68,12 +70,12 @@ describe('BeginFrame', function() {
    });
 });
 
-/*
 describe('AttachFrame', function() {
     describe('#outgoing()', function() {
         it('should encode performative correctly', function() {
             var attach = new AttachFrame({
                 name: 'test',
+                handle: 1,
                 role: constants.linkRole.sender,
                 source: new Source({ address: null, dynamic: true }),
                 target: new Target({ address: 'testtgt' }),
@@ -89,9 +91,26 @@ describe('AttachFrame', function() {
                 0x80, 0x00, 0x00, 0x00, 0x00,
                       0x00, 0x00, 0x00, 0x12,
                 0xc0, listSize, 12,
-
+                0xA1, 4, builder.prototype.appendString, 'test',
+                0x52, 1, // handle
+                0x42, // role=sender
+                0x50, 2, // sender-settle-mode=mixed
+                0x50, 0, // rcv-settle-mode=first
+                0x00, 0x80, 0, 0, 0, 0, 0, 0, 0, 28, // source
+                    0x40,
+                    0x43,
+                    0xA3, 11, builder.prototype.appendString, 'session-end',
+                    0x43, 0x42, 0xc1, 1, 0, 0x40, 0xc1, 1, 0, 0x40, 0x40,
+                0x00, 0x80, 0, 0, 0, 0, 0, 0, 0, 29, // target
+                    0xA1, 7, builder.prototype.appendString, 'testtgt',
+                    0x43,
+                    0xA3, 11, builder.prototype.appendString, 'session-end',
+                    0x43, 0x42, 0xc1, 1, 0, 0x40,
+                0xc1, 1, 0,
+                0x42,
+                0x52, 1,
+                0x44, 0x40, 0x40, 0xc1, 1, 0
             ]);
         });
     });
 });
-*/
