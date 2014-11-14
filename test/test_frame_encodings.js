@@ -43,7 +43,7 @@ describe('OpenFrame', function() {
                 0xa3, 5, builder.prototype.appendString, constants.defaultIncomingLocales.contents,
                 0x40, 0x40, 0xc1, 0x01, 0x00
             ]);
-            actual.toString('hex').should.eql(expected.toString('hex'));
+            tu.shouldBufEql(expected, actual);
         });
     });
 });
@@ -68,7 +68,7 @@ describe('BeginFrame', function() {
               0x70, builder.prototype.appendUInt32BE, constants.defaultHandleMax,
               0x40, 0x40, 0xc1, 0x01, 0x00
           ]);
-          actual.toString('hex').should.eql(expected.toString('hex'));
+          tu.shouldBufEql(expected, actual);
       });
    });
 });
@@ -132,7 +132,7 @@ describe('AttachFrame', function() {
                 0x40,
                 0xc1, 1, 0
             ]);
-            actual.toString('hex').should.eql(expected.toString('hex'));
+            tu.shouldBufEql(expected, actual);
         });
     });
 });
@@ -175,7 +175,7 @@ describe('FlowFrame', function() {
                 0x41,
                 0xc1, 1, 0
             ]);
-            actual.toString('hex').should.eql(expected.toString('hex'));
+            tu.shouldBufEql(expected, actual);
         });
     });
 });

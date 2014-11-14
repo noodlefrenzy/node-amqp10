@@ -163,17 +163,17 @@ describe('Codec', function() {
         it('should encode strings', function () {
             var bufb = new builder();
             codec.encode('FOO', bufb);
-            bufb.get().toString('hex').should.eql(newBuf([0xA1, 0x03, 0x46, 0x4F, 0x4F]).toString('hex'));
+            tu.shouldBufEql([0xA1, 0x03, 0x46, 0x4F, 0x4F], bufb);
         });
         it('should encode symbols', function() {
             var bufb = new builder();
             codec.encode(new Symbol('FOO'), bufb);
-            bufb.get().toString('hex').should.eql(newBuf([0xA3, 0x03, 0x46, 0x4F, 0x4F]).toString('hex'));
+            tu.shouldBufEql([0xA3, 0x03, 0x46, 0x4F, 0x4F], bufb);
         });
         it('should encode buffers', function() {
             var bufb = new builder();
             codec.encode(newBuf([0xFF]), bufb);
-            tu.shouldBufEql(bufb.get(), newBuf([0xA0, 1, 0xFF]));
+            tu.shouldBufEql([0xA0, 1, 0xFF], bufb);
         });
         it('should encode numbers', function() {
             var bufb = new builder();
@@ -181,42 +181,42 @@ describe('Codec', function() {
             var expected = new Buffer(9);
             expected[0] = 0x82;
             expected.writeDoubleBE(123.456, 1);
-            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+            tu.shouldBufEql(expected, bufb);
 
             bufb = new builder();
             codec.encode(new Int64(0x12, 0x34), bufb);
             var expected = newBuf([0x80, builder.prototype.appendInt32BE, 0x12, builder.prototype.appendInt32BE, 0x34]);
-            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+            tu.shouldBufEql(expected, bufb);
 
             bufb = new builder();
             codec.encode(new Int64(0xFFFFFFFF, 0xFFFFFF00), bufb);
             var expected = newBuf([0x81, builder.prototype.appendInt32BE, 0xFFFFFFFF, builder.prototype.appendInt32BE, 0xFFFFFF00]);
-            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+            tu.shouldBufEql(expected, bufb);
         });
         it('should encode lists', function() {
             var list = [ 1, 'foo' ];
             var expected = newBuf([0xC0, (1+5+5), 2, 0x71, 0, 0, 0, 1, 0xA1, 3, builder.prototype.appendString, 'foo' ]);
             var bufb = new builder();
             codec.encode(list, bufb);
-            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+            tu.shouldBufEql(expected, bufb);
 
             list = [];
             expected = newBuf([0x45]);
             bufb = new builder();
             codec.encode(list, bufb);
-            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+            tu.shouldBufEql(expected, bufb);
         });
         it('should encode described types', function() {
             var bufb = new builder();
             codec.encode(new DescribedType('D1', 'V1'), bufb);
             var expected = newBuf([0x00, 0xA1, 0x2, builder.prototype.appendString, 'D1', 0xA1, 0x2, builder.prototype.appendString, 'V1']);
-            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+            tu.shouldBufEql(expected, bufb);
         });
         it('should encode described types with no values', function() {
             var bufb = new builder();
             codec.encode(new DescribedType(new Int64(0x0, 0x26)), bufb);
             var expected = newBuf([0x00, 0x80, 0, 0, 0, 0, 0, 0, 0, 0x26, 0x45]);
-            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+            tu.shouldBufEql(expected, bufb);
         });
         it('should encode objects as lists when asked', function() {
             var toEncode = {
@@ -227,28 +227,28 @@ describe('Codec', function() {
             var expected = newBuf([0xC0, 0x9, 0x2, 0xA1, 0x2, builder.prototype.appendString, 'V1', 0xA1, 0x2, builder.prototype.appendString, 'V2']);
             var bufb = new builder();
             codec.encode(toEncode, bufb);
-            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+            tu.shouldBufEql(expected, bufb);
         });
         it('should encode forced-types when asked', function() {
             var toEncode = new ForcedType('uint', 0x123);
             var expected = newBuf([0x70, 0x00, 0x00, 0x01, 0x23]);
             var bufb = new builder();
             codec.encode(toEncode, bufb);
-            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+            tu.shouldBufEql(expected, bufb);
         });
         it('should encode null', function() {
             var toEncode = null;
             var expected = newBuf([0x40]);
             var bufb = new builder();
             codec.encode(toEncode, bufb);
-            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+            tu.shouldBufEql(expected, bufb);
         });
         it('should encode ForcedType with null value as null', function() {
             var toEncode = new ForcedType('uint', null);
             var expected = newBuf([0x40]);
             var bufb = new builder();
             codec.encode(toEncode, bufb);
-            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+            tu.shouldBufEql(expected, bufb);
         });
         it('should encode amqp arrays', function() {
             var amqpArray = new AMQPArray([ 1, 2, 3], 0x71);
@@ -259,7 +259,7 @@ describe('Codec', function() {
             ]);
             var bufb = new builder();
             codec.encode(amqpArray, bufb);
-            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+            tu.shouldBufEql(expected, bufb);
         });
         it('should encode composite example from spec', function() {
             // From Page 25 of AMQP 1.0 spec
@@ -279,7 +279,7 @@ describe('Codec', function() {
                     new AMQPArray([ 'Rob J. Godfrey', 'Rafael H. Schloming'], 0xA1),
                     null
                 ]), bufb);
-            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+            tu.shouldBufEql(expected, bufb);
         });
         it('should encode frame performative correctly', function() {
             var performative = new DescribedType(new Int64(0x00000000, 0x00000010), {
@@ -311,7 +311,7 @@ describe('Codec', function() {
             ]);
             var bufb = new builder();
             codec.encode(performative, bufb);
-            bufb.get().toString('hex').should.eql(expected.toString('hex'));
+            tu.shouldBufEql(expected, bufb);
         });
     });
 });

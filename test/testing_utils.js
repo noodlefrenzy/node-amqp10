@@ -27,6 +27,13 @@ function newCBuf(contents) {
 module.exports.newCBuf = newCBuf;
 
 function shouldBufEql(expected, actual) {
+    if (actual instanceof builder) {
+        actual = actual.get();
+    }
+    if (expected instanceof Array) {
+        expected = newBuf(expected);
+    }
+
     var expectedStr = expected.toString('hex');
     var actualStr = actual.toString('hex');
     if (actualStr.length > 100) {
