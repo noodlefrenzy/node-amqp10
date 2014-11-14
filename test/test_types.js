@@ -24,7 +24,7 @@ function assertEncoders(tests, maxSize) {
             enc(curTest[1], actual, codec);
             actual = actual.get();
             debug('Encoded "' + curTest[0] + '" => 0x' + actual.toString('hex'));
-            actual.toString('hex').should.eql(curTest[2].toString('hex'), idx + ': ' + curTest[0] + ' encoding failed');
+            tu.shouldBufEql(curTest[2], actual, 'idx ' + idx + ': ' + curTest[0] + ' encoding failed');
         } catch (e) {
             if (e instanceof assert.AssertionError) {
                 throw e;
