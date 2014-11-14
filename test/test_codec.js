@@ -170,6 +170,11 @@ describe('Codec', function() {
             codec.encode(new Symbol('FOO'), bufb);
             bufb.get().toString('hex').should.eql(newBuf([0xA3, 0x03, 0x46, 0x4F, 0x4F]).toString('hex'));
         });
+        it('should encode buffers', function() {
+            var bufb = new builder();
+            codec.encode(newBuf([0xFF]), bufb);
+            tu.shouldBufEql(bufb.get(), newBuf([0xA0, 1, 0xFF]));
+        });
         it('should encode numbers', function() {
             var bufb = new builder();
             codec.encode(123.456, bufb);

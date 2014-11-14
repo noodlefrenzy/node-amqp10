@@ -1,5 +1,6 @@
 var builder     = require('buffer-builder'),
-    CBuffer     = require('cbarrick-circular-buffer');
+    CBuffer     = require('cbarrick-circular-buffer')
+    should      = require('should');
 
 function newBuf(contents) {
     var bufb = new builder();
@@ -24,3 +25,16 @@ function newCBuf(contents) {
 }
 
 module.exports.newCBuf = newCBuf;
+
+function shouldBufEql(expected, actual) {
+    var expectedStr = expected.toString('hex');
+    var actualStr = actual.toString('hex');
+    if (actualStr.length > 100) {
+        // If too long, check length first.
+        actualStr.length.should.eql(expectedStr.length, 'Actual: ' + (actualStr.length > 100 ? actualStr.substring(0, 100) + '...' : actualStr) +
+            ' vs. Expected: ' + (expectedStr.length > 100 ? expectedStr.substring(0,100) + '...' : expectedStr));
+    }
+    actualStr.should.eql(expectedStr);
+}
+
+module.exports.shouldBufEql = shouldBufEql;

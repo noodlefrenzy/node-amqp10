@@ -12,6 +12,7 @@ var Int64       = require('node-int64'),
     Symbol      = require('../lib/types/symbol'),
     Source      = require('../lib/types/source_target').Source,
     Target      = require('../lib/types/source_target').Target,
+    Delivery    = require('../lib/types/delivery_state'),
 
     AttachFrame = require('../lib/frames/attach_frame'),
     BeginFrame  = require('../lib/frames/begin_frame'),
@@ -183,21 +184,35 @@ describe('TransferFrame', function() {
     describe('#outgoing()', function() {
         it('should encode performative correctly', function() {
             var transfer = new TransferFrame({
-
+                handle: 1,
+                deliveryId: 1,
+                deliveryTag: tu.newBuf([1]),
+                messageFormat: 20000,
+                settled: true,
+                receiverSettleMode: constants.receiverSettleMode.autoSettle
             });
             transfer.channel = 1;
             var actual = transfer.outgoing();
-            var listSize = 0;
+            var listSize = 1 + 2 + 2 + 3 + 5 + 1 + 1 + 2 + 1 + 1 + 1 + 1;
             var frameSize = 8 + 1 + 9 + 2 + listSize;
             var expected = tu.newBuf([
                 0x00, 0x00, 0x00, frameSize,
                 0x02, 0x00, 0x00, 0x01,
                 0x00,
                 0x80, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x14,
-                0xc0, listSize, 12,
+                      0x00, 0x00, 0x00, 0x14,
+                0xc0, listSize, 11,
+                0x52, 1, // handle
+                0x52, 1, // delivery-id
+                0xA0, 1, 1, // delivery-tag
+                0x70, builder.prototype.appendUInt32BE, 20000, // message-format
+                0x41, // settled
+                0x42, // more
+                0x50, 0, // rcv-settle-mode
+                0x40, // state
+                0x42, 0x42, 0x42 // resume/aborted/batchable
             ]);
-            actual.toString('hex').should.eql(expected.toString('hex'));
+            tu.shouldBufEql(expected, actual);
         });
     });
 });
