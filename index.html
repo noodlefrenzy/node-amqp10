@@ -1,0 +1,143 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Node-amqp-1-0 by noodlefrenzy</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/noodlefrenzy/node-amqp-1-0">View On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/noodlefrenzy/node-amqp-1-0/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/noodlefrenzy/node-amqp-1-0/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>Node-amqp-1-0</h1>
+          <p>AMQP 1.0-compliant Node.js client with no native code (e.g. Qpid Proton). </p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/noodlefrenzy">noodlefrenzy</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
+        </div>
+
+        <h1>
+<a id="node-amqp-1-0" class="anchor" href="#node-amqp-1-0" aria-hidden="true"><span class="octicon octicon-link"></span></a>node-amqp-1-0</h1>
+
+<p><a href="https://travis-ci.org/noodlefrenzy/node-amqp-1-0"><img src="https://secure.travis-ci.org/noodlefrenzy/node-amqp-1-0.png?branch=master" alt="Build Status"></a>
+<a href="https://david-dm.org/noodlefrenzy/node-amqp-1-0"><img src="https://david-dm.org/noodlefrenzy/node-amqp-1-0.png" alt="Dependency Status"></a></p>
+
+<p>AMQP 1.0-compliant Node.js client.  Since AMQP 1.0 is such a large departure from 0.9.1, 
+I've started a new project rather than fork from node-amqp or amqp.node.  Both node-amqp and amqp.node are
+great 0.9.1 clients and I recommend them, but neither is pursuing a 1.0 implementation.  If I can find an
+easy way to integrate this code back into them, I'll definitely be submitting a PR.</p>
+
+<h2>
+<a id="implementation-notes" class="anchor" href="#implementation-notes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Implementation Notes</h2>
+
+<p>Here are my current implementation plans - if you have feedback or critiques on any of these choices, feel free to
+submit an Issue or even a PR.  Trust me, I don't take criticism personally, and I'm new to Nodejs so I could be making
+"obviously bad" choices to someone who is more familiar with the landscape.</p>
+
+<ul>
+<li>  I'm planning on using Node's built-in net/socket classes for communicating with the server.</li>
+<li>  Data from the server will be written to a circular buffer based on <a href="https://github.com/cbarrick/CircularBuffer">CBarrick's</a>.</li>
+<li>  Outgoing data will be encoded using <a href="https://github.com/PeterReid/node-buffer-builder">this buffer builder</a> - streaming
+output won't really work since each outgoing payload needs to be prefixed with its encoded size.</li>
+<li>  The connection state will be managed using <a href="https://github.com/fschaefer/Stately.js">Stately.js</a>, with state transitions
+swapping which callback gets invoked on receipt of new data. (e.g. post-connection, we write the AMQP version header
+and then install a callback to ensure the correct version.  Once incoming data is written to the circular buffer, this
+callback is invoked, and a comparison vs. the expected version triggers another transition).</li>
+<li>  Buffer comparisons are done via <a href="https://github.com/bnoordhuis/node-buffertools">Buffertools</a>.  Bit-twiddling is done
+via <a href="https://github.com/nlf/node-butils">node-butils</a>, if necessary.</li>
+</ul>
+
+<p>Further, detailed implementation nodes are available in the <a href="api/">API Readme</a>.</p>
+
+<h2>
+<a id="protocol-notes" class="anchor" href="#protocol-notes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Protocol Notes</h2>
+
+<p>The <a href="http://docs.oasis-open.org/amqp/core/v1.0/amqp-core-complete-v1.0.pdf">AMQP 1.0 Protocol</a> differs substantially 
+from the <a href="http://www.rabbitmq.com/resources/specs/amqp0-9-1.pdf">0.9.1 protocol</a>, with 0.9.1 defining exchanges, brokers, 
+types of queues (fanout, topic, etc.) and 1.0 focusing on more robust data interchange specifications and leaving much 
+of the server implementation to the implementor.  This section is just attempting to document features of this protocol 
+with the aim of enlightening those looking into the defined classes (and helping me drive my implementation).</p>
+
+<ul>
+<li>
+<p>Connection</p>
+
+<p>An AMQP connection is a full-duplex ordered sequence of frames.</p>
+</li>
+<li>
+<p>Frame</p>
+
+<p>A Frame is the bitstream defining a full parsable unit.</p>
+</li>
+<li>
+<p>Channel</p>
+
+<p>A connection is divided into a negotiated number of independent unidirectional channels.  Frames are marked with
+their parent channel number.</p>
+</li>
+<li>
+<p>Session</p>
+
+<p>Correlation of two channels to form a bi-di sequential conversation.</p>
+
+<p>Connections may have multiple independent sessions active simultaneously, up to the negotiated channel limit.</p>
+</li>
+<li>
+<p>Link</p>
+
+<p>Connection between two nodes.  Provides a credit-based flow-control scheme, each terminus of a link must track 
+stream state.  Links are named, and may outlive their associated connections, allowing reconnection and retention
+of associated state.</p>
+</li>
+</ul>
+
+<h2>
+<a id="caveats" class="anchor" href="#caveats" aria-hidden="true"><span class="octicon octicon-link"></span></a>Caveats</h2>
+
+<p>NOT YET IMPLEMENTED!  I'm just starting on this work - please ignore this repo for now.  Unless you want to help,
+in which case PR's are welcome :)</p>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>License</h2>
+
+<p>MIT License.  If you need a more permissive license, or you want to try your hand at integrating this code into
+node-amqp or amqp.node and need to match their license, let me know (i.e. open an issue).</p>
+      </section>
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-54597100-2");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
