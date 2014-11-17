@@ -11,6 +11,18 @@
   * [codec.encode(val, buf, [forceType])](#Codec#encode)
 * [class: Connection](#Connection)
   * [new Connection()](#new_Connection)
+* [class: MalformedHeaderError](#MalformedHeaderError)
+  * [new MalformedHeaderError(msg)](#new_MalformedHeaderError)
+* [class: NotImplementedError](#NotImplementedError)
+  * [new NotImplementedError(msg)](#new_NotImplementedError)
+* [class: MalformedPayloadError](#MalformedPayloadError)
+  * [new MalformedPayloadError(msg)](#new_MalformedPayloadError)
+* [class: EncodingError](#EncodingError)
+  * [new EncodingError(msg)](#new_EncodingError)
+* [class: OverCapacityError](#OverCapacityError)
+  * [new OverCapacityError(msg)](#new_OverCapacityError)
+* [class: ArgumentError](#ArgumentError)
+  * [new ArgumentError(arg)](#new_ArgumentError)
 * [class: AttachFrame](#AttachFrame)
   * [new AttachFrame()](#new_AttachFrame)
 * [class: BeginFrame](#BeginFrame)
@@ -33,6 +45,9 @@
   * [new AMQPFrame()](#new_AMQPFrame)
   * [aMQPFrame._getPerformative()](#AMQPFrame#_getPerformative)
   * [aMQPFrame._getAdditionalPayload()](#AMQPFrame#_getAdditionalPayload)
+* [class: FrameReader](#FrameReader)
+  * [frameReader.read(cbuf)](#FrameReader#read)
+  * [frameReader._readMessage(messageBuf)](#FrameReader#_readMessage)
 * [class: OpenFrame](#OpenFrame)
   * [new OpenFrame()](#new_OpenFrame)
 * [class: TransferFrame](#TransferFrame)
@@ -52,13 +67,35 @@
   * [new DescribedType(descriptor, value)](#new_DescribedType)
 * [class: ForcedType](#ForcedType)
   * [new ForcedType(typeName, value)](#new_ForcedType)
+* [class: Header](#Header)
+  * [new Header(options)](#new_Header)
+* [class: DeliveryAnnotations](#DeliveryAnnotations)
+  * [new DeliveryAnnotations(annotations)](#new_DeliveryAnnotations)
+* [class: Annotations](#Annotations)
+  * [new Annotations(annotations)](#new_Annotations)
+* [class: Properties](#Properties)
+  * [new Properties(options)](#new_Properties)
+* [class: ApplicationProperties](#ApplicationProperties)
+  * [new ApplicationProperties(properties)](#new_ApplicationProperties)
+* [class: Footer](#Footer)
+  * [new Footer(map)](#new_Footer)
+* [class: Data](#Data)
+  * [new Data(data)](#new_Data)
+* [class: AMQPSequence](#AMQPSequence)
+  * [new AMQPSequence(values)](#new_AMQPSequence)
+* [class: AMQPValue](#AMQPValue)
+  * [new AMQPValue(value)](#new_AMQPValue)
+* [class: Message](#Message)
+  * [new Message(contents, body)](#new_Message)
 * [class: Symbol](#Symbol)
   * [new Symbol(str)](#new_Symbol)
 
 **Functions**
 
+* [assertArguments(options, argnames)](#assertArguments)
 * [encoder(val, buf, [codec])](#encoder)
 * [decoder(buf, [codec])](#decoder)
+* [onUndef(arg1, arg2)](#onUndef)
  
 <a name="CircularBuffer"></a>
 #class: CircularBuffer
@@ -238,6 +275,96 @@ Connection states, from AMQP 1.0 spec:
  +----------------------+-----------------------------------------------+
 
  </pre>R:<b>CTRL</b> = Received <b>CTRL</b>S:<b>CTRL</b> = Sent <b>CTRL</b>Also could be DISCARDING if an error condition triggered the CLOSE
+
+<a name="MalformedHeaderError"></a>
+#class: MalformedHeaderError
+**Members**
+
+* [class: MalformedHeaderError](#MalformedHeaderError)
+  * [new MalformedHeaderError(msg)](#new_MalformedHeaderError)
+
+<a name="new_MalformedHeaderError"></a>
+##new MalformedHeaderError(msg)
+AMQP Header is malformed.
+
+**Params**
+
+- msg   
+
+<a name="NotImplementedError"></a>
+#class: NotImplementedError
+**Members**
+
+* [class: NotImplementedError](#NotImplementedError)
+  * [new NotImplementedError(msg)](#new_NotImplementedError)
+
+<a name="new_NotImplementedError"></a>
+##new NotImplementedError(msg)
+Method or feature is not yet implemented.
+
+**Params**
+
+- msg   
+
+<a name="MalformedPayloadError"></a>
+#class: MalformedPayloadError
+**Members**
+
+* [class: MalformedPayloadError](#MalformedPayloadError)
+  * [new MalformedPayloadError(msg)](#new_MalformedPayloadError)
+
+<a name="new_MalformedPayloadError"></a>
+##new MalformedPayloadError(msg)
+Payload is malformed or cannot be parsed.
+
+**Params**
+
+- msg   
+
+<a name="EncodingError"></a>
+#class: EncodingError
+**Members**
+
+* [class: EncodingError](#EncodingError)
+  * [new EncodingError(msg)](#new_EncodingError)
+
+<a name="new_EncodingError"></a>
+##new EncodingError(msg)
+Given object cannot be encoded successfully.
+
+**Params**
+
+- msg   
+
+<a name="OverCapacityError"></a>
+#class: OverCapacityError
+**Members**
+
+* [class: OverCapacityError](#OverCapacityError)
+  * [new OverCapacityError(msg)](#new_OverCapacityError)
+
+<a name="new_OverCapacityError"></a>
+##new OverCapacityError(msg)
+Violation of AMQP flow control.
+
+**Params**
+
+- msg   
+
+<a name="ArgumentError"></a>
+#class: ArgumentError
+**Members**
+
+* [class: ArgumentError](#ArgumentError)
+  * [new ArgumentError(arg)](#new_ArgumentError)
+
+<a name="new_ArgumentError"></a>
+##new ArgumentError(arg)
+Argument missing or incorrectly defined.
+
+**Params**
+
+- arg   
 
 <a name="AttachFrame"></a>
 #class: AttachFrame
@@ -419,6 +546,33 @@ Children should implement this method to translate their internal (friendly) rep
 ##aMQPFrame._getAdditionalPayload()
 AMQP Frames consist of two sections of payload - the performative, and the additional actual payload.Some frames don't have any additional payload, but for those that do, they should override this to generate it.
 
+**Access**: private  
+<a name="FrameReader"></a>
+#class: FrameReader
+**Members**
+
+* [class: FrameReader](#FrameReader)
+  * [frameReader.read(cbuf)](#FrameReader#read)
+  * [frameReader._readMessage(messageBuf)](#FrameReader#_readMessage)
+
+<a name="FrameReader#read"></a>
+##frameReader.read(cbuf)
+For now, just process performative headers.
+
+**Params**
+
+- cbuf  - circular buffer containing the potential frame data.  
+
+**Returns**: [AMQPFrame](#AMQPFrame) - Frame with populated data, undefined if frame is incomplete.  Throws exception on unmatched frame.  
+<a name="FrameReader#_readMessage"></a>
+##frameReader._readMessage(messageBuf)
+An AMQP Message is composed of:* Zero or one header* Zero or one delivery-annotations* Zero or one message-annotations* Zero or one properties* Zero or one application-properties* Body: One or more data sections, one or more amqp-sequence sections, or one amqp-value section* Zero or one footer
+
+**Params**
+
+- messageBuf `Buffer` - Message buffer to decode  
+
+**Returns**: [Message](#Message) - Complete message object decoded from buffer  
 **Access**: private  
 <a name="OpenFrame"></a>
 #class: OpenFrame
@@ -689,6 +843,153 @@ ForcedType coerces the encoder to encode to the given type, regardless of what i
 - typeName  - Symbolic name or specific code (e.g. 'long', or 0xA0)  
 - value  - Value to encode, should be compatible or bad things will occur  
 
+<a name="Header"></a>
+#class: Header
+**Members**
+
+* [class: Header](#Header)
+  * [new Header(options)](#new_Header)
+
+<a name="new_Header"></a>
+##new Header(options)
+**Params**
+
+- options   
+
+<a name="DeliveryAnnotations"></a>
+#class: DeliveryAnnotations
+**Members**
+
+* [class: DeliveryAnnotations](#DeliveryAnnotations)
+  * [new DeliveryAnnotations(annotations)](#new_DeliveryAnnotations)
+
+<a name="new_DeliveryAnnotations"></a>
+##new DeliveryAnnotations(annotations)
+**Params**
+
+- annotations   
+
+<a name="Annotations"></a>
+#class: Annotations
+**Members**
+
+* [class: Annotations](#Annotations)
+  * [new Annotations(annotations)](#new_Annotations)
+
+<a name="new_Annotations"></a>
+##new Annotations(annotations)
+**Params**
+
+- annotations   
+
+<a name="Properties"></a>
+#class: Properties
+**Members**
+
+* [class: Properties](#Properties)
+  * [new Properties(options)](#new_Properties)
+
+<a name="new_Properties"></a>
+##new Properties(options)
+**Params**
+
+- options   
+
+<a name="ApplicationProperties"></a>
+#class: ApplicationProperties
+**Members**
+
+* [class: ApplicationProperties](#ApplicationProperties)
+  * [new ApplicationProperties(properties)](#new_ApplicationProperties)
+
+<a name="new_ApplicationProperties"></a>
+##new ApplicationProperties(properties)
+**Params**
+
+- properties   
+
+<a name="Footer"></a>
+#class: Footer
+**Members**
+
+* [class: Footer](#Footer)
+  * [new Footer(map)](#new_Footer)
+
+<a name="new_Footer"></a>
+##new Footer(map)
+**Params**
+
+- map   
+
+<a name="Data"></a>
+#class: Data
+**Members**
+
+* [class: Data](#Data)
+  * [new Data(data)](#new_Data)
+
+<a name="new_Data"></a>
+##new Data(data)
+**Params**
+
+- data   
+
+<a name="AMQPSequence"></a>
+#class: AMQPSequence
+**Members**
+
+* [class: AMQPSequence](#AMQPSequence)
+  * [new AMQPSequence(values)](#new_AMQPSequence)
+
+<a name="new_AMQPSequence"></a>
+##new AMQPSequence(values)
+**Params**
+
+- values   
+
+<a name="AMQPValue"></a>
+#class: AMQPValue
+**Members**
+
+* [class: AMQPValue](#AMQPValue)
+  * [new AMQPValue(value)](#new_AMQPValue)
+
+<a name="new_AMQPValue"></a>
+##new AMQPValue(value)
+**Params**
+
+- value   
+
+<a name="Message"></a>
+#class: Message
+**Members**
+
+* [class: Message](#Message)
+  * [new Message(contents, body)](#new_Message)
+
+<a name="new_Message"></a>
+##new Message(contents, body)
+Actual AMQP Message, which as defined by the spec looks like:
+ <pre>
+                                                      Bare Message
+                                                            |
+                                      .---------------------+--------------------.
+                                      |                                          |
+ +--------+-------------+-------------+------------+--------------+--------------+--------+
+ | header | delivery-   | message-    | properties | application- | application- | footer |
+ |        | annotations | annotations |            | properties   | data         |        |
+ +--------+-------------+-------------+------------+--------------+--------------+--------+
+ |                                                                                        |
+ '-------------------------------------------+--------------------------------------------'
+                                             |
+                                      Annotated Message
+ </pre>The message _may_ contain the sections above, and application data _may_ be repeated, as follows:* Zero or one [Header](#Header) sections.* Zero or one [DeliveryAnnotations](#DeliveryAnnotations) sections.* Zero or one [Annotations](#Annotations) sections.* Zero or one [Properties](#Properties) sections.* Zero or one [ApplicationProperties](#ApplicationProperties) sections.* The body consists of either: one or more [Data](#Data) sections, one or more [AMQPSequence](#AMQPSequence) sections,     or a single [AMQPValue](#AMQPValue) section.* Zero or one [Footer](#Footer) sections.
+
+**Params**
+
+- contents   
+- body   
+
 <a name="Symbol"></a>
 #class: Symbol
 **Members**
@@ -703,6 +1004,15 @@ Encoding for AMQP Symbol type, to differentiate from strings.  More terse than F
 **Params**
 
 - str `String` - Symbol contents  
+
+<a name="assertArguments"></a>
+#assertArguments(options, argnames)
+Convenience method to assert that a given options object contains the required arguments.
+
+**Params**
+
+- options   
+- argnames   
 
 <a name="encoder"></a>
 #encoder(val, buf, [codec])
@@ -724,3 +1034,13 @@ Decoder methods decode an incoming buffer into an appropriate concrete JS entity
 - \[codec\] <code>[Codec](#Codec)</code> - If needed, the codec to decode sub-values for composite types.  
 
 **Returns**:  - Decoded value  
+<a name="onUndef"></a>
+#onUndef(arg1, arg2)
+Simple, *light-weight* function for coalescing an argument with a default.Differs from _??_ by operating *only* on undefined, and not on null/zero/empty-string/emtpy-array/etc.Could use _args_ and slice and work for arbitrary length argument list, but that would no longer be simple.
+
+**Params**
+
+- arg1   
+- arg2   
+
+**Returns**:  - arg2 if arg1 === undefined, otherwise arg1  

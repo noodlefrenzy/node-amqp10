@@ -8,6 +8,7 @@ var Int64       = require('node-int64'),
     codec       = require('../lib/codec'),
 
     AMQPError   = require('../lib/types/amqp_error'),
+    Delivery    = require('../lib/types/delivery_state'),
     DescribedType = require('../lib/types/described_type'),
     ForcedType  = require('../lib/types/forced_type'),
     reader      = require('../lib/frames/frame_reader'),
@@ -16,6 +17,7 @@ var Int64       = require('node-int64'),
     BeginFrame  = require('../lib/frames/begin_frame'),
     CloseFrame  = require('../lib/frames/close_frame'),
     OpenFrame   = require('../lib/frames/open_frame'),
+    TransferFrame   = require('../lib/frames/transfer_frame'),
 
     tu          = require('./testing_utils');
 
@@ -112,6 +114,41 @@ describe('FrameReader', function() {
             newAttach.role.should.eql(true);
             newAttach.senderSettleMode.should.eql(constants.senderSettleMode.mixed);
             newAttach.receiverSettleMode.should.eql(constants.receiverSettleMode.autoSettle);
+        });
+
+        it('should read transfer frame with trivial message body', function() {
+            var listSize = 1 + 2 + 2 + 3 + 3 + 2 + 4;
+            var payloadSize = 5;
+            var txFrameSize = 8 + 3 + 2 + listSize + payloadSize;
+            var channel = 1;
+            var handle = 1;
+            var cbuf = tu.newCBuf([
+                0x00, 0x00, 0x00, txFrameSize,
+                0x02, 0x00, 0x00, channel,
+                0x00, 0x53, 0x14,
+                0xc0, listSize, 10,
+                0x52, handle,
+                0x52, 1, // delivery-id
+                0xa0, 1, 1, // delivery-tag
+                0x43, // message-format
+                0x41, // settled=true
+                0x42, // more=false
+                0x50, 0, // rcv-settle-mode=first
+                0x40, // state=null
+                0x42, // resume=false
+                0x42, // aborted=false
+                0x42, // batchable=false
+                // Message Body - amqp-value of uint(10)
+                0x00, 0x53, 0x77,
+                0x52, 10
+            ]);
+            var newTransfer = reader.read(cbuf);
+            newTransfer.should.be.instanceof(TransferFrame);
+            newTransfer.channel.should.eql(channel);
+            newTransfer.handle.should.eql(handle);
+            newTransfer.receiverSettleMode.should.eql(constants.receiverSettleMode.autoSettle);
+            newTransfer.message.body.length.should.eql(1);
+            newTransfer.message.body[0].should.eql(10);
         });
 
         it('should return undefined on incomplete buffer', function() {
