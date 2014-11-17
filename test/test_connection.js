@@ -8,6 +8,7 @@ var debug       = require('debug')('amqp10-test_connection'),
     AMQPError   = require('../lib/types/amqp_error'),
     Source      = require('../lib/types/source_target').Source,
     Target      = require('../lib/types/source_target').Target,
+    M           = require('../lib/types/message'),
 
     CloseFrame  = require('../lib/frames/close_frame'),
     OpenFrame   = require('../lib/frames/open_frame'),
@@ -89,7 +90,12 @@ describe('Connection', function() {
             conn.on(Connection.Connected, function() {
                 var session = new Session(conn);
                 session.on(Session.LinkAttached, function(link) {
-                    session.detachLink(link);
+                    var msg = new M.Message();
+                    msg.body.push(10);
+                    session.sendMessage(link, msg, { deliveryId: 1, deliveryTag: tu.newBuf([1]) });
+                    setTimeout(function() {
+                        session.detachLink(link);
+                    }, 500);
                 });
                 session.on(Session.LinkDetached, function() {
                     session.end();
