@@ -27,7 +27,7 @@ function newCBuf(contents) {
 module.exports.newCBuf = newCBuf;
 
 function shouldBufEql(expected, actual, msg) {
-    msg = msg ? msg + ': ' : msg;
+    msg = msg ? msg + ': ' : '';
     if (actual instanceof builder) {
         actual = actual.get();
     }
@@ -39,8 +39,9 @@ function shouldBufEql(expected, actual, msg) {
     var actualStr = actual.toString('hex');
     if (actualStr.length > 100) {
         // If too long, check length first.
-        actualStr.length.should.eql(expectedStr.length, msg + 'Actual: ' + (actualStr.length > 100 ? actualStr.substring(0, 100) + '...' : actualStr) +
-            ' vs. Expected: ' + (expectedStr.length > 100 ? expectedStr.substring(0,100) + '...' : expectedStr));
+        actualStr.length.should.eql(expectedStr.length,
+            msg + '\nActual:   ' + (actualStr.length > 100 ? actualStr.substring(0, 100) + '...' : actualStr) +
+            ' vs.  \nExpected: ' + (expectedStr.length > 100 ? expectedStr.substring(0,100) + '...' : expectedStr));
     }
     if (msg) {
         actualStr.should.eql(expectedStr, msg);

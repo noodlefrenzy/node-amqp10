@@ -13,6 +13,7 @@ var Int64       = require('node-int64'),
     Source      = require('../lib/types/source_target').Source,
     Target      = require('../lib/types/source_target').Target,
     Delivery    = require('../lib/types/delivery_state'),
+    M           = require('../lib/types/message'),
 
     AttachFrame = require('../lib/frames/attach_frame'),
     BeginFrame  = require('../lib/frames/begin_frame'),
@@ -192,9 +193,12 @@ describe('TransferFrame', function() {
                 receiverSettleMode: constants.receiverSettleMode.autoSettle
             });
             transfer.channel = 1;
+            transfer.message = new M.Message();
+            transfer.message.body.push(new ForcedType('uint', 10));
             var actual = transfer.outgoing();
+            var payloadSize = 12;
             var listSize = 1 + 2 + 2 + 3 + 5 + 1 + 1 + 2 + 1 + 1 + 1 + 1;
-            var frameSize = 8 + 1 + 9 + 2 + listSize;
+            var frameSize = 8 + 1 + 9 + 2 + listSize + payloadSize;
             var expected = tu.newBuf([
                 0x00, 0x00, 0x00, frameSize,
                 0x02, 0x00, 0x00, 0x01,
@@ -210,7 +214,10 @@ describe('TransferFrame', function() {
                 0x42, // more
                 0x50, 0, // rcv-settle-mode
                 0x40, // state
-                0x42, 0x42, 0x42 // resume/aborted/batchable
+                0x42, 0x42, 0x42, // resume/aborted/batchable
+                // Message Body - amqp-value of uint(10)
+                0x00, 0x80, 0, 0, 0, 0, 0, 0, 0, 0x77,
+                0x52, 10
             ]);
             tu.shouldBufEql(expected, actual);
         });

@@ -5,7 +5,7 @@ var Int64       = require('node-int64'),
     builder     = require('buffer-builder'),
 
     codec       = require('../lib/codec'),
-    AMQPArray   = require('../lib/types/amqp_array'),
+    AMQPArray   = require('../lib/types/amqp_composites').Array,
     AMQPError   = require('../lib/types/amqp_error'),
     DescribedType = require('../lib/types/described_type'),
     ForcedType  = require('../lib/types/forced_type'),
