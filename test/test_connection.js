@@ -14,9 +14,11 @@ var debug       = require('debug')('amqp10-test_connection'),
     OpenFrame   = require('../lib/frames/open_frame'),
 
     Connection  = require('../lib/connection'),
-    Session     = require('../lib/session');
+    Session     = require('../lib/session'),
 
-    function openBuf() {
+    tu          = require('./testing_utils');
+
+function openBuf() {
     var open = new OpenFrame({ containerId: 'test', hostname: 'localhost' });
     return open.outgoing();
 }
@@ -122,6 +124,43 @@ describe('Connection', function() {
         });
         */
 
+        /*
+        it('should read from activemq', function(done) {
+            this.timeout(0);
+            var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
+            conn.open('amqp://localhost/');
+            conn.on(Connection.Connected, function() {
+                var session = new Session(conn);
+                session.on(Session.LinkAttached, function(link) {
+                    setTimeout(function() {
+                        session.detachLink(link);
+                    }, 1000);
+                });
+                session.on(Session.LinkDetached, function() {
+                    session.end();
+                });
+                session.on(Session.Mapped, function() {
+                    link = session.attachLink({ name: 'testtgt', role: constants.linkRole.receiver, source: new Source({ address: 'testtgt', dynamic: true }), target: new Target({ address: null }), initialDeliveryCount: 1 });
+                });
+                session.on(Session.Unmapped, function() {
+                    conn.close();
+                });
+                session.on(Session.ErrorReceived, function(err) {
+                    console.log(err);
+                });
+                session.begin({
+                    nextOutgoingId: 1,
+                    incomingWindow: 100,
+                    outgoingWindow: 100
+                });
+            });
+            conn.on(Connection.Disconnected, function() {
+                console.log('Disconnected');
+                done();
+            });
+        });
+        */
+        
         var server = null;
 
         afterEach(function (done) {
