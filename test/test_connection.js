@@ -11,6 +11,7 @@ var debug       = require('debug')('amqp10-test_connection'),
     M           = require('../lib/types/message'),
 
     CloseFrame  = require('../lib/frames/close_frame'),
+    FlowFrame   = require('../lib/frames/flow_frame'),
     OpenFrame   = require('../lib/frames/open_frame'),
 
     Connection  = require('../lib/connection'),
@@ -83,9 +84,12 @@ describe('Connection', function() {
     };
 
     describe('#_open()', function() {
+        var linkName = 'test2';
+        var addr = 'testtgt2';
+
         // NOTE: Only works if you have a local AMQP server running
         /*
-        it('should connect to activemq', function(done) {
+        it('should send activemq', function(done) {
             this.timeout(0);
             var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
             conn.open('amqp://localhost/');
@@ -93,7 +97,7 @@ describe('Connection', function() {
                 var session = new Session(conn);
                 session.on(Session.LinkAttached, function(link) {
                     var msg = new M.Message();
-                    msg.body.push(10);
+                    msg.body.push(tu.newBuf([1]));
                     session.sendMessage(link, msg, { deliveryId: 1, deliveryTag: tu.newBuf([1]) });
                     setTimeout(function() {
                         session.detachLink(link);
@@ -103,7 +107,7 @@ describe('Connection', function() {
                     session.end();
                 });
                 session.on(Session.Mapped, function() {
-                    link = session.attachLink({ name: 'test', role: constants.linkRole.sender, source: new Source({ address: null, dynamic: true }), target: new Target({ address: 'testtgt' }), initialDeliveryCount: 1 });
+                    link = session.attachLink({ name: linkName, role: constants.linkRole.sender, source: new Source({ address: null, dynamic: true }), target: new Target({ address: addr }), initialDeliveryCount: 1 });
                 });
                 session.on(Session.Unmapped, function() {
                     conn.close();
@@ -125,13 +129,22 @@ describe('Connection', function() {
         */
 
         /*
-        it('should read from activemq', function(done) {
+        it('should receive activemq', function(done) {
             this.timeout(0);
             var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
             conn.open('amqp://localhost/');
             conn.on(Connection.Connected, function() {
                 var session = new Session(conn);
                 session.on(Session.LinkAttached, function(link) {
+                    var flow = new FlowFrame({
+                        nextIncomingId: 1,
+                        incomingWindow: 100,
+                        nextOutgoingId: 1,
+                        outgoingWindow: 100,
+                        handle: null,
+                        linkCredit: 1000
+                    });
+                    conn.sendFrame(flow);
                     setTimeout(function() {
                         session.detachLink(link);
                     }, 1000);
@@ -140,7 +153,8 @@ describe('Connection', function() {
                     session.end();
                 });
                 session.on(Session.Mapped, function() {
-                    link = session.attachLink({ name: 'testtgt', role: constants.linkRole.receiver, source: new Source({ address: 'testtgt', dynamic: true }), target: new Target({ address: null }), initialDeliveryCount: 1 });
+                    link = session.attachLink({ name: linkName, role: constants.linkRole.receiver,
+                        source: new Source({ address: addr }), target: new Target({ address: addr, dynamic: true  }), initialDeliveryCount: 1 });
                 });
                 session.on(Session.Unmapped, function() {
                     conn.close();
