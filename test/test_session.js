@@ -5,7 +5,7 @@ var debug       = require('debug')('amqp10-test_connection'),
     constants   = require('../lib/constants'),
 
     Connection  = require('../lib/connection'),
-    Session     = require('../lib/session'),
+    Session     = require('../lib/session').Session,
 
     AMQPError   = require('../lib/types/amqp_error'),
 

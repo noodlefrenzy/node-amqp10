@@ -15,7 +15,8 @@ var debug       = require('debug')('amqp10-test_connection'),
     OpenFrame   = require('../lib/frames/open_frame'),
 
     Connection  = require('../lib/connection'),
-    Session     = require('../lib/session'),
+    Session     = require('../lib/session').Session,
+    Link        = require('../lib/session').Link,
 
     tu          = require('./testing_utils');
 
@@ -84,8 +85,8 @@ describe('Connection', function() {
     };
 
     describe('#_open()', function() {
-        var linkName = 'test2';
-        var addr = 'testtgt2';
+        var linkName = 'test4';
+        var addr = 'testtgt4';
 
         // NOTE: Only works if you have a local AMQP server running
         /*
@@ -97,7 +98,7 @@ describe('Connection', function() {
                 var session = new Session(conn);
                 session.on(Session.LinkAttached, function(link) {
                     var msg = new M.Message();
-                    msg.body.push(tu.newBuf([1]));
+                    msg.body.push('test message');
                     session.sendMessage(link, msg, { deliveryId: 1, deliveryTag: tu.newBuf([1]) });
                     setTimeout(function() {
                         session.detachLink(link);
@@ -136,25 +137,30 @@ describe('Connection', function() {
             conn.on(Connection.Connected, function() {
                 var session = new Session(conn);
                 session.on(Session.LinkAttached, function(link) {
+                    debugger;
+                    link.on(Link.MessageReceived, function (msg) {
+                        console.log('Received message: ' + JSON.stringify(msg));
+                    });
                     var flow = new FlowFrame({
                         nextIncomingId: 1,
                         incomingWindow: 100,
                         nextOutgoingId: 1,
                         outgoingWindow: 100,
-                        handle: null,
-                        linkCredit: 1000
+                        handle: link.handle,
+                        linkCredit: 100000
                     });
+                    flow.channel = session.channel;
                     conn.sendFrame(flow);
                     setTimeout(function() {
                         session.detachLink(link);
-                    }, 1000);
+                    }, 10000);
                 });
                 session.on(Session.LinkDetached, function() {
                     session.end();
                 });
                 session.on(Session.Mapped, function() {
                     link = session.attachLink({ name: linkName, role: constants.linkRole.receiver,
-                        source: new Source({ address: addr }), target: new Target({ address: addr, dynamic: true  }), initialDeliveryCount: 1 });
+                        source: new Source({ address: addr }), target: new Target({ address: addr }), initialDeliveryCount: 1 });
                 });
                 session.on(Session.Unmapped, function() {
                     conn.close();
