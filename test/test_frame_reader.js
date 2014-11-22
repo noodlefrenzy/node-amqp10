@@ -19,6 +19,8 @@ var Int64       = require('node-int64'),
     OpenFrame   = require('../lib/frames/open_frame'),
     TransferFrame   = require('../lib/frames/transfer_frame'),
 
+    Sasl        = require('../lib/frames/sasl_frame'),
+
     tu          = require('./testing_utils');
 
 describe('FrameReader', function() {
@@ -159,6 +161,27 @@ describe('FrameReader', function() {
             ]);
             var newOpen = reader.read(cbuf);
             (newOpen === undefined).should.be.true;
+        });
+
+        it('should read SASL Mechanisms frame', function() {
+            var arraySize = 1 + 1 + 6 + 5;
+            var frameSize = 8 + 1 + 9 + 2 + arraySize;
+            var cbuf = tu.newCBuf([
+                0x00, 0x00, 0x00, frameSize,
+                0x02, 0x01, 0x00, 0x00,
+                0x00,
+                0x80, 0x00, 0x00, 0x00, 0x00,
+                      0x00, 0x00, 0x00, 0x40,
+                0xE0, arraySize, 2,
+                0xA3,
+                5, builder.prototype.appendString, 'PLAIN',
+                4, builder.prototype.appendString, 'CRAP'
+            ]);
+            var newMechanisms = reader.read(cbuf);
+            newMechanisms.should.be.instanceof(Sasl.SaslMechanisms);
+            newMechanisms.mechanisms.length.should.eql(2);
+            newMechanisms.mechanisms[0].should.eql('PLAIN');
+            newMechanisms.mechanisms[1].should.eql('CRAP');
         });
     });
 });

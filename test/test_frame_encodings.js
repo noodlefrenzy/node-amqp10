@@ -21,6 +21,8 @@ var Int64       = require('node-int64'),
     OpenFrame   = require('../lib/frames/open_frame'),
     TransferFrame   = require('../lib/frames/transfer_frame'),
 
+    Sasl        = require('../lib/frames/sasl_frame'),
+
     tu          = require('./testing_utils');
 
 describe('OpenFrame', function() {
@@ -220,6 +222,27 @@ describe('TransferFrame', function() {
                 0x52, 10
             ]);
             tu.shouldBufEql(expected, actual);
+        });
+    });
+});
+
+describe('SaslFrames', function() {
+    describe('SaslMechanisms', function() {
+        describe('#outgoing()', function () {
+            it('should encode correctly', function () {
+                var mechanisms = new Sasl.SaslMechanisms();
+                var actual = mechanisms.outgoing();
+                var frameSize = 8 + 1 + 9 + 2 + 'ANONYMOUS'.length;
+                var expected = tu.newBuf([
+                    0x00, 0x00, 0x00, frameSize,
+                    0x02, 0x01, 0x00, 0x00,
+                    0x00,
+                    0x80, 0x00, 0x00, 0x00, 0x00,
+                          0x00, 0x00, 0x00, 0x40,
+                    0xA3, 9, builder.prototype.appendString, 'ANONYMOUS'
+                ]);
+                tu.shouldBufEql(expected, actual);
+            });
         });
     });
 });

@@ -186,5 +186,26 @@ describe('Types', function() {
             ];
             assertDecoders(toTest);
         });
+
+        it('should decode arrays', function() {
+            var toTest = [
+                [ 0xE0,
+                    buf([(10 + 1 + 1), 2, 0xA1,
+                        4, builder.prototype.appendString, 'elt1',
+                        4, builder.prototype.appendString, 'elt2'
+                    ]),
+                    [ 'elt1', 'elt2' ]
+                ],
+                [ 0xF0,
+                    buf([builder.prototype.appendUInt32BE, (10 + 4 + 1),
+                        builder.prototype.appendUInt32BE, 2,
+                        0xA1,
+                        4, builder.prototype.appendString, 'elt1',
+                        4, builder.prototype.appendString, 'elt2'
+                    ]),
+                    [ 'elt1', 'elt2' ]
+                ]
+            ];
+        });
     });
 });
