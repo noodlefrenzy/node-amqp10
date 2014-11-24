@@ -45,7 +45,6 @@ AMQPClient.ParseAddress = function(address) {
     } else {
         results = AMQPClient.AddressRegex.exec(address);
         if (results) {
-            debugger;
             return {
                 protocol: results[1],
                 host: results[2],

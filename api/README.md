@@ -9,6 +9,7 @@
   * [codec.encode(val, buf, [forceType])](#Codec#encode)
 * [class: Connection](#Connection)
   * [new Connection()](#new_Connection)
+  * [connection.open(address, sasl)](#Connection#open)
 * [class: MalformedHeaderError](#MalformedHeaderError)
   * [new MalformedHeaderError(msg)](#new_MalformedHeaderError)
 * [class: NotImplementedError](#NotImplementedError)
@@ -19,6 +20,8 @@
   * [new EncodingError(msg)](#new_EncodingError)
 * [class: OverCapacityError](#OverCapacityError)
   * [new OverCapacityError(msg)](#new_OverCapacityError)
+* [class: AuthenticationError](#AuthenticationError)
+  * [new AuthenticationError(msg)](#new_AuthenticationError)
 * [class: ArgumentError](#ArgumentError)
   * [new ArgumentError(arg)](#new_ArgumentError)
 * [class: AttachFrame](#AttachFrame)
@@ -167,6 +170,7 @@ Encode the given value as an AMQP 1.0 bitstring.We do a best-effort to determi
 
 * [class: Connection](#Connection)
   * [new Connection()](#new_Connection)
+  * [connection.open(address, sasl)](#Connection#open)
 
 <a name="new_Connection"></a>
 ##new Connection()
@@ -287,6 +291,15 @@ S:<b>CTRL</b> = Sent <b>CTRL</b>
 
 Also could be DISCARDING if an error condition triggered the CLOSE
 
+<a name="Connection#open"></a>
+##connection.open(address, sasl)
+Open a connection to the given (parsed) address (@see `AMQPClient`).
+
+**Params**
+
+- address  - Contains at least protocol, host and port, may contain user/pass, path.  
+- sasl  - If given, contains a "negotiate" method that, given address and a callback, will run through SASL negotiations.  
+
 <a name="MalformedHeaderError"></a>
 #class: MalformedHeaderError
 **Members**
@@ -357,6 +370,21 @@ Given object cannot be encoded successfully.
 <a name="new_OverCapacityError"></a>
 ##new OverCapacityError(msg)
 Violation of AMQP flow control.
+
+**Params**
+
+- msg   
+
+<a name="AuthenticationError"></a>
+#class: AuthenticationError
+**Members**
+
+* [class: AuthenticationError](#AuthenticationError)
+  * [new AuthenticationError(msg)](#new_AuthenticationError)
+
+<a name="new_AuthenticationError"></a>
+##new AuthenticationError(msg)
+Authentication failure.
 
 **Params**
 
