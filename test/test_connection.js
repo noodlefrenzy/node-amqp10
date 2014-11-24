@@ -31,51 +31,6 @@ function closeBuf(err) {
 }
 
 describe('Connection', function() {
-    describe('#_parseAddress()', function() {
-
-        it('should match amqp(|s) no port no route', function () {
-            var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
-
-            var addr = 'amqp://localhost/';
-            var result = conn._parseAddress(addr);
-            result.protocol.should.eql('amqp');
-            result.host.should.eql('localhost');
-            result.port.should.eql('5672');
-            result.path.should.eql('/');
-
-            addr = 'amqps://127.0.0.1';
-            result = conn._parseAddress(addr);
-            result.should.eql({
-                protocol: 'amqps',
-                host: '127.0.0.1',
-                port: '5671',
-                path: '/'
-            });
-        });
-
-        it('should match with port and with/without route', function () {
-            var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
-
-            var addr = 'amqp://localhost:1234';
-            var result = conn._parseAddress(addr);
-            result.should.eql({
-                protocol: 'amqp',
-                host: 'localhost',
-                port: '1234',
-                path: '/'
-            });
-
-            addr = 'amqps://mq.myhost.com:1235/myroute?with=arguments&multiple=arguments';
-            result = conn._parseAddress(addr);
-            result.should.eql({
-                protocol: 'amqps',
-                host: 'mq.myhost.com',
-                port: '1235',
-                path: '/myroute?with=arguments&multiple=arguments'
-            });
-        });
-    });
-
     var assertTransitions = function(actual, expected) {
         actual.length.should.eql(expected.length-1, "Wrong number of state transitions: Actual " + JSON.stringify(actual) + " vs. Expected " + JSON.stringify(expected));
         for (var idx = 0; idx < expected.length - 1; ++idx) {
@@ -93,7 +48,7 @@ describe('Connection', function() {
         it('should send activemq', function(done) {
             this.timeout(0);
             var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
-            conn.open('amqp://localhost/');
+            conn.open({ protocol: 'amqp', host: 'localhost', port: 5672 });
             conn.on(Connection.Connected, function() {
                 var session = new Session(conn);
                 session.on(Session.LinkAttached, function(link) {
@@ -133,7 +88,7 @@ describe('Connection', function() {
         it('should receive activemq', function(done) {
             this.timeout(0);
             var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
-            conn.open('amqp://localhost/');
+            conn.open({ protocol: 'amqp', host: 'localhost', port: 5672 });
             conn.on(Connection.Connected, function() {
                 var session = new Session(conn);
                 session.on(Session.LinkAttached, function(link) {
@@ -199,7 +154,7 @@ describe('Connection', function() {
             var transitions = [];
             var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
             conn.connSM.bind(recordTransitions);
-            conn.open('amqp://localhost:'+server.port);
+            conn.open({ protocol: 'amqp', host: 'localhost', port: server.port });
             server.assertSequence(function() {
                 conn.close();
                 assertTransitions(transitions, [ 'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'DISCONNECTED' ]);
@@ -215,7 +170,7 @@ describe('Connection', function() {
             var transitions = [];
             var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
             conn.connSM.bind(recordTransitions);
-            conn.open('amqp://localhost:'+server.port);
+            conn.open({ protocol: 'amqp', host: 'localhost', port: server.port });
             server.assertSequence(function() {
                 conn.close();
                 assertTransitions(transitions, [ 'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'DISCONNECTED' ]);
@@ -231,7 +186,7 @@ describe('Connection', function() {
             var transitions = [];
             var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
             conn.connSM.bind(recordTransitions);
-            conn.open('amqp://localhost:'+server.port);
+            conn.open({ protocol: 'amqp', host: 'localhost', port: server.port });
             server.assertSequence(function() {
                 conn.close();
                 assertTransitions(transitions, [ 'DISCONNECTED', 'START', 'HDR_SENT', 'DISCONNECTED' ]);
@@ -247,7 +202,7 @@ describe('Connection', function() {
             var transitions = [];
             var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
             conn.connSM.bind(recordTransitions);
-            conn.open('amqp://localhost:'+server.port);
+            conn.open({ protocol: 'amqp', host: 'localhost', port: server.port });
             server.assertSequence(function() {
                 conn.close();
                 assertTransitions(transitions, [ 'DISCONNECTED', 'START', 'HDR_SENT', 'DISCONNECTED' ]);
@@ -263,7 +218,7 @@ describe('Connection', function() {
             var transitions = [];
             var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS+'=>'+newS); };
             conn.connSM.bind(recordTransitions);
-            conn.open('amqp://localhost:'+server.port);
+            conn.open({ protocol: 'amqp', host: 'localhost', port: server.port });
             server.assertSequence(function() {
                 conn.close();
                 assertTransitions(transitions, [ 'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'OPENED', 'CLOSE_RCVD', 'DISCONNECTED' ]);
@@ -284,7 +239,7 @@ describe('Connection', function() {
             conn.on(Connection.FrameReceived, function(frame) { events.push([ Connection.FrameReceived, frame ]); });
             conn.on(Connection.ErrorReceived, function(err) { events.push([ Connection.ErrorReceived, err ]); });
             conn.connSM.bind(recordTransitions);
-            conn.open('amqp://localhost:'+server.port);
+            conn.open({ protocol: 'amqp', host: 'localhost', port: server.port });
             server.assertSequence(function() {
                 conn.close();
                 assertTransitions(transitions, [ 'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'OPENED', 'CLOSE_RCVD', 'DISCONNECTED' ]);

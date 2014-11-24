@@ -104,7 +104,7 @@ describe('Session', function() {
                 session.sessionSM.bind(recordSessionTransitions);
                 session.begin({ nextOutgoingId: 1, incomingWindow: 100, outgoingWindow: 100 });
             });
-            conn.open('amqp://localhost:'+server.port);
+            conn.open({ protocol: 'amqp', host: 'localhost', port: server.port });
             server.assertSequence(function() {
                 conn.close();
                 assertTransitions(transitions, [ 'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'OPENED', 'CLOSE_RCVD', 'DISCONNECTED' ]);
@@ -127,7 +127,7 @@ describe('Session', function() {
                 session.on(Session.Unmapped, function() { events.push(Session.Unmapped); });
                 session.begin({ nextOutgoingId: 1, incomingWindow: 100, outgoingWindow: 100 });
             });
-            conn.open('amqp://localhost:'+server.port);
+            conn.open({ protocol: 'amqp', host: 'localhost', port: server.port });
             server.assertSequence(function() {
                 conn.close();
                 events.length.should.eql(3, JSON.stringify(events));
@@ -162,7 +162,7 @@ describe('Session', function() {
                 });
                 session.begin({ nextOutgoingId: 1, incomingWindow: 100, outgoingWindow: 100 });
             });
-            conn.open('amqp://localhost:'+server.port);
+            conn.open({ protocol: 'amqp', host: 'localhost', port: server.port });
             server.assertSequence(function() {
                 conn.close();
                 assertTransitions(transitions, [ 'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'OPENED', 'CLOSE_RCVD', 'DISCONNECTED' ]);
