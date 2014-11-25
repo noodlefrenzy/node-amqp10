@@ -165,13 +165,14 @@ describe('FrameReader', function() {
 
         it('should read SASL Mechanisms frame', function() {
             var arraySize = 1 + 1 + 6 + 5;
-            var frameSize = 8 + 1 + 9 + 2 + arraySize;
+            var frameSize = 8 + 1 + 9 + 2 + 3 + arraySize;
             var cbuf = tu.newCBuf([
                 0x00, 0x00, 0x00, frameSize,
                 0x02, 0x01, 0x00, 0x00,
                 0x00,
                 0x80, 0x00, 0x00, 0x00, 0x00,
                       0x00, 0x00, 0x00, 0x40,
+                0xC0, arraySize + 3, 1,
                 0xE0, arraySize, 2,
                 0xA3,
                 5, builder.prototype.appendString, 'PLAIN',

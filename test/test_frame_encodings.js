@@ -232,13 +232,14 @@ describe('SaslFrames', function() {
             it('should encode correctly', function () {
                 var mechanisms = new Sasl.SaslMechanisms();
                 var actual = mechanisms.outgoing();
-                var frameSize = 8 + 1 + 9 + 2 + 'ANONYMOUS'.length;
+                var frameSize = 8 + 1 + 9 + 3 + 2 + 'ANONYMOUS'.length;
                 var expected = tu.newBuf([
                     0x00, 0x00, 0x00, frameSize,
                     0x02, 0x01, 0x00, 0x00,
                     0x00,
                     0x80, 0x00, 0x00, 0x00, 0x00,
                           0x00, 0x00, 0x00, 0x40,
+                    0xC0, 9 + 3, 1,
                     0xA3, 9, builder.prototype.appendString, 'ANONYMOUS'
                 ]);
                 tu.shouldBufEql(expected, actual);
