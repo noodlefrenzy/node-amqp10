@@ -1,30 +1,31 @@
-var debug = require('debug')('amqp10-test_sasl'),
-    should = require('should'),
-    builder = require('buffer-builder'),
+var debug       = require('debug')('amqp10-test_sasl'),
+    should      = require('should'),
+    builder     = require('buffer-builder'),
 
-    constants = require('../lib/constants'),
+    constants   = require('../lib/constants'),
 
-    MockServer = require('./mock_amqp'),
-    AMQPError = require('../lib/types/amqp_error'),
-    Source = require('../lib/types/source_target').Source,
-    Target = require('../lib/types/source_target').Target,
-    M = require('../lib/types/message'),
+    MockServer  = require('./mock_amqp'),
+    AMQPError   = require('../lib/types/amqp_error'),
+    Symbol      = require('../lib/types/symbol'),
+    Source      = require('../lib/types/source_target').Source,
+    Target      = require('../lib/types/source_target').Target,
+    M           = require('../lib/types/message'),
 
-    CloseFrame = require('../lib/frames/close_frame'),
-    FlowFrame = require('../lib/frames/flow_frame'),
-    OpenFrame = require('../lib/frames/open_frame'),
-    SaslFrames = require('../lib/frames/sasl_frame'),
+    CloseFrame  = require('../lib/frames/close_frame'),
+    FlowFrame   = require('../lib/frames/flow_frame'),
+    OpenFrame   = require('../lib/frames/open_frame'),
+    SaslFrames  = require('../lib/frames/sasl_frame'),
 
-    Connection = require('../lib/connection'),
-    Session = require('../lib/session').Session,
-    Link = require('../lib/session').Link,
-    Sasl = require('../lib/sasl'),
+    Connection  = require('../lib/connection'),
+    Session     = require('../lib/session').Session,
+    Link        = require('../lib/session').Link,
+    Sasl        = require('../lib/sasl'),
 
-    tu = require('./testing_utils');
+    tu          = require('./testing_utils');
 
 function initBuf() {
     var init = new SaslFrames.SaslInit({
-        mechanism: 'PLAIN',
+        mechanism: new Symbol('PLAIN'),
         initialResponse: tu.newBuf([0, builder.prototype.appendString, 'user', 0, builder.prototype.appendString, 'pass'])
     });
     return init.outgoing();
@@ -79,9 +80,10 @@ describe('Sasl', function () {
             var conn = new Connection({
                 containerId: 'test',
                 hostname: 'localhost',
+                idleTimeout: 120000,
                 sslOptions: {
-                    keyFile: 'E:/dev/git_ws/node_modules/node-amqp-1-0/ehtest-key.pem',
-                    certFile: 'E:/dev/git_ws/node_modules/node-amqp-1-0/ehtest-cert.pem'
+                    keyFile: 'C:/dev/git_ws/node_modules/node-amqp-1-0/ehtest-key.pem',
+                    certFile: 'C:/dev/git_ws/node_modules/node-amqp-1-0/ehtest-cert.pem'
                 }
             });
             conn.open({
@@ -89,7 +91,7 @@ describe('Sasl', function () {
                 host: 'milanz-hub-ns.servicebus.windows.net',
                 port: 5671,
                 user: 'Subscriber',
-                pass: '6zAbA9oAmIIejkeI2BOZwFFrod81jxWaKz8N607DjEc='
+                pass: ''
             }, new Sasl());
             conn.on(Connection.Connected, function () {
                 var session = new Session(conn);
@@ -104,7 +106,7 @@ describe('Sasl', function () {
                         nextOutgoingId: 1,
                         outgoingWindow: 100,
                         handle: link.handle,
-                        linkCredit: 100000
+                        linkCredit: 10
                     });
                     flow.channel = session.channel;
                     conn.sendFrame(flow);
@@ -120,7 +122,7 @@ describe('Sasl', function () {
                         name: linkName,
                         role: constants.linkRole.receiver,
                         source: new Source({address: addr}),
-                        target: new Target({address: addr}),
+                        target: new Target({address: 'localhost'}),
                         initialDeliveryCount: 1
                     });
                 });

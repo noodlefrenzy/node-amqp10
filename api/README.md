@@ -623,13 +623,24 @@ An AMQP Message is composed of:* Zero or one header* Zero or one delivery-ann
 
 <a name="new_SaslFrame"></a>
 ##new SaslFrame()
-Base Frame for SASL authentication.To establish a SASL tunnel, each peer MUST start by sending a protocol header. The protocolheader consists of the upper case ASCII letters "AMQP" followed by a protocol id of three,followed by three unsigned bytes representing the major, minor, and revision of thespecification version (see constants.saslVersion). In total this is an 8-octet sequence:
+Base Frame for SASL authentication.
+
+To establish a SASL tunnel, each peer MUST start by sending a protocol header. The protocol
+header consists of the upper case ASCII letters "AMQP" followed by a protocol id of three,
+followed by three unsigned bytes representing the major, minor, and revision of the
+specification version (see constants.saslVersion). In total this is an 8-octet sequence:
  <pre>
  4 OCTETS   1 OCTET   1 OCTET   1 OCTET   1 OCTET
  +----------+---------+---------+---------+----------+
  |  "AMQP"  |   %d3   |  major  |  minor  | revision |
  +----------+---------+---------+---------+----------+
- </pre>Other than using a protocol id of three, the exchange of SASL tunnel headers follows thesame rules specified in the version negotiation section of the transport specification (Seeversion-negotiation).The following diagram illustrates the interaction involved in creating a SASL Security Layer:
+ </pre>
+
+Other than using a protocol id of three, the exchange of SASL tunnel headers follows the
+same rules specified in the version negotiation section of the transport specification (See
+version-negotiation).
+
+The following diagram illustrates the interaction involved in creating a SASL Security Layer:
  <pre>
  TCP Client                 TCP Server
  =========================================
@@ -644,7 +655,12 @@ Base Frame for SASL authentication.To establish a SASL tunnel, each peer MUST 
  < --------  AMQP%d0.1.0.0
  open  -------- >
  < --------  open
- </pre>SASL is negotiated using framing. A SASL frame has a type code of 0x01.Bytes 6 and 7 of the header are ignored. Implementations SHOULD set these to 0x00. Theextended header is ignored. Implementations SHOULD therefore set DOFF to 0x02.
+ </pre>
+
+SASL is negotiated using framing. A SASL frame has a type code of 0x01.
+Bytes 6 and 7 of the header are ignored. Implementations SHOULD set these to 0x00. The
+extended header is ignored. Implementations SHOULD therefore set DOFF to 0x02.
+
  <pre>
  type: 0x01 - SASL frame
  +0       +1       +2       +3
@@ -669,7 +685,12 @@ Base Frame for SASL authentication.To establish a SASL tunnel, each peer MUST 
  +--------------------------+          -'
  &#42;1 SHOULD be set to 0x0000
  &#42;2 Ignored, so DOFF should be set to 0x02
- </pre>The maximum size of a SASL frame is defined by constants.minMaxFrameSize. There isno mechanism within the SASL negotiation to negotiate a different size. The frame body of aSASL frame may contain exactly one AMQP type, whose type encoding must havesasl-frame. Receipt of an empty frame is an irrecoverable error.
+ </pre>
+
+The maximum size of a SASL frame is defined by constants.minMaxFrameSize. There is
+no mechanism within the SASL negotiation to negotiate a different size. The frame body of a
+SASL frame may contain exactly one AMQP type, whose type encoding must have
+sasl-frame. Receipt of an empty frame is an irrecoverable error.
 
 <a name="SaslMechanisms"></a>
 #class: SaslMechanisms
@@ -680,11 +701,16 @@ Base Frame for SASL authentication.To establish a SASL tunnel, each peer MUST 
 
 <a name="new_SaslMechanisms"></a>
 ##new SaslMechanisms(options)
-A list of the sasl security mechanisms supported by the sending peer. It is invalidfor this list to be null or empty. If the sending peer does not require its partnerto authenticate with it, then it should send a list of one element with its value asthe SASL mechanism <i>ANONYMOUS</i>. The server mechanisms are ordered in decreasinglevel of preference.
+A list of the sasl security mechanisms supported by the sending peer. It is invalid
+for this list to be null or empty. If the sending peer does not require its partner
+to authenticate with it, then it should send a list of one element with its value as
+the SASL mechanism <i>ANONYMOUS</i>. The server mechanisms are ordered in decreasing
+level of preference.
 
 **Params**
 
-- options  - Either the DescribedType of an incoming SASL Mechanisms frame,                 or an array of mechanisms, or a map with a mechanisms key.  
+- options  - Either the DescribedType of an incoming SASL Mechanisms frame,
+                 or an array of mechanisms, or a map with a mechanisms key.  
 
 <a name="SaslInit"></a>
 #class: SaslInit
@@ -695,7 +721,45 @@ A list of the sasl security mechanisms supported by the sending peer. It is inva
 
 <a name="new_SaslInit"></a>
 ##new SaslInit(options)
-SASL Init frame, containing the following fields:<table border="1">    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>    <tr><td>mechanism</td><td>symbol</td><td>true</td><td>false</td></tr>    <tr><td>&nbsp;</td><td colspan="3">The name of the SASL mechanism used for the SASL exchange. If the selected mechanism isnot supported by the receiving peer, it MUST close the Connection with theauthentication-failure close-code. Each peer MUST authenticate using the highest-levelsecurity profile it can handle from the list provided by the partner.     </td></tr>     <tr><td>initial-response</td><td>binary</td><td>false</td><td>false</td></tr>     <tr><td>&nbsp;</td><td colspan="3">     <i>security response data</i><br/>     <p>A block of opaque data passed to the security mechanism. The contents of this data aredefined by the SASL security mechanism.     </p>     </td></tr>     <tr><td>hostname</td><td>string</td><td>false</td><td>false</td></tr>     <tr><td>&nbsp;</td><td colspan="3">     <i>the name of the target host</i><br/>     <p>The DNS name of the host (either fully qualified or relative) to which the sending peeris connecting. It is not mandatory to provide the hostname. If no hostname is providedthe receiving peer should select a default based on its own configuration.     </p>     <p>This field can be used by AMQP proxies to determine the correct back-end service toconnect the client to, and to determine the domain to validate the client's credentialsagainst.     </p>     <p>This field may already have been specified by the server name indication extension asdescribed in RFC-4366, if a TLS layer is used, in which case this field SHOULD be nullor contain the same value. It is undefined what a different value to those alreadyspecific means.     </p>     </td></tr></table>
+SASL Init frame, containing the following fields:
+<table border="1">
+    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>
+    <tr><td>mechanism</td><td>symbol</td><td>true</td><td>false</td></tr>
+    <tr><td>&nbsp;</td><td colspan="3">
+The name of the SASL mechanism used for the SASL exchange. If the selected mechanism is
+not supported by the receiving peer, it MUST close the Connection with the
+authentication-failure close-code. Each peer MUST authenticate using the highest-level
+security profile it can handle from the list provided by the partner.
+     </td></tr>
+     <tr><td>initial-response</td><td>binary</td><td>false</td><td>false</td></tr>
+     <tr><td>&nbsp;</td><td colspan="3">
+     <i>security response data</i><br/>
+     <p>
+A block of opaque data passed to the security mechanism. The contents of this data are
+defined by the SASL security mechanism.
+     </p>
+     </td></tr>
+     <tr><td>hostname</td><td>string</td><td>false</td><td>false</td></tr>
+     <tr><td>&nbsp;</td><td colspan="3">
+     <i>the name of the target host</i><br/>
+     <p>
+The DNS name of the host (either fully qualified or relative) to which the sending peer
+is connecting. It is not mandatory to provide the hostname. If no hostname is provided
+the receiving peer should select a default based on its own configuration.
+     </p>
+     <p>
+This field can be used by AMQP proxies to determine the correct back-end service to
+connect the client to, and to determine the domain to validate the client's credentials
+against.
+     </p>
+     <p>
+This field may already have been specified by the server name indication extension as
+described in RFC-4366, if a TLS layer is used, in which case this field SHOULD be null
+or contain the same value. It is undefined what a different value to those already
+specific means.
+     </p>
+     </td></tr>
+</table>
 
 **Params**
 
@@ -710,7 +774,16 @@ SASL Init frame, containing the following fields:<table border="1">    <tr><th
 
 <a name="new_SaslChallenge"></a>
 ##new SaslChallenge(options)
-SASL Challenge frame, containing the following field:<table border="1">    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>    <tr><td>challenge</td><td>binary</td><td>true</td><td>false</td></tr>    <tr><td>&nbsp;</td><td colspan="3">Challenge information, a block of opaque binary data passed to the securitymechanism.    </td></tr></table>
+SASL Challenge frame, containing the following field:
+
+<table border="1">
+    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>
+    <tr><td>challenge</td><td>binary</td><td>true</td><td>false</td></tr>
+    <tr><td>&nbsp;</td><td colspan="3">
+Challenge information, a block of opaque binary data passed to the security
+mechanism.
+    </td></tr>
+</table>
 
 **Params**
 
@@ -725,7 +798,16 @@ SASL Challenge frame, containing the following field:<table border="1">    <t
 
 <a name="new_SaslResponse"></a>
 ##new SaslResponse(options)
-SASL Response frame, containing the following field:<table border="1">    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>    <tr><td>response</td><td>binary</td><td>true</td><td>false</td></tr>    <tr><td>&nbsp;</td><td colspan="3">A block of opaque data passed to the security mechanism. The contents of this data aredefined by the SASL security mechanism.    </td></tr></table>
+SASL Response frame, containing the following field:
+
+<table border="1">
+    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>
+    <tr><td>response</td><td>binary</td><td>true</td><td>false</td></tr>
+    <tr><td>&nbsp;</td><td colspan="3">
+A block of opaque data passed to the security mechanism. The contents of this data are
+defined by the SASL security mechanism.
+    </td></tr>
+</table>
 
 **Params**
 
@@ -740,7 +822,45 @@ SASL Response frame, containing the following field:<table border="1">    <tr
 
 <a name="new_SaslOutcome"></a>
 ##new SaslOutcome(options)
-This frame indicates the outcome of the SASL dialog. Upon successful completion of theSASL dialog the Security Layer has been established, and the peers must exchange protocolheaders to either start a nested Security Layer, or to establish the AMQP Connection.SASL Outcome frame contains the following fields:<table border="1">    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>    <tr><td>code</td><td>sasl-code</td><td>true</td><td>false</td></tr>    <tr><td>&nbsp;</td><td colspan="3">    <i>indicates the outcome of the sasl dialog</i><br/>    </td></tr>    <tr><td>additional-data</td><td>binary</td><td>false</td><td>false</td></tr>    <tr><td>&nbsp;</td><td colspan="3">The additional-data field carries additional data on successful authentication outcomeas specified by the SASL specification (RFC-4422). If the authentication isunsuccessful, this field is not set.    </td></tr></table>SASL Code is a ubyte constrained to the following:<table border="1">    <tr><th>Byte</th><th>Name</th><th>Details</th></tr>    <tr><td>0</td><td>ok</td><td>Connection authentication succeeded.</td></tr>    <tr><td>1</td><td>auth</td><td>Connection authentication failed due to an unspecified problem with the suppliedcredentials.    </td></tr>    <tr><td>2</td><td>sys</td><td>Connection authentication failed due to a system error.    </td></tr>    <tr><td>3</td><td>sys-perm</td><td>Connection authentication failed due to a system error that is unlikely to be correctedwithout intervention.    </td></tr>    <tr><td>4</td><td>sys-temp</td><td>Connection authentication failed due to a transient system error.    </td></tr></table>
+This frame indicates the outcome of the SASL dialog. Upon successful completion of the
+SASL dialog the Security Layer has been established, and the peers must exchange protocol
+headers to either start a nested Security Layer, or to establish the AMQP Connection.
+
+SASL Outcome frame contains the following fields:
+
+<table border="1">
+    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>
+    <tr><td>code</td><td>sasl-code</td><td>true</td><td>false</td></tr>
+    <tr><td>&nbsp;</td><td colspan="3">
+    <i>indicates the outcome of the sasl dialog</i><br/>
+    </td></tr>
+    <tr><td>additional-data</td><td>binary</td><td>false</td><td>false</td></tr>
+    <tr><td>&nbsp;</td><td colspan="3">
+The additional-data field carries additional data on successful authentication outcome
+as specified by the SASL specification (RFC-4422). If the authentication is
+unsuccessful, this field is not set.
+    </td></tr>
+</table>
+
+SASL Code is a ubyte constrained to the following:
+<table border="1">
+    <tr><th>Byte</th><th>Name</th><th>Details</th></tr>
+    <tr><td>0</td><td>ok</td><td>Connection authentication succeeded.</td></tr>
+    <tr><td>1</td><td>auth</td><td>
+Connection authentication failed due to an unspecified problem with the supplied
+credentials.
+    </td></tr>
+    <tr><td>2</td><td>sys</td><td>
+Connection authentication failed due to a system error.
+    </td></tr>
+    <tr><td>3</td><td>sys-perm</td><td>
+Connection authentication failed due to a system error that is unlikely to be corrected
+without intervention.
+    </td></tr>
+    <tr><td>4</td><td>sys-temp</td><td>
+Connection authentication failed due to a transient system error.
+    </td></tr>
+</table>
 
 **Params**
 
