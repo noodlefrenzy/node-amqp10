@@ -73,7 +73,7 @@ describe('Sasl', function () {
         var linkName = 'test';
         var addr = 'milanz-hub/ConsumerGroups/$default/Partitions/1';
 
-        /*
+        /**/
         it('should receive eventhub', function (done) {
             this.timeout(0);
             var conn = new Connection({
@@ -87,7 +87,7 @@ describe('Sasl', function () {
             conn.open({
                 protocol: 'amqps',
                 host: 'milanz-hub-ns.servicebus.windows.net',
-                port: 5672,
+                port: 5671,
                 user: 'Subscriber',
                 pass: '6zAbA9oAmIIejkeI2BOZwFFrod81jxWaKz8N607DjEc='
             }, new Sasl());
@@ -145,7 +145,7 @@ describe('Sasl', function () {
                 }
             });
         });
-        */
+        /**/
 
         it('should go through sasl negotiation and then open/close cycle as asked', function (done) {
             server = new MockServer();
