@@ -72,18 +72,92 @@ describe('Sasl', function () {
         });
 
         var linkName = 'test';
-        var addr = 'milanz-hub/ConsumerGroups/$default/Partitions/1';
+        var recvAddr = 'milanz-hub/ConsumerGroups/$default/Partitions/1';
+        var sendAddr = 'milanz-hub/Partitions/1';
+
+        /*
+        it('should send eventhub', function(done) {
+            this.timeout(0);
+            var conn = new Connection({
+                containerId: 'test',
+                hostname: 'milanz-hub-ns.servicebus.windows.net',
+                idleTimeout: 120000,
+                sslOptions: {
+                    keyFile: 'E:/dev/git_ws/node_modules/node-amqp-1-0/ehtest-key.pem',
+                    certFile: 'E:/dev/git_ws/node_modules/node-amqp-1-0/ehtest-cert.pem'
+                }
+            });
+            conn.open({
+                protocol: 'amqps',
+                host: 'milanz-hub-ns.servicebus.windows.net',
+                port: 5671,
+                user: 'Publisher',
+                pass: ''
+            }, new Sasl());
+            conn.on(Connection.Connected, function() {
+                var session = new Session(conn);
+                session.on(Session.LinkAttached, function(link) {
+                    link.on(Link.CreditChange, function(c) {
+                        if (c > 0) {
+                            var msg = new M.Message();
+                            msg.body.push('test message');
+                            session.sendMessage(link, msg, { deliveryId: 1, deliveryTag: tu.newBuf([1]) });
+                        } else {
+                            console.log('Link has no capacity');
+                        }
+                    });
+                    setTimeout(function() {
+                        session.detachLink(link);
+                    }, 5000);
+                });
+                session.on(Session.LinkDetached, function() {
+                    session.end();
+                });
+                session.on(Session.Mapped, function() {
+                    link = session.attachLink({
+                        name: linkName+'s',
+                        role: constants.linkRole.sender,
+                        source: new Source({
+                            address: 'localhost'
+                        }),
+                        target: new Target({
+                            address: sendAddr
+                        }),
+                        senderSettleMode: constants.senderSettleMode.settled,
+                        receiverSettleMode: constants.receiverSettleMode.autoSettle,
+                        maxMessageSize: 10000,
+                        initialDeliveryCount: 1
+                    });
+                });
+                session.on(Session.Unmapped, function() {
+                    conn.close();
+                });
+                session.on(Session.ErrorReceived, function(err) {
+                    console.log(err);
+                });
+                session.begin({
+                    nextOutgoingId: 1,
+                    incomingWindow: 100,
+                    outgoingWindow: 100
+                });
+            });
+            conn.on(Connection.Disconnected, function() {
+                console.log('Disconnected');
+                done();
+            });
+        });
+        */
 
         /*
         it('should receive eventhub', function (done) {
             this.timeout(0);
             var conn = new Connection({
                 containerId: 'test',
-                hostname: 'localhost',
+                hostname: 'milanz-hub-ns.servicebus.windows.net',
                 idleTimeout: 120000,
                 sslOptions: {
-                    keyFile: 'C:/dev/git_ws/node_modules/node-amqp-1-0/ehtest-key.pem',
-                    certFile: 'C:/dev/git_ws/node_modules/node-amqp-1-0/ehtest-cert.pem'
+                    keyFile: 'E:/dev/git_ws/node_modules/node-amqp-1-0/ehtest-key.pem',
+                    certFile: 'E:/dev/git_ws/node_modules/node-amqp-1-0/ehtest-cert.pem'
                 }
             });
             conn.open({
@@ -96,7 +170,6 @@ describe('Sasl', function () {
             conn.on(Connection.Connected, function () {
                 var session = new Session(conn);
                 session.on(Session.LinkAttached, function (link) {
-                    debugger;
                     link.on(Link.MessageReceived, function (msg) {
                         console.log('Received message: ' + JSON.stringify(msg));
                     });
@@ -112,17 +185,24 @@ describe('Sasl', function () {
                     conn.sendFrame(flow);
                     setTimeout(function () {
                         session.detachLink(link);
-                    }, 10000);
+                    }, 7000);
                 });
                 session.on(Session.LinkDetached, function () {
                     session.end();
                 });
                 session.on(Session.Mapped, function () {
                     link = session.attachLink({
-                        name: linkName,
+                        name: linkName+'r',
                         role: constants.linkRole.receiver,
-                        source: new Source({address: addr}),
-                        target: new Target({address: 'localhost'}),
+                        source: new Source({
+                            address: recvAddr
+                        }),
+                        target: new Target({
+                            address: 'localhost'
+                        }),
+                        senderSettleMode: constants.senderSettleMode.settled,
+                        receiverSettleMode: constants.receiverSettleMode.autoSettle,
+                        maxMessageSize: 10000,
                         initialDeliveryCount: 1
                     });
                 });
