@@ -20,6 +20,31 @@ describe('Utilities', function() {
         });
     });
 
+    describe('#orDefaults', function() {
+        it('should set defaults when not set', function() {
+            var m = { 'a': 1 };
+            var d = { 'a': 2, 'b': 3 };
+            m = u.orDefaults(m, d);
+            m.a.should.eql(1);
+            m.b.should.eql(3);
+        });
+        it('should ignore defaults when set to "false" values', function() {
+            var m = { 'a': 0, 'b': false };
+            var d = { 'a': 1, 'b': true, 'c': 1.23 };
+            m = u.orDefaults(m, d);
+            m.a.should.eql(0);
+            m.b.should.eql(false);
+            m.c.should.eql(1.23);
+        });
+        it('should cope with undefined/null base map', function() {
+            var d = { 'a': 1 };
+            var m = u.orDefaults(undefined, d);
+            m.a.should.eql(1);
+            m = u.orDefaults(null, d);
+            m.a.should.eql(1);
+        })
+    });
+
     describe('#bufferEquals()', function() {
         it('should succeed when equal', function() {
             var b1 = tu.newBuf([1, 2, 3, 4]);

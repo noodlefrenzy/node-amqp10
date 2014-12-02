@@ -24,6 +24,8 @@
   * [new AuthenticationError(msg)](#new_AuthenticationError)
 * [class: ArgumentError](#ArgumentError)
   * [new ArgumentError(arg)](#new_ArgumentError)
+* [class: InvalidStateError](#InvalidStateError)
+  * [new InvalidStateError(msg)](#new_InvalidStateError)
 * [class: AttachFrame](#AttachFrame)
   * [new AttachFrame()](#new_AttachFrame)
 * [class: BeginFrame](#BeginFrame)
@@ -69,6 +71,7 @@
   * [new Sasl()](#new_Sasl)
 * [class: Session](#Session)
   * [new Session(conn)](#new_Session)
+  * [session.sendMessage(link, message, options)](#Session#sendMessage)
 * [class: Types](#Types)
   * [new Types()](#new_Types)
   * [types._listBuilder(val, bufb, codec, [width])](#Types#_listBuilder)
@@ -111,6 +114,7 @@
 * [encoder(val, buf, [codec])](#encoder)
 * [decoder(buf, [codec])](#decoder)
 * [onUndef(arg1, arg2)](#onUndef)
+* [orDefaults(map, defaultMap)](#orDefaults)
 
 **Members**
 
@@ -404,6 +408,21 @@ Argument missing or incorrectly defined.
 **Params**
 
 - arg   
+
+<a name="InvalidStateError"></a>
+#class: InvalidStateError
+**Members**
+
+* [class: InvalidStateError](#InvalidStateError)
+  * [new InvalidStateError(msg)](#new_InvalidStateError)
+
+<a name="new_InvalidStateError"></a>
+##new InvalidStateError(msg)
+Invalid state.
+
+**Params**
+
+- msg   
 
 <a name="AttachFrame"></a>
 #class: AttachFrame
@@ -1529,6 +1548,7 @@ Currently, only supports SASL-PLAIN
 
 * [class: Session](#Session)
   * [new Session(conn)](#new_Session)
+  * [session.sendMessage(link, message, options)](#Session#sendMessage)
 
 <a name="new_Session"></a>
 ##new Session(conn)
@@ -1614,6 +1634,14 @@ Note: This implementation *assumes* it is the client, and thus will always be th
 **Params**
 
 - conn <code>[Connection](#Connection)</code> - Connection to bind session to.  
+
+<a name="Session#sendMessage"></a>
+##session.sendMessage(link, message, options)
+**Params**
+
+- link `Link`  
+- message <code>[Message](#Message)</code>  
+- options `*`  
 
 <a name="Types"></a>
 #class: Types
@@ -1996,6 +2024,16 @@ Could use _args_ and slice and work for arbitrary length argument list, but that
 - arg2   
 
 **Returns**:  - arg2 if arg1 === undefined, otherwise arg1  
+<a name="orDefaults"></a>
+#orDefaults(map, defaultMap)
+Adds missing values to map from defaultMap.  Mutates input.
+
+**Params**
+
+- map   
+- defaultMap   
+
+**Returns**:  - map to allow for chaining.  
 <a name="payload"></a>
 #payload
 Convenience methods for operating against DescribedType list payloads.
