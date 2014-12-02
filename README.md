@@ -9,6 +9,16 @@ I've started a new project rather than fork from node-amqp or amqp.node.  Both n
 great 0.9.1 clients and I recommend them, but neither is pursuing a 1.0 implementation.  If I can find an
 easy way to integrate this code back into them, I'll definitely be submitting a PR.
 
+## Caveats ##
+
+Just getting this working, so might have bugs against various server implementations.  Also, configuring it is painful at the moment
+since it's exposing the raw AMQP parameters - I'll be working on tidying that up.
+
+I haven't yet completed the flow-control!  So, if you decide to use it now, you'll have to do your own.  Give me a bit and I'll
+be adding that in.
+
+Currently, I've only verified that this can send and receive against EventHub.
+
 ## Implementation Notes ##
 
 Here are my current implementation plans - if you have feedback or critiques on any of these choices, feel free to
@@ -23,8 +33,7 @@ submit an Issue or even a PR.  Trust me, I don't take criticism personally, and 
     swapping which callback gets invoked on receipt of new data. (e.g. post-connection, we write the AMQP version header
     and then install a callback to ensure the correct version.  Once incoming data is written to the circular buffer, this
     callback is invoked, and a comparison vs. the expected version triggers another transition).
-+   Buffer comparisons are done via [Buffertools](https://github.com/bnoordhuis/node-buffertools).  Bit-twiddling is done
-    via [node-butils](https://github.com/nlf/node-butils), if necessary.
++   Bit-twiddling is done via [node-butils](https://github.com/nlf/node-butils).
 
 Further, detailed implementation nodes are available in the [API Readme](api/).
 
@@ -61,11 +70,6 @@ with the aim of enlightening those looking into the defined classes (and helping
     stream state.  Links are named, and may outlive their associated connections, allowing reconnection and retention
     of associated state.
     
-## Caveats ##
-
-NOT YET IMPLEMENTED!  I'm just starting on this work - please ignore this repo for now.  Unless you want to help,
-in which case PR's are welcome :)
-
 ## License ##
 
 MIT License.  If you need a more permissive license, or you want to try your hand at integrating this code into

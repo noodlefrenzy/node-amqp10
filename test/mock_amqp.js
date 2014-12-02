@@ -1,11 +1,11 @@
-var btools      = require('buffertools'),
-    cbuf        = require('cbarrick-circular-buffer'),
+var cbuf        = require('cbarrick-circular-buffer'),
     debug       = require('debug')('amqp10-MockServer'),
     net         = require('net'),
     StateMachine= require('stately.js'),
     should      = require('should'),
 
-    constants   = require('../lib/constants');
+    constants   = require('../lib/constants'),
+    utils       = require('../lib/utilities');
 
 var MockServer = function(port) {
     this.server = null;
