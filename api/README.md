@@ -2,6 +2,8 @@
 
 **Classes**
 
+* [class: NodeSbusEventHubAdapter](#NodeSbusEventHubAdapter)
+  * [new NodeSbusEventHubAdapter()](#new_NodeSbusEventHubAdapter)
 * [class: Codec](#Codec)
   * [new Codec()](#new_Codec)
   * [codec._readFullValue(buf, [offset], [doNotConsume], [forcedCode])](#Codec#_readFullValue)
@@ -67,6 +69,8 @@
   * [new SaslOutcome(options)](#new_SaslOutcome)
 * [class: TransferFrame](#TransferFrame)
   * [new TransferFrame()](#new_TransferFrame)
+* [class: PolicyBase](#PolicyBase)
+  * [new PolicyBase()](#new_PolicyBase)
 * [class: Sasl](#Sasl)
   * [new Sasl()](#new_Sasl)
 * [class: Session](#Session)
@@ -120,6 +124,19 @@
 
 * [payload](#payload)
  
+<a name="NodeSbusEventHubAdapter"></a>
+#class: NodeSbusEventHubAdapter
+**Members**
+
+* [class: NodeSbusEventHubAdapter](#NodeSbusEventHubAdapter)
+  * [new NodeSbusEventHubAdapter()](#new_NodeSbusEventHubAdapter)
+
+<a name="new_NodeSbusEventHubAdapter"></a>
+##new NodeSbusEventHubAdapter()
+Adapts node-amqp-1-0 to adhere to the interface defined by the node-sbus adapter,
+for EventHub support.  Defines "subscribe" and "message" events, and builds
+a messenger.
+
 <a name="Codec"></a>
 #class: Codec
 **Members**
@@ -1530,6 +1547,18 @@ This frame indicates the outcome of the SASL dialog. Upon successful completion 
             a link is suspended and subsequently resumed.
           </p></td></tr>
 </table>
+
+<a name="PolicyBase"></a>
+#class: PolicyBase
+**Members**
+
+* [class: PolicyBase](#PolicyBase)
+  * [new PolicyBase()](#new_PolicyBase)
+
+<a name="new_PolicyBase"></a>
+##new PolicyBase()
+Policies encode many of the optional behaviors and settings of AMQP into a cohesive place,
+that could potentially be standardized, could be loaded from JSON, etc.
 
 <a name="Sasl"></a>
 #class: Sasl

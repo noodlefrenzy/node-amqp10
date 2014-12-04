@@ -1,4 +1,4 @@
-var debug       = require('debug')('amqp10-test_connection'),
+var debug       = require('debug')('amqp10-test_amqpclient'),
     should      = require('should'),
 
     AMQPClient  = require('../amqp_client'),

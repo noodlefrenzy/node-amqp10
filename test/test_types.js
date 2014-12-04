@@ -116,7 +116,6 @@ describe('Types', function() {
                ])
              ]
             ];
-            debugger;
             assertEncoders(toTest);
         });
     });
