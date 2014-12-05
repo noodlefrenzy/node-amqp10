@@ -140,7 +140,7 @@ describe('Session', function() {
 
         it('should create link', function(done) {
             server = new MockServer();
-            server.setSequence([ constants.amqpVersion, openBuf(), beginBuf({}, 1), attachBuf({ handle: 1, role: constants.linkRole.sender, initialDeliveryCount: 1 }, 1), detachBuf({ handle: 1}, 1), endBuf(null, 1), closeBuf() ],
+            server.setSequence([ constants.amqpVersion, openBuf(), beginBuf({}, 1), attachBuf({ handle: 0, role: constants.linkRole.sender, initialDeliveryCount: 1 }, 1), detachBuf({ handle: 0}, 1), endBuf(null, 1), closeBuf() ],
                 [ constants.amqpVersion, openBuf(), beginBuf({ remoteChannel: 1 }, 5), attachBuf({ handle: 3, role: constants.linkRole.receiver }, 5),
                     [true, detachBuf({ handle: 3, error: new AMQPError(AMQPError.LinkDetachForced, 'test') }, 5) ],
                     [ true, endBuf(new AMQPError(AMQPError.ConnectionForced, 'test'), 5) ], [ true, closeBuf()] ]);
