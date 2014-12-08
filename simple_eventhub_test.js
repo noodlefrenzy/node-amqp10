@@ -2,6 +2,8 @@ var debug       = require('debug')('amqp10-app'),
     builder     = require('buffer-builder'),
 
     constants   = require('./lib/constants'),
+    exceptions  = require('./lib/exceptions'),
+    u           = require('./lib/utilities'),
 
     AMQPError   = require('./lib/types/amqp_error'),
     Symbol      = require('./lib/types/symbol'),
@@ -16,36 +18,27 @@ var debug       = require('debug')('amqp10-app'),
 
     AMQPClient      = require('./amqp_client');
 
-// From SAS endpoint entry for both send/receive permissions, e.g.:
-// Endpoint=sb://<sb-host>/;SharedAccessKeyName=<name>;SharedAccessKey=<key>
-var serviceBusHost = '';
-var ehSASKeyName = '';
-var ehSASKey = '';
-// From EventHub name
-var recvAddr = '<ehname>/ConsumerGroups/$default/Partitions/';
-var sendAddr = '<ehname>';
-
 // @todo A lot of these should be replaced with default policy settings
 // @todo amqp_client should be doing a lot of this work
-function makeSession(cb) {
+function makeSession(sbHost, sasName, sasKey, sendAddr, recvAddr, cb) {
     var conn = new Connection({
         containerId: 'test',
-        hostname: serviceBusHost,
+        hostname: sbHost,
         idleTimeout: 120000,
         sslOptions: {
         }
     });
     conn.open({
         protocol: 'amqps',
-        host: serviceBusHost,
+        host: sbHost,
         port: 5671,
-        user: ehSASKeyName,
-        pass: ehSASKey
+        user: sasName,
+        pass: sasKey
     }, new Sasl());
     conn.on(Connection.Connected, function() {
         var session = new Session(conn);
         session.on(Session.Mapped, function(s) {
-            cb(s);
+            cb(sendAddr, recvAddr, s);
         });
         session.on(Session.Unmapped, function() {
             conn.close();
@@ -139,7 +132,7 @@ function recv(link) {
     }, 1000);
 }
 
-function runSendRecv(session) {
+function runSendRecv(sendAddr, recvAddr, session) {
     //makeSender(session, sendAddr, send);
     var makeRx = function(addr) {
         makeReceiver(session, addr, recv);
@@ -157,4 +150,29 @@ function runSendRecv(session) {
     }, 1000);
 }
 
-makeSession(runSendRecv);
+// From SAS endpoint entry for both send/receive permissions, e.g.:
+// Endpoint=sb://<sb-host>/;SharedAccessKeyName=<name>;SharedAccessKey=<key>
+// Settings file should be JSON containing:
+// {
+//   serviceBusHost: <sb-host>,
+//   eventHubName: <eh-name>,
+//   SASKeyName: <name>,
+//   SASKey: <key>
+// }
+
+//makeSession(runSendRecv);
+
+if (process.argv.length < 3) {
+    console.warn('Usage: node '+process.argv[1]+' <settings json file>');
+} else {
+    var settingsFile = process.argv[2];
+    var settings = require('./' + settingsFile);
+    exceptions.assertArguments(settings, [ 'serviceBusHost', 'SASKeyName', 'SASKey', 'eventHubName']);
+    var sbHost = settings.serviceBusHost + '.servicebus.windows.net';
+    var sasName = settings.SASKeyName;
+    var sasKey = settings.SASKey;
+    var sendAddr = settings.eventHubName;
+    var recvAddr = settings.eventHubName + '/ConsumerGroups/' + (settings.consumerGroup || '$default') + '/Partitions/';
+    console.log('Tx to '+sbHost+'/'+sendAddr+', Rx from '+sbHost+'/'+recvAddr);
+    makeSession(sbHost, sasName, sasKey, sendAddr, recvAddr, runSendRecv);
+}
