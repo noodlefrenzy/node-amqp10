@@ -20,6 +20,7 @@ var Int64       = require('node-int64'),
     FlowFrame   = require('../lib/frames/flow_frame'),
     OpenFrame   = require('../lib/frames/open_frame'),
     TransferFrame   = require('../lib/frames/transfer_frame'),
+    HeartbeatFrame  = require('../lib/frames/heartbeat_frame'),
 
     Sasl        = require('../lib/frames/sasl_frame'),
 
@@ -244,6 +245,17 @@ describe('SaslFrames', function() {
                 ]);
                 tu.shouldBufEql(expected, actual);
             });
+        });
+    });
+});
+
+describe('HeartbeatFrame', function() {
+    describe('#outgoing()', function() {
+        it('should encode correctly', function() {
+            var heartbeat = new HeartbeatFrame();
+            var actual = heartbeat.outgoing();
+            var expected = tu.newBuf([0, 0, 0, 8, 2, 0, 0, 0]);
+            tu.shouldBufEql(expected, actual);
         });
     });
 });

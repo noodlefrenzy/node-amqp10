@@ -20,7 +20,7 @@ var debug       = require('debug')('amqp10-app'),
 
 // @todo A lot of these should be replaced with default policy settings
 // @todo amqp_client should be doing a lot of this work
-function makeSession(sbHost, sasName, sasKey, sendAddr, recvAddr, cb) {
+function makeSessions(sbHost, sasName, sasKey, sendAddr, recvAddr, cb) {
     var conn = new Connection({
         containerId: 'test',
         hostname: sbHost,
@@ -36,21 +36,17 @@ function makeSession(sbHost, sasName, sasKey, sendAddr, recvAddr, cb) {
         pass: sasKey
     }, new Sasl());
     conn.on(Connection.Connected, function() {
-        var session = new Session(conn);
-        session.on(Session.Mapped, function(s) {
-            cb(sendAddr, recvAddr, s);
-        });
-        session.on(Session.Unmapped, function() {
-            conn.close();
-        });
-        session.on(Session.ErrorReceived, function(err) {
-            console.log(err);
-        });
-        session.begin({
-            nextOutgoingId: 1,
-            incomingWindow: 100,
-            outgoingWindow: 100
-        });
+        for (var idx = 0; idx < 5; ++idx) {
+            var session = new Session(conn);
+            var boundCB = cb.bind(null, sendAddr, recvAddr, idx===0, (idx-1)*2);
+            session.on(Session.Mapped, boundCB);
+            session.on(Session.ErrorReceived, console.log);
+            session.begin({
+                nextOutgoingId: 1,
+                incomingWindow: 100,
+                outgoingWindow: 100
+            });
+        }
     });
     conn.on(Connection.Disconnected, function() {
         console.log('Disconnected');
@@ -132,22 +128,20 @@ function recv(link) {
     }, 1000);
 }
 
-function runSendRecv(sendAddr, recvAddr, session) {
-    //makeSender(session, sendAddr, send);
-    var makeRx = function(addr) {
-        makeReceiver(session, addr, recv);
-    };
-    for (var idx=0; idx < 4; ++idx) {
-        var curAddr = recvAddr + idx;
-        setTimeout(makeRx, (idx + 1) * 1000, curAddr);
-    }
-    var tester = setInterval(function() {
-        if (doneSending) {
-            setTimeout(function() {
-                session.connection.close();
-            }, 1000);
+function runSendRecv(sendAddr, recvAddr, doSend, recvLinks, session) {
+    if (doSend) {
+        console.log('Tx to '+sendAddr);
+        makeSender(session, sendAddr, send);
+    } else {
+        var makeRx = function (addr) {
+            makeReceiver(session, addr, recv);
+        };
+        for (var idx = 0; idx < 2; ++idx) {
+            var curAddr = recvAddr + (recvLinks + idx);
+            console.log('Rx from ' + curAddr);
+            makeRx(curAddr);
         }
-    }, 1000);
+    }
 }
 
 // From SAS endpoint entry for both send/receive permissions, e.g.:
@@ -173,6 +167,5 @@ if (process.argv.length < 3) {
     var sasKey = settings.SASKey;
     var sendAddr = settings.eventHubName;
     var recvAddr = settings.eventHubName + '/ConsumerGroups/' + (settings.consumerGroup || '$default') + '/Partitions/';
-    console.log('Tx to '+sbHost+'/'+sendAddr+', Rx from '+sbHost+'/'+recvAddr);
-    makeSession(sbHost, sasName, sasKey, sendAddr, recvAddr, runSendRecv);
+    makeSessions(sbHost, sasName, sasKey, sendAddr, recvAddr, runSendRecv);
 }

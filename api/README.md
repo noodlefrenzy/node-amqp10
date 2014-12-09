@@ -53,6 +53,8 @@
 * [class: FrameReader](#FrameReader)
   * [frameReader.read(cbuf)](#FrameReader#read)
   * [frameReader._readMessage(messageBuf)](#FrameReader#_readMessage)
+* [class: HeartbeatFrame](#HeartbeatFrame)
+  * [new HeartbeatFrame()](#new_HeartbeatFrame)
 * [class: OpenFrame](#OpenFrame)
   * [new OpenFrame()](#new_OpenFrame)
 * [class: SaslFrame](#SaslFrame)
@@ -671,6 +673,18 @@ An AMQP Message is composed of:
 
 **Returns**: [Message](#Message) - Complete message object decoded from buffer  
 **Access**: private  
+<a name="HeartbeatFrame"></a>
+#class: HeartbeatFrame
+**Members**
+
+* [class: HeartbeatFrame](#HeartbeatFrame)
+  * [new HeartbeatFrame()](#new_HeartbeatFrame)
+
+<a name="new_HeartbeatFrame"></a>
+##new HeartbeatFrame()
+Heartbeat frames are under-specified in the AMQP Specification as "an empty frame".  In practice, this
+seems to be interpreted as a an empty header with a type of 0 (or 8 zero bytes).
+
 <a name="OpenFrame"></a>
 #class: OpenFrame
 **Members**
