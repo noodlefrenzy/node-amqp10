@@ -7,54 +7,21 @@ function AMQPClient() {
 
 }
 
-// Constants
-AMQPClient.AddressRegex = new RegExp('^(amqps?)://([^:/]+)(?::([0-9]+))?(/.*)?$');
-AMQPClient.AddressWithCredentialsRegex = new RegExp('^(amqps?)://([^:]+):([^@]+)@([^:/]+)(?::([0-9]+))?(/.*)?$');
+var EHAdapter = require('./lib/adapters/node_sbus').NodeSbusEventHubAdapter;
 
-// Static Methods
-AMQPClient.GetPort = function(port, protocol) {
-    if (port) {
-        if (!isNaN(parseFloat(port)) && isFinite(port) && (port % 1 === 0)) {
-            return port;
-        } else {
-            throw new Error('Invalid port: '+port);
-        }
-    } else {
-        switch (protocol) {
-            case 'amqp':
-                return '5672';
-            case 'amqps':
-                return '5671';
-            default:
-                throw new Error('Unknown Protocol ' + protocol);
-        }
-    }
+/**
+ * Map of various adapters from other AMQP-reliant libraries to the interface herein.
+ */
+AMQPClient.adapters = {
+    'NodeSbusEventHubAdapter': EHAdapter
 };
 
-AMQPClient.ParseAddress = function(address) {
-    var results = AMQPClient.AddressWithCredentialsRegex.exec(address);
-    if (results) {
-        return {
-            protocol: results[1],
-            user: results[2],
-            pass: results[3],
-            host: results[4],
-            port: AMQPClient.GetPort(results[5], results[1]),
-            path: results[6] || '/'
-        };
-    } else {
-        results = AMQPClient.AddressRegex.exec(address);
-        if (results) {
-            return {
-                protocol: results[1],
-                host: results[2],
-                port: AMQPClient.GetPort(results[3], results[1]),
-                path: results[4] || '/'
-            };
-        }
-    }
+var PolicyBase      = require('./lib/policies/policy_base'),
+    EHPolicy        = require('./lib/policies/event_hub_policy').EventHubPolicy;
 
-    throw new Error('Failed to parse ' + address);
+AMQPClient.policies = {
+    'PolicyBase': PolicyBase,
+    'EventHubPolicy': EHPolicy
 };
 
 module.exports = AMQPClient;

@@ -13,7 +13,7 @@ describe('NodeSbusEventHubAdapter', function() {
 
         it('should match consumer URI', function () {
             var uri = 'amqps://bob:dobbs@mysb.servicebus.windows.net/myeh/ConsumerGroups/$Default/Partitions/1';
-            var parsed = EH.ParseAddress(uri);
+            var parsed = EH.parseAddress(uri);
             parsed.eventHubName.should.eql('myeh');
             parsed.path.should.eql('myeh/ConsumerGroups/$Default/Partitions/1');
             parsed.subpath.should.eql('ConsumerGroups/$Default/Partitions/1');
