@@ -1,5 +1,5 @@
 var Int64       = require('node-int64'),
-    CBuffer     = require('cbarrick-circular-buffer'),
+    CBuffer     = require('circular-buffer'),
     should      = require('should'),
     debug       = require('debug')('amqp10-test-codec'),
     builder     = require('buffer-builder'),

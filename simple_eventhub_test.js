@@ -1,5 +1,6 @@
 var debug       = require('debug')('amqp10-app'),
     builder     = require('buffer-builder'),
+    fs          = require('fs'),
 
     constants   = require('./lib/constants'),
     exceptions  = require('./lib/exceptions'),
@@ -18,9 +19,12 @@ var debug       = require('debug')('amqp10-app'),
 
     AMQPClient      = require('./amqp_client');
 
+
+var partitionAcrossSessions = false;
+
 // @todo A lot of these should be replaced with default policy settings
 // @todo amqp_client should be doing a lot of this work
-function makeSessions(sbHost, sasName, sasKey, sendAddr, recvAddr, cb) {
+function makeSessions(protocol, port, sbHost, sasName, sasKey, sendAddr, recvAddr, numPartitions, cb) {
     var conn = new Connection({
         containerId: 'test',
         hostname: sbHost,
@@ -29,16 +33,29 @@ function makeSessions(sbHost, sasName, sasKey, sendAddr, recvAddr, cb) {
         }
     });
     conn.open({
-        protocol: 'amqps',
+        protocol: protocol,
         host: sbHost,
-        port: 5671,
+        port: port,
         user: sasName,
         pass: sasKey
     }, new Sasl());
     conn.on(Connection.Connected, function() {
-        for (var idx = 0; idx < 5; ++idx) {
-            var session = new Session(conn);
-            var boundCB = cb.bind(null, sendAddr, recvAddr, idx===0, (idx-1)*2);
+        var session, boundCB;
+        if (partitionAcrossSessions) {
+            for (var idx = 0; idx <= numPartitions / 2; ++idx) {
+                session = new Session(conn);
+                boundCB = cb.bind(null, sendAddr, recvAddr, idx === 0, (idx - 1) * 2, (idx - 1) * 2 + 2);
+                session.on(Session.Mapped, boundCB);
+                session.on(Session.ErrorReceived, console.log);
+                session.begin({
+                    nextOutgoingId: 1,
+                    incomingWindow: 100,
+                    outgoingWindow: 100
+                });
+            }
+        } else {
+            session = new Session(conn);
+            boundCB = cb.bind(null, sendAddr, recvAddr, false, 0, numPartitions);
             session.on(Session.Mapped, boundCB);
             session.on(Session.ErrorReceived, console.log);
             session.begin({
@@ -77,10 +94,12 @@ function makeSender(session, sendAddr, cb) {
 function makeReceiver(session, recvAddr, cb) {
     session.on(Session.LinkAttached, function (link) {
         if (link.name === recvAddr) {
-            debug('Receiver Attached ' + link.name);
+            var msg = 'Receiver Attached ' + link.name;
+            debug(msg);
             cb(link);
         }
     });
+    debug('Attaching Receiver ' + recvAddr);
     session.attachLink({
         name: recvAddr,
         role: constants.linkRole.receiver,
@@ -128,7 +147,7 @@ function recv(link) {
     }, 1000);
 }
 
-function runSendRecv(sendAddr, recvAddr, doSend, recvLinks, session) {
+function runSendRecv(sendAddr, recvAddr, doSend, recvStart, recvEnd, session) {
     if (doSend) {
         console.log('Tx to '+sendAddr);
         makeSender(session, sendAddr, send);
@@ -136,8 +155,8 @@ function runSendRecv(sendAddr, recvAddr, doSend, recvLinks, session) {
         var makeRx = function (addr) {
             makeReceiver(session, addr, recv);
         };
-        for (var idx = 0; idx < 2; ++idx) {
-            var curAddr = recvAddr + (recvLinks + idx);
+        for (var idx = recvStart; idx < recvEnd; ++idx) {
+            var curAddr = recvAddr + idx;
             console.log('Rx from ' + curAddr);
             makeRx(curAddr);
         }
@@ -162,10 +181,17 @@ if (process.argv.length < 3) {
     var settingsFile = process.argv[2];
     var settings = require('./' + settingsFile);
     exceptions.assertArguments(settings, [ 'serviceBusHost', 'SASKeyName', 'SASKey', 'eventHubName']);
+    var protocol = settings.protocol || 'amqps';
+    var port = settings.port || (protocol === 'amqps' ? 5671 : 5672);
     var sbHost = settings.serviceBusHost + '.servicebus.windows.net';
+    if (settings.serviceBusHost.indexOf(".") !== -1) {
+        sbHost = settings.serviceBusHost;
+    }
     var sasName = settings.SASKeyName;
     var sasKey = settings.SASKey;
     var sendAddr = settings.eventHubName;
     var recvAddr = settings.eventHubName + '/ConsumerGroups/' + (settings.consumerGroup || '$default') + '/Partitions/';
-    makeSessions(sbHost, sasName, sasKey, sendAddr, recvAddr, runSendRecv);
+    var numPartitions = settings.partitions;
+    console.log(sbHost+': '+sendAddr+' - '+recvAddr+' '+numPartitions);
+    makeSessions(protocol, port, sbHost, sasName, sasKey, sendAddr, recvAddr, numPartitions, runSendRecv);
 }

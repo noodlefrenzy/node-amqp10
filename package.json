@@ -9,7 +9,7 @@
   "dependencies": {
     "buffer-builder": "^0.1.0",
     "butils": "^0.1.0",
-    "cbarrick-circular-buffer": "^1.2.1",
+    "circular-buffer": "noodlefrenzy/CircularBuffer",
     "debug": "^2.0.0",
     "local-web-server": "^0.5.15",
     "node-int64": "noodlefrenzy/node-int64",

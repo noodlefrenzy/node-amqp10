@@ -1,5 +1,5 @@
 var builder     = require('buffer-builder'),
-    CBuffer     = require('cbarrick-circular-buffer')
+    CBuffer     = require('circular-buffer'),
     should      = require('should');
 
 function newBuf(contents) {

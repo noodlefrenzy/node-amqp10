@@ -155,16 +155,19 @@ Build a codec.
 
 <a name="Codec#_readFullValue"></a>
 ##codec._readFullValue(buf, [offset], [doNotConsume], [forcedCode])
-Reads a full value's worth of bytes from a circular or regular buffer, or returns undefined if not enough bytes are there.Note that for Buffers, the returned Buffer will be a slice (so backed by the original storage)!
+Reads a full value's worth of bytes from a circular or regular buffer, or returns undefined if not enough bytes are there.
+Note that for Buffers, the returned Buffer will be a slice (so backed by the original storage)!
 
 **Params**
 
 - buf `Buffer` | `CBuffer` - Buffer or circular buffer to read from.  If a Buffer is given, it is assumed to be full.  
 - \[offset=0\] `integer` - Offset - only valid for Buffer, not CBuffer.  
-- \[doNotConsume=false\] `boolean` - If set to true, will peek bytes instead of reading them - useful for leaving                                         circular buffer in original state for described values that are not yet complete.  
+- \[doNotConsume=false\] `boolean` - If set to true, will peek bytes instead of reading them - useful for leaving
+                                         circular buffer in original state for described values that are not yet complete.  
 - \[forcedCode\] `Number` - If given, first byte is not assumed to be code and given code will be used - useful for arrays.  
 
-**Returns**: `Array` - Buffer of full value + number of bytes read.                                         For described types, will return [ [ descriptor-buffer, value-buffer ], total-bytes ].  
+**Returns**: `Array` - Buffer of full value + number of bytes read.
+                                         For described types, will return [ [ descriptor-buffer, value-buffer ], total-bytes ].  
 **Access**: private  
 <a name="Codec#decode"></a>
 ##codec.decode(buf, [offset], [forcedCode])
@@ -179,7 +182,13 @@ Decode a single entity from a buffer (starting at offset 0).  Only simple values
 **Returns**: `Array` - Single decoded value + number of bytes consumed.  
 <a name="Codec#encode"></a>
 ##codec.encode(val, buf, [forceType])
-Encode the given value as an AMQP 1.0 bitstring.We do a best-effort to determine type.  Objects will be encoded as <code>maps</code>, unless:+ They are DescribedTypes, in which case they will be encoded as such.+ They contain an encodeOrdering array, in which case they will be encoded as a <code>list</code> of their values  in the specified order.+ They are Int64s, in which case they will be encoded as <code>longs</code>.
+Encode the given value as an AMQP 1.0 bitstring.
+
+We do a best-effort to determine type.  Objects will be encoded as <code>maps</code>, unless:
++ They are DescribedTypes, in which case they will be encoded as such.
++ They contain an encodeOrdering array, in which case they will be encoded as a <code>list</code> of their values
+  in the specified order.
++ They are Int64s, in which case they will be encoded as <code>longs</code>.
 
 **Params**
 
@@ -229,6 +238,7 @@ Connection states, from AMQP 1.0 spec:
 
  <dt>OPEN-SENT</dt>
  <dd><p>In this state we have sent and received the Connection header, and sent an
+ open frame to our peer, but have not yet received an
  open frame to our peer, but have not yet received an
  open frame.</p></dd>
 
@@ -1101,7 +1111,8 @@ Type definitions, encoders, and decoders - used extensively by [Codec](#Codec).
 
 <a name="Types#_listBuilder"></a>
 ##types._listBuilder(val, bufb, codec, [width])
-Encoder for list types, specified in AMQP 1.0 as:
+Encoder for list types, specified in AMQP 1.0 as:
+
  <pre>
                        +----------= count items =----------+
                        |                                   |
@@ -1132,7 +1143,9 @@ Encoder for list types, specified in AMQP 1.0 as:
 **Access**: private  
 <a name="Types#_arrayBuilder"></a>
 ##types._arrayBuilder(val, bufb, codec, [width])
-All array encodings consist of a size followed by a count followed by an element constructorfollowed by <i>count</i> elements of encoded data formatted as required by the elementconstructor:
+All array encodings consist of a size followed by a count followed by an element constructor
+followed by <i>count</i> elements of encoded data formatted as required by the element
+constructor:
  <pre>
                                              +--= count elements =--+
                                              |                      |
@@ -1157,13 +1170,20 @@ All array encodings consist of a size followed by a count followed by an element
 **Access**: private  
 <a name="Types#_mapBuilder"></a>
 ##types._mapBuilder(val, bufb, codec, [width])
-A map is encoded as a compound value where the constituent elements form alternating key value pairs.
+A map is encoded as a compound value where the constituent elements form alternating key value pairs.
+
  <pre>
   item 0   item 1      item n-1    item n
  +-------+-------+----+---------+---------+
  | key 1 | val 1 | .. | key n/2 | val n/2 |
  +-------+-------+----+---------+---------+
- </pre>Map encodings must contain an even number of items (i.e. an equal number of keys andvalues). A map in which there exist two identical key values is invalid. Unless known tobe otherwise, maps must be considered to be ordered - that is the order of the key-valuepairs is semantically important and two maps which are different only in the order inwhich their key-value pairs are encoded are not equal.
+ </pre>
+
+Map encodings must contain an even number of items (i.e. an equal number of keys and
+values). A map in which there exist two identical key values is invalid. Unless known to
+be otherwise, maps must be considered to be ordered - that is the order of the key-value
+pairs is semantically important and two maps which are different only in the order in
+which their key-value pairs are encoded are not equal.
 
 **Params**
 
@@ -1422,7 +1442,8 @@ Convenience method to assert that a given options object contains the required a
 
 <a name="encoder"></a>
 #encoder(val, buf, [codec])
-Encoder methods are used for all examples of that type and are expected to encode to the proper type (e.g. a uint willencode to the fixed-zero-value, the short uint, or the full uint as appropriate).
+Encoder methods are used for all examples of that type and are expected to encode to the proper type (e.g. a uint will
+encode to the fixed-zero-value, the short uint, or the full uint as appropriate).
 
 **Params**
 

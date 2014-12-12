@@ -72,7 +72,7 @@ describe('Utilities', function() {
             var result = u.parseAddress(addr);
             result.protocol.should.eql('amqp');
             result.host.should.eql('localhost');
-            result.port.should.eql('5672');
+            result.port.should.eql(5672);
             result.path.should.eql('/');
 
             addr = 'amqps://127.0.0.1';

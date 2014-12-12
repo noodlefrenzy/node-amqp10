@@ -1,4 +1,4 @@
-var cbuf        = require('cbarrick-circular-buffer'),
+var cbuf        = require('circular-buffer'),
     debug       = require('debug')('amqp10-MockServer'),
     net         = require('net'),
     StateMachine= require('stately.js'),

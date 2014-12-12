@@ -2,7 +2,7 @@ var Int64       = require('node-int64'),
     should      = require('should'),
     debug       = require('debug')('amqp10-test-FrameReader'),
     builder     = require('buffer-builder'),
-    CBuffer     = require('cbarrick-circular-buffer'),
+    CBuffer     = require('circular-buffer'),
 
     constants   = require('../lib/constants'),
     codec       = require('../lib/codec'),
