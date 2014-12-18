@@ -68,6 +68,14 @@ describe('Codec', function() {
             actual[1].should.eql(8);
         });
 
+        it('should match buffers', function() {
+            var buffer = newCBuf([0xA0, 0x3, 0x7b, 0x22, 0x7d]);
+            var actual = codec.decode(buffer);
+            actual[0].should.be.instanceof(Buffer);
+            tu.shouldBufEql(newBuf([0x7b, 0x22, 0x7d]), actual[0]);
+            actual[1].should.eql(5);
+        });
+
         it('should fail when not implemented', function() {
             var buffer = newCBuf([0x73, 0x01, 0x02, 0x03, 0x04]);
             (function() { codec.decode(buffer); }).should.throw(Error);

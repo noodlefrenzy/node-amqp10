@@ -21,6 +21,7 @@ var debug       = require('debug')('amqp10-app'),
 
 
 var partitionAcrossSessions = false;
+var sendOnly = false;
 
 // @todo A lot of these should be replaced with default policy settings
 // @todo amqp_client should be doing a lot of this work
@@ -55,14 +56,25 @@ function makeSessions(protocol, port, sbHost, sasName, sasKey, sendAddr, recvAdd
             }
         } else {
             session = new Session(conn);
-            boundCB = cb.bind(null, sendAddr, recvAddr, false, 0, numPartitions);
-            session.on(Session.Mapped, boundCB);
-            session.on(Session.ErrorReceived, console.log);
-            session.begin({
-                nextOutgoingId: 1,
-                incomingWindow: 100,
-                outgoingWindow: 100
-            });
+            if (sendOnly) {
+                boundCB = cb.bind(null, sendAddr, recvAddr, true, 0, numPartitions);
+                session.on(Session.Mapped, boundCB);
+                session.on(Session.ErrorReceived, console.log);
+                session.begin({
+                    nextOutgoingId: 1,
+                    incomingWindow: 100,
+                    outgoingWindow: 100
+                });
+            } else {
+                boundCB = cb.bind(null, sendAddr, recvAddr, false, 0, numPartitions);
+                session.on(Session.Mapped, boundCB);
+                session.on(Session.ErrorReceived, console.log);
+                session.begin({
+                    nextOutgoingId: 1,
+                    incomingWindow: 100,
+                    outgoingWindow: 100
+                });
+            }
         }
     });
     conn.on(Connection.Disconnected, function() {
@@ -118,16 +130,20 @@ function makeReceiver(session, recvAddr, cb) {
 
 var msgId = 1;
 var doneSending = false;
+var numMessages = 1;
 
 function send(link) {
     var timer = setInterval(function() {
         if (link.linkCredit > 0) {
             var curId = msgId++;
             var msg = new M.Message();
-            msg.body.push('test message ' + curId);
+            var payload = { Name: "From Node.js", Count: 3, Value: 4.56 };
+            var b = new builder();
+            b.appendString(JSON.stringify(payload));
+            msg.body.push(b.get());
             link.session.sendMessage(link, msg, {deliveryTag: new Buffer([curId])});
         }
-        if (msgId > 100) {
+        if (msgId > numMessages) {
             clearInterval(timer);
             doneSending = true;
         }
@@ -139,6 +155,21 @@ function recv(link) {
         console.log('Message on ' + link.name);
         console.log(m.annotations);
         console.log(m.body);
+        try {
+            var bodyStr = m.body;
+            if (bodyStr instanceof Array) {
+                bodyStr = bodyStr[0];
+            }
+            if (bodyStr instanceof Buffer) {
+                bodyStr = m.body.toString();
+                console.log('Body decoded: ' + bodyStr);
+            }
+            var parsed = JSON.parse(bodyStr);
+            console.log('Body as JSON:');
+            console.log(parsed);
+        } catch(err) {
+            console.log('Body failed to parse as JSON');
+        }
     });
     setInterval(function() {
         if (link.linkCredit < 5) {
