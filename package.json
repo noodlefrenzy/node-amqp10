@@ -14,7 +14,8 @@
     "local-web-server": "^0.5.15",
     "node-int64": "^0.3.2",
     "readable-stream": "^1.0.32",
-    "stately.js": "^1.2.0"
+    "stately.js": "^1.2.0",
+    "sugar": "^1.4.1"
   },
   "devDependencies": {
     "grunt": "^0.4.5",

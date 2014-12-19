@@ -65,6 +65,30 @@ describe('Utilities', function() {
         });
     });
 
+    describe('#deepMerge()', function() {
+        it('should work for flat', function() {
+            var flat = { foo: 1, bar: 2 };
+            var defaults = { bar: 3, baz: 4 };
+            var merged = u.deepMerge(flat, defaults);
+            merged.should.eql({ foo: 1, bar: 2, baz: 4 });
+        });
+
+        it('should work for nested', function() {
+            var nested = { foo: { bar: 1, baz: 2 }, bat: 3 };
+            var defaults = { foo: { zoop: 1 }, dubin: { a: 1 } };
+            var merged = u.deepMerge(nested, defaults);
+            merged.should.eql({ foo: { bar: 1, baz: 2, zoop: 1 }, bat: 3, dubin: { a: 1 }});
+        });
+
+        it('should work for chains', function() {
+            var last = { a: 1, b: 1, c: 1 };
+            var middle = { b: 2, c: 2 };
+            var first = { c: 3 };
+            var merged = u.deepMerge(first, middle, last);
+            merged.should.eql({ a: 1, b: 2, c: 3 });
+        });
+    });
+
     describe('#parseAddress()', function () {
 
         it('should match amqp(|s) no port no route', function () {
