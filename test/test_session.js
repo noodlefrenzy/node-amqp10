@@ -3,6 +3,9 @@ var debug       = require('debug')('amqp10-test_connection'),
     builder     = require('buffer-builder'),
 
     constants   = require('../lib/constants'),
+    u           = require('../lib/utilities'),
+
+    PolicyBase  = require('../lib/policies/policy_base'),
 
     Connection  = require('../lib/connection'),
     Session     = require('../lib/session').Session,
@@ -18,34 +21,33 @@ var debug       = require('debug')('amqp10-test_connection'),
 
     MockServer  = require('./mock_amqp');
 
+PolicyBase.connectPolicy.options.containerId = 'test';
+PolicyBase.senderLinkPolicy.options.name = 'sender';
+PolicyBase.receiverLinkPolicy.options.name = 'receiver';
+
 function openBuf(options) {
-    var open = new OpenFrame(options || { containerId: 'test', hostname: 'localhost' });
+    var open = new OpenFrame(options || PolicyBase.connectPolicy.options);
     return open.outgoing();
 }
 
 function beginBuf(options, channel) {
-    var opts = { nextOutgoingId: 1, incomingWindow: 100, outgoingWindow: 100 };
-    for (var prop in options) { opts[prop] = options[prop]; }
-    var begin = new BeginFrame(opts);
+    var begin = new BeginFrame(u.deepMerge(options, PolicyBase.sessionPolicy.options));
     begin.channel = channel;
     return begin.outgoing();
 }
 
-function src(options) {
-    var opts = { address: 'test-src' };
-    if (options) for (var prop in options) { opts[prop] = options[prop]; }
-    return opts;
-}
-
-function tgt(options) {
-    var opts = { address: 'test-tgt' };
-    if (options) for (var prop in options) { opts[prop] = options[prop]; }
-    return opts;
-}
+function src() { return { address: 'test-src' }; }
+function tgt() { return { address: 'test-tgt' }; }
 
 function attachBuf(options, channel) {
-    var opts = { name: 'test', source: src(), target: tgt() };
-    for (var prop in options) { opts[prop] = options[prop]; }
+    var defaults = options.role === constants.linkRole.sender ?
+        PolicyBase.senderLinkPolicy.options :
+        PolicyBase.receiverLinkPolicy.options;
+    var opts = u.deepMerge({
+        name: 'test',
+        source: src(),
+        target: tgt()
+    }, options, defaults);
     var attach = new AttachFrame(opts);
     attach.channel = channel;
     return attach.outgoing();
@@ -90,9 +92,9 @@ describe('Session', function() {
 
         it('should go through begin/end cycle as asked', function(done) {
             server = new MockServer();
-            server.setSequence([ constants.amqpVersion, openBuf(), beginBuf({}, 1), endBuf(null, 1), closeBuf() ],
+            server.setSequence([ constants.amqpVersion, openBuf(), beginBuf(null, 1), endBuf(null, 1), closeBuf() ],
                 [ constants.amqpVersion, openBuf(), beginBuf({ remoteChannel: 1 }, 5), [ true, endBuf(new AMQPError(AMQPError.ConnectionForced, 'test'), 5) ], [ true, closeBuf()] ]);
-            var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
+            var conn = new Connection(PolicyBase.connectPolicy);
             server.setup(conn);
             var transitions = [];
             var sessionTransitions = [];
@@ -102,7 +104,7 @@ describe('Session', function() {
             conn.on(Connection.Connected, function() {
                 var session = new Session(conn);
                 session.sessionSM.bind(recordSessionTransitions);
-                session.begin({ nextOutgoingId: 1, incomingWindow: 100, outgoingWindow: 100 });
+                session.begin(PolicyBase.sessionPolicy);
             });
             conn.open({ protocol: 'amqp', host: 'localhost', port: server.port });
             server.assertSequence(function() {
@@ -117,7 +119,7 @@ describe('Session', function() {
             server = new MockServer();
             server.setSequence([ constants.amqpVersion, openBuf(), beginBuf({}, 1), endBuf(null, 1), closeBuf() ],
                 [ constants.amqpVersion, openBuf(), beginBuf({ remoteChannel: 1 }, 5), [ true, endBuf(new AMQPError(AMQPError.ConnectionForced, 'test'), 5) ], [ true, closeBuf()] ]);
-            var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
+            var conn = new Connection(PolicyBase.connectPolicy);
             server.setup(conn);
             var events = [];
             conn.on(Connection.Connected, function() {
@@ -125,7 +127,7 @@ describe('Session', function() {
                 session.on(Session.Mapped, function() { events.push(Session.Mapped); });
                 session.on(Session.ErrorReceived, function(err) { events.push([ Session.ErrorReceived, err ]); });
                 session.on(Session.Unmapped, function() { events.push(Session.Unmapped); });
-                session.begin({ nextOutgoingId: 1, incomingWindow: 100, outgoingWindow: 100 });
+                session.begin(PolicyBase.sessionPolicy);
             });
             conn.open({ protocol: 'amqp', host: 'localhost', port: server.port });
             server.assertSequence(function() {
@@ -140,11 +142,11 @@ describe('Session', function() {
 
         it('should create link', function(done) {
             server = new MockServer();
-            server.setSequence([ constants.amqpVersion, openBuf(), beginBuf({}, 1), attachBuf({ handle: 0, role: constants.linkRole.sender, initialDeliveryCount: 1 }, 1), detachBuf({ handle: 0}, 1), endBuf(null, 1), closeBuf() ],
+            server.setSequence([ constants.amqpVersion, openBuf(), beginBuf({}, 1), attachBuf({ handle: 0, role: constants.linkRole.sender }, 1), detachBuf({ handle: 0}, 1), endBuf(null, 1), closeBuf() ],
                 [ constants.amqpVersion, openBuf(), beginBuf({ remoteChannel: 1 }, 5), attachBuf({ handle: 3, role: constants.linkRole.receiver }, 5),
                     [true, detachBuf({ handle: 3, error: new AMQPError(AMQPError.LinkDetachForced, 'test') }, 5) ],
                     [ true, endBuf(new AMQPError(AMQPError.ConnectionForced, 'test'), 5) ], [ true, closeBuf()] ]);
-            var conn = new Connection({ containerId: 'test', hostname: 'localhost' });
+            var conn = new Connection(PolicyBase.connectPolicy);
             server.setup(conn);
             var transitions = [];
             var sessionTransitions = [];
@@ -157,10 +159,11 @@ describe('Session', function() {
                 var session = new Session(conn);
                 session.sessionSM.bind(recordSessionTransitions);
                 session.on(Session.Mapped, function() {
-                    var link = session.attachLink({ name: 'test', role: constants.linkRole.sender, initialDeliveryCount: 1, source: src(), target: tgt() });
+                    var opts = u.deepMerge({ options: { name: 'test', source: src(), target: tgt() } }, PolicyBase.senderLinkPolicy);
+                    var link = session.attachLink(opts);
                     link.linkSM.bind(recordLinkTransitions);
                 });
-                session.begin({ nextOutgoingId: 1, incomingWindow: 100, outgoingWindow: 100 });
+                session.begin(PolicyBase.sessionPolicy);
             });
             conn.open({ protocol: 'amqp', host: 'localhost', port: server.port });
             server.assertSequence(function() {

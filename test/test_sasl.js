@@ -4,6 +4,8 @@ var debug       = require('debug')('amqp10-test_sasl'),
 
     constants   = require('../lib/constants'),
 
+    PolicyBase  = require('../lib/policies/policy_base'),
+
     MockServer  = require('./mock_amqp'),
     AMQPError   = require('../lib/types/amqp_error'),
     Symbol      = require('../lib/types/symbol'),
@@ -22,6 +24,8 @@ var debug       = require('debug')('amqp10-test_sasl'),
     Sasl        = require('../lib/sasl'),
 
     tu          = require('./testing_utils');
+
+PolicyBase.connectPolicy.options.containerId = 'test';
 
 function initBuf() {
     var init = new SaslFrames.SaslInit({
@@ -42,7 +46,7 @@ function outcomeBuf() {
 }
 
 function openBuf() {
-    var open = new OpenFrame({containerId: 'test', hostname: 'localhost'});
+    var open = new OpenFrame(PolicyBase.connectPolicy.options);
     return open.outgoing();
 }
 
@@ -234,7 +238,7 @@ describe('Sasl', function () {
             server.setSequence(
                 [constants.saslVersion, initBuf(), constants.amqpVersion, openBuf(), closeBuf()],
                 [constants.saslVersion, [true, mechanismsBuf()], outcomeBuf(), constants.amqpVersion, openBuf(), [true, closeBuf(new AMQPError(AMQPError.ConnectionForced, 'test'))]]);
-            var conn = new Connection({containerId: 'test', hostname: 'localhost'});
+            var conn = new Connection(PolicyBase.connectPolicy);
             server.setup(conn);
             var transitions = [];
             var recordTransitions = function (evt, oldS, newS) {
