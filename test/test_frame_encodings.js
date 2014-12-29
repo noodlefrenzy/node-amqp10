@@ -43,8 +43,8 @@ describe('OpenFrame', function() {
                 0x70, builder.prototype.appendUInt32BE, constants.defaultMaxFrameSize,
                 0x60, builder.prototype.appendUInt16BE, constants.defaultChannelMax,
                 0x70, builder.prototype.appendUInt32BE, constants.defaultIdleTimeout,
-                0xa3, 5, builder.prototype.appendString, constants.defaultOutgoingLocales.contents,
-                0xa3, 5, builder.prototype.appendString, constants.defaultIncomingLocales.contents,
+                0xa3, 5, builder.prototype.appendString, constants.defaultOutgoingLocales,
+                0xa3, 5, builder.prototype.appendString, constants.defaultIncomingLocales,
                 0x40, 0x40, 0xc1, 0x01, 0x00
             ]);
             tu.shouldBufEql(expected, actual);

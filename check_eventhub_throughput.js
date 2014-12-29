@@ -59,7 +59,7 @@ function makeSender(session, sendAddr, cb) {
         console.log('Sender Attached ' + link.name);
         cb(link);
     });
-    session.attachLink({
+    session.attachLink({ options: {
         name: sendAddr,
         role: constants.linkRole.sender,
         source: new Source({
@@ -72,7 +72,7 @@ function makeSender(session, sendAddr, cb) {
         receiverSettleMode: constants.receiverSettleMode.autoSettle,
         maxMessageSize: 10000,
         initialDeliveryCount: 1
-    });
+    } });
 }
 
 var prevId = 0;

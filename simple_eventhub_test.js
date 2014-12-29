@@ -21,18 +21,18 @@ var debug       = require('debug')('amqp10-app'),
 
 
 var partitionAcrossSessions = false;
-var sendOnly = false;
+var sendOnly = true;
 
 // @todo A lot of these should be replaced with default policy settings
 // @todo amqp_client should be doing a lot of this work
 function makeSessions(protocol, port, sbHost, sasName, sasKey, sendAddr, recvAddr, numPartitions, cb) {
-    var conn = new Connection({
+    var conn = new Connection({ options: {
         containerId: 'test',
         hostname: sbHost,
         idleTimeout: 120000,
         sslOptions: {
         }
-    });
+    } });
     conn.open({
         protocol: protocol,
         host: sbHost,
@@ -48,11 +48,11 @@ function makeSessions(protocol, port, sbHost, sasName, sasKey, sendAddr, recvAdd
                 boundCB = cb.bind(null, sendAddr, recvAddr, idx === 0, (idx - 1) * 2, (idx - 1) * 2 + 2);
                 session.on(Session.Mapped, boundCB);
                 session.on(Session.ErrorReceived, console.log);
-                session.begin({
+                session.begin({ options: {
                     nextOutgoingId: 1,
                     incomingWindow: 100,
                     outgoingWindow: 100
-                });
+                } });
             }
         } else {
             session = new Session(conn);
@@ -60,20 +60,20 @@ function makeSessions(protocol, port, sbHost, sasName, sasKey, sendAddr, recvAdd
                 boundCB = cb.bind(null, sendAddr, recvAddr, true, 0, numPartitions);
                 session.on(Session.Mapped, boundCB);
                 session.on(Session.ErrorReceived, console.log);
-                session.begin({
+                session.begin({ options: {
                     nextOutgoingId: 1,
                     incomingWindow: 100,
                     outgoingWindow: 100
-                });
+                }});
             } else {
                 boundCB = cb.bind(null, sendAddr, recvAddr, false, 0, numPartitions);
                 session.on(Session.Mapped, boundCB);
                 session.on(Session.ErrorReceived, console.log);
-                session.begin({
+                session.begin({ options: {
                     nextOutgoingId: 1,
                     incomingWindow: 100,
                     outgoingWindow: 100
-                });
+                }});
             }
         }
     });
@@ -87,20 +87,20 @@ function makeSender(session, sendAddr, cb) {
         debug('Sender Attached ' + link.name);
         cb(link);
     });
-    session.attachLink({
+    session.attachLink({ options: {
         name: sendAddr,
         role: constants.linkRole.sender,
-        source: new Source({
+        source: {
             address: 'localhost'
-        }),
-        target: new Target({
+        },
+        target: {
             address: sendAddr
-        }),
+        },
         senderSettleMode: constants.senderSettleMode.settled,
         receiverSettleMode: constants.receiverSettleMode.autoSettle,
         maxMessageSize: 10000,
         initialDeliveryCount: 1
-    });
+    }});
 }
 
 function makeReceiver(session, recvAddr, cb) {
@@ -112,20 +112,20 @@ function makeReceiver(session, recvAddr, cb) {
         }
     });
     debug('Attaching Receiver ' + recvAddr);
-    session.attachLink({
+    session.attachLink({ options: {
         name: recvAddr,
         role: constants.linkRole.receiver,
-        source: new Source({
+        source: {
             address: recvAddr
-        }),
-        target: new Target({
+        },
+        target: {
             address: 'localhost'
-        }),
+        },
         senderSettleMode: constants.senderSettleMode.settled,
         receiverSettleMode: constants.receiverSettleMode.autoSettle,
         maxMessageSize: 10000,
         initialDeliveryCount: 1
-    });
+    }});
 }
 
 var msgId = 1;
@@ -161,7 +161,7 @@ function recv(link) {
                 bodyStr = bodyStr[0];
             }
             if (bodyStr instanceof Buffer) {
-                bodyStr = m.body.toString();
+                bodyStr = bodyStr.toString();
                 console.log('Body decoded: ' + bodyStr);
             }
             var parsed = JSON.parse(bodyStr);

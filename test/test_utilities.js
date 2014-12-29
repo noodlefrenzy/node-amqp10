@@ -2,6 +2,7 @@ var debug       = require('debug')('amqp10-test_utilities'),
     should      = require('should'),
 
     u           = require('../lib/utilities'),
+    Symbol      = require('../lib/types/symbol'),
     tu          = require('./testing_utils');
 
 describe('Utilities', function() {
@@ -40,6 +41,31 @@ describe('Utilities', function() {
         });
     });
 
+    describe('#coerce()', function() {
+        it('should coerce strings into symbols', function() {
+            var result = u.coerce('en-US', Symbol);
+            result.should.be.instanceof(Symbol);
+        });
+
+        it('should ignore if of same type', function() {
+            var result = u.coerce(new Symbol('en-US'), Symbol);
+            result.should.be.instanceof(Symbol);
+            result.contents.should.be.type('string');
+        });
+
+        it('should coerce array of values', function() {
+            var result = u.coerce(['a', 'b', 'c'], Symbol);
+            result.should.be.instanceof(Array);
+            result.length.should.eql(3);
+            result[0].should.be.instanceof(Symbol);
+        });
+
+        it('should pass through nulls', function() {
+            var result = u.coerce(null, Symbol);
+            (result === null).should.be.true;
+        });
+    });
+
     describe('#deepMerge()', function() {
         it('should work for flat', function() {
             var flat = { foo: 1, bar: 2 };
@@ -54,6 +80,16 @@ describe('Utilities', function() {
             var merged = u.deepMerge(nested, defaults);
             merged.should.eql({ foo: { bar: 1, baz: 2, zoop: 1 }, bat: 3, dubin: { a: 1 }});
         });
+
+        // @todo Fix deepMerge to preserve object __proto__ identity.
+        //it('should work for nested with custom types', function() {
+        //    var nested = { foo: { bar: new Symbol('s1') } };
+        //    var defaults = { foo: { baz: new Symbol('s2') }, bat: new Symbol('s3') };
+        //    var merged = u.deepMerge(nested, defaults);
+        //    merged.bat.should.be.instanceof(Symbol);
+        //    merged.foo.bar.should.be.instanceof(Symbol);
+        //    merged.foo.baz.should.be.instanceof(Symbol);
+        //});
 
         it('should work for chains', function() {
             var last = { a: 1, b: 1, c: 1 };
