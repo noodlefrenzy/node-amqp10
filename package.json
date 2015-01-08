@@ -11,7 +11,6 @@
     "butils": "^0.1.0",
     "circular-buffer": "noodlefrenzy/CircularBuffer",
     "debug": "^2.0.0",
-    "local-web-server": "^0.5.15",
     "node-int64": "^0.3.2",
     "readable-stream": "^1.0.32",
     "stately.js": "^1.2.0",

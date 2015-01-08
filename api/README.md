@@ -132,9 +132,7 @@
 
 <a name="new_NodeSbusEventHubAdapter"></a>
 ##new NodeSbusEventHubAdapter()
-Adapts node-amqp-1-0 to adhere to the interface defined by the node-sbus adapter,
-for EventHub support.  Defines "subscribe" and "message" events, and builds
-a messenger.
+Adapts node-amqp-1-0 to adhere to the interface defined by the node-sbus adapter,for EventHub support.  Defines "subscribe" and "message" events, and buildsa messenger.
 
 <a name="Codec"></a>
 #class: Codec
@@ -152,19 +150,16 @@ Build a codec.
 
 <a name="Codec#_readFullValue"></a>
 ##codec._readFullValue(buf, [offset], [doNotConsume], [forcedCode])
-Reads a full value's worth of bytes from a circular or regular buffer, or returns undefined if not enough bytes are there.
-Note that for Buffers, the returned Buffer will be a slice (so backed by the original storage)!
+Reads a full value's worth of bytes from a circular or regular buffer, or returns undefined if not enough bytes are there.Note that for Buffers, the returned Buffer will be a slice (so backed by the original storage)!
 
 **Params**
 
 - buf `Buffer` | `CBuffer` - Buffer or circular buffer to read from.  If a Buffer is given, it is assumed to be full.  
 - \[offset=0\] `integer` - Offset - only valid for Buffer, not CBuffer.  
-- \[doNotConsume=false\] `boolean` - If set to true, will peek bytes instead of reading them - useful for leaving
-                                         circular buffer in original state for described values that are not yet complete.  
+- \[doNotConsume=false\] `boolean` - If set to true, will peek bytes instead of reading them - useful for leaving                                         circular buffer in original state for described values that are not yet complete.  
 - \[forcedCode\] `Number` - If given, first byte is not assumed to be code and given code will be used - useful for arrays.  
 
-**Returns**: `Array` - Buffer of full value + number of bytes read.
-                                         For described types, will return [ [ descriptor-buffer, value-buffer ], total-bytes ].  
+**Returns**: `Array` - Buffer of full value + number of bytes read.                                         For described types, will return [ [ descriptor-buffer, value-buffer ], total-bytes ].  
 **Access**: private  
 <a name="Codec#decode"></a>
 ##codec.decode(buf, [offset], [forcedCode])
@@ -179,13 +174,7 @@ Decode a single entity from a buffer (starting at offset 0).  Only simple values
 **Returns**: `Array` - Single decoded value + number of bytes consumed.  
 <a name="Codec#encode"></a>
 ##codec.encode(val, buf, [forceType])
-Encode the given value as an AMQP 1.0 bitstring.
-
-We do a best-effort to determine type.  Objects will be encoded as <code>maps</code>, unless:
-+ They are DescribedTypes, in which case they will be encoded as such.
-+ They contain an encodeOrdering array, in which case they will be encoded as a <code>list</code> of their values
-  in the specified order.
-+ They are Int64s, in which case they will be encoded as <code>longs</code>.
+Encode the given value as an AMQP 1.0 bitstring.We do a best-effort to determine type.  Objects will be encoded as <code>maps</code>, unless:+ They are DescribedTypes, in which case they will be encoded as such.+ They contain an encodeOrdering array, in which case they will be encoded as a <code>list</code> of their values  in the specified order.+ They are Int64s, in which case they will be encoded as <code>longs</code>.
 
 **Params**
 
@@ -203,8 +192,7 @@ We do a best-effort to determine type.  Objects will be encoded as <code>maps</c
 
 <a name="new_Connection"></a>
 ##new Connection(connectPolicy)
-Connection states, from AMQP 1.0 spec:
-
+Connection states, from AMQP 1.0 spec:
  <dl>
  <dt>START</dt>
  <dd><p>In this state a Connection exists, but nothing has been sent or received. This is the
@@ -271,10 +259,7 @@ Connection states, from AMQP 1.0 spec:
  <dt>END</dt>
  <dd><p>In this state it is illegal for either endpoint to write anything more onto the
  Connection. The Connection may be safely closed and discarded.</p></dd>
- </dl>
-
-Connection negotiation state diagram from AMQP 1.0 spec:
-
+ </dl>Connection negotiation state diagram from AMQP 1.0 spec:
  <pre>
               R:HDR +=======+ S:HDR             R:HDR[!=S:HDR]
            +--------| START |-----+    +--------------------------------+
@@ -313,13 +298,7 @@ Connection negotiation state diagram from AMQP 1.0 spec:
  |    S:HDR[!=R:HDR]    |                R:HDR[!=S:HDR]                 |
  +----------------------+-----------------------------------------------+
 
- </pre>
-
-R:<b>CTRL</b> = Received <b>CTRL</b>
-
-S:<b>CTRL</b> = Sent <b>CTRL</b>
-
-Also could be DISCARDING if an error condition triggered the CLOSE
+ </pre>R:<b>CTRL</b> = Received <b>CTRL</b>S:<b>CTRL</b> = Sent <b>CTRL</b>Also could be DISCARDING if an error condition triggered the CLOSE
 
 **Params**
 
@@ -463,142 +442,7 @@ Invalid state.
 
 <a name="new_AttachFrame"></a>
 ##new AttachFrame()
-<h2>attach performative</h2>
-<i>attach a Link to a Session</i>
-<p>
-          The  frame indicates that a Link Endpoint has been
-          attached to the Session. The opening flag is used to indicate that the Link Endpoint is
-          newly created.
-        </p>
-<p>attach</p>
-<h3>Descriptor</h3>
-<dl>
-<dt>Name</dt>
-<dd>amqp:attach:list</dd>
-<dt>Code</dt>
-<dd>0x00000000:0x00000012</dd>
-</dl>
-
-<table border="1">
-<tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>name</td><td>string</td><td>true</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the name of the link</i>
-<p>
-            This name uniquely identifies the link from the container of the source to the container
-            of the target node, e.g. if the container of the source node is A, and the container of
-            the target node is B, the link may be globally identified by the (ordered) tuple
-            .
-          </p></td></tr>
-<tr><td>handle</td><td>handle</td><td>true</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3">undefined
-<p>
-            The handle MUST NOT be used for other open Links. An attempt to attach using a handle
-            which is already associated with a Link MUST be responded to with an immediate
-             carrying a Handle-in-use .
-           </p>
-<p>close</p>
-<p>
-             To make it easier to monitor AMQP link attach frames, it is recommended that
-             implementations always assign the lowest available handle to this field.
-           </p></td></tr>
-<tr><td>role</td><td>role</td><td>true</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>role of the link endpoint</i></td></tr>
-<tr><td>snd-settle-mode</td><td>sender-settle-mode</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>settlement mode for the Sender</i>
-<p>
-            Determines the settlement policy for deliveries sent at the Sender. When set at the
-            Receiver this indicates the desired value for the settlement mode at the Sender.  When
-            set at the Sender this indicates the actual settlement mode in use.
-          </p></td></tr>
-<tr><td>rcv-settle-mode</td><td>receiver-settle-mode</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the settlement mode of the Receiver</i>
-<p>
-            Determines the settlement policy for unsettled deliveries received at the Receiver. When
-            set at the Sender this indicates the desired value for the settlement mode at the
-            Receiver. When set at the Receiver this indicates the actual settlement mode in use.
-          </p></td></tr>
-<tr><td>source</td><td>*</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the source for Messages</i>
-<p>
-            If no source is specified on an outgoing Link, then there is no source currently
-            attached to the Link. A Link with no source will never produce outgoing Messages.
-          </p></td></tr>
-<tr><td>target</td><td>*</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the target for Messages</i>
-<p>
-            If no target is specified on an incoming Link, then there is no target currently
-            attached to the Link. A Link with no target will never permit incoming Messages.
-          </p></td></tr>
-<tr><td>unsettled</td><td>map</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>unsettled delivery state</i>
-<p>
-            This is used to indicate any unsettled delivery states when a suspended link is resumed.
-            The map is keyed by delivery-tag with values indicating the delivery state. The local
-            and remote delivery states for a given delivery-tag MUST be compared to resolve any
-            in-doubt deliveries. If necessary, deliveries MAY be resent, or resumed based on the
-            outcome of this comparison. See .
-          </p>
-<p>resuming-deliveries</p>
-<p>
-            If the local unsettled map is too large to be encoded within a frame of the agreed
-            maximum frame size then the session may be ended with the frame-size-too-small error
-            (see ). The endpoint SHOULD make use of the ability to send an
-            incomplete unsettled map (see below) to avoid sending an error.
-          </p>
-<p>amqp-error</p>
-<p>
-            The unsettled map MUST NOT contain null valued keys.
-          </p>
-<p>
-            When reattaching (as opposed to resuming), the unsettled map MUST be null.
-          </p></td></tr>
-<tr><td>incomplete-unsettled</td><td>boolean</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3">undefined
-<p>
-            If set to true this field indicates that the unsettled map provided is not complete.
-            When the map is incomplete the recipient of the map cannot take the absence of a
-            delivery tag from the map as evidence of settlement. On receipt of an incomplete
-            unsettled map a sending endpoint MUST NOT send any new deliveries (i.e. deliveries where
-            resume is not set to true) to its partner (and a receiving endpoint which sent an
-            incomplete unsettled map MUST detach with an error on receiving a transfer which does
-            not have the resume flag set to true).
-          </p></td></tr>
-<tr><td>initial-delivery-count</td><td>sequence-no</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3">undefined
-<p>
-            This MUST NOT be null if role is sender, and it is ignored if the role is receiver. See
-            .
-          </p>
-<p>flow-control</p></td></tr>
-<tr><td>max-message-size</td><td>ulong</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the maximum message size supported by the link endpoint</i>
-<p>
-            This field indicates the maximum message size supported by the link endpoint. Any
-            attempt to deliver a message larger than this results in a message-size-exceeded
-            . If this field is zero or unset, there is no maximum size
-            imposed by the link endpoint.
-          </p>
-<p>link-error</p></td></tr>
-<tr><td>offered-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender supports</i>
-<p>
-            A list of commonly defined session capabilities and their meanings can be found here:
-            .
-          </p>
-<p>http://www.amqp.org/specification/1.0/link-capabilities</p></td></tr>
-<tr><td>desired-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender may use if the receiver supports them</i></td></tr>
-<tr><td>properties</td><td>fields</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>link properties</i>
-<p>
-            The properties map contains a set of fields intended to indicate information about the
-            link and its container.
-          </p>
-<p>
-            A list of commonly defined link properties and their meanings can be found here:
-
-          </p>
-<p>http://www.amqp.org/specification/1.0/link-properties</p></td></tr>
-</table>
+<h2>attach performative</h2><i>attach a Link to a Session</i><p>          The  frame indicates that a Link Endpoint has been          attached to the Session. The opening flag is used to indicate that the Link Endpoint is          newly created.        </p><p>attach</p><h3>Descriptor</h3><dl><dt>Name</dt><dd>amqp:attach:list</dd><dt>Code</dt><dd>0x00000000:0x00000012</dd></dl><table border="1"><tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>name</td><td>string</td><td>true</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the name of the link</i><p>            This name uniquely identifies the link from the container of the source to the container            of the target node, e.g. if the container of the source node is A, and the container of            the target node is B, the link may be globally identified by the (ordered) tuple            .          </p></td></tr><tr><td>handle</td><td>handle</td><td>true</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3">undefined<p>            The handle MUST NOT be used for other open Links. An attempt to attach using a handle            which is already associated with a Link MUST be responded to with an immediate             carrying a Handle-in-use .           </p><p>close</p><p>             To make it easier to monitor AMQP link attach frames, it is recommended that             implementations always assign the lowest available handle to this field.           </p></td></tr><tr><td>role</td><td>role</td><td>true</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>role of the link endpoint</i></td></tr><tr><td>snd-settle-mode</td><td>sender-settle-mode</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>settlement mode for the Sender</i><p>            Determines the settlement policy for deliveries sent at the Sender. When set at the            Receiver this indicates the desired value for the settlement mode at the Sender.  When            set at the Sender this indicates the actual settlement mode in use.          </p></td></tr><tr><td>rcv-settle-mode</td><td>receiver-settle-mode</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the settlement mode of the Receiver</i><p>            Determines the settlement policy for unsettled deliveries received at the Receiver. When            set at the Sender this indicates the desired value for the settlement mode at the            Receiver. When set at the Receiver this indicates the actual settlement mode in use.          </p></td></tr><tr><td>source</td><td>*</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the source for Messages</i><p>            If no source is specified on an outgoing Link, then there is no source currently            attached to the Link. A Link with no source will never produce outgoing Messages.          </p></td></tr><tr><td>target</td><td>*</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the target for Messages</i><p>            If no target is specified on an incoming Link, then there is no target currently            attached to the Link. A Link with no target will never permit incoming Messages.          </p></td></tr><tr><td>unsettled</td><td>map</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>unsettled delivery state</i><p>            This is used to indicate any unsettled delivery states when a suspended link is resumed.            The map is keyed by delivery-tag with values indicating the delivery state. The local            and remote delivery states for a given delivery-tag MUST be compared to resolve any            in-doubt deliveries. If necessary, deliveries MAY be resent, or resumed based on the            outcome of this comparison. See .          </p><p>resuming-deliveries</p><p>            If the local unsettled map is too large to be encoded within a frame of the agreed            maximum frame size then the session may be ended with the frame-size-too-small error            (see ). The endpoint SHOULD make use of the ability to send an            incomplete unsettled map (see below) to avoid sending an error.          </p><p>amqp-error</p><p>            The unsettled map MUST NOT contain null valued keys.          </p><p>            When reattaching (as opposed to resuming), the unsettled map MUST be null.          </p></td></tr><tr><td>incomplete-unsettled</td><td>boolean</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3">undefined<p>            If set to true this field indicates that the unsettled map provided is not complete.            When the map is incomplete the recipient of the map cannot take the absence of a            delivery tag from the map as evidence of settlement. On receipt of an incomplete            unsettled map a sending endpoint MUST NOT send any new deliveries (i.e. deliveries where            resume is not set to true) to its partner (and a receiving endpoint which sent an            incomplete unsettled map MUST detach with an error on receiving a transfer which does            not have the resume flag set to true).          </p></td></tr><tr><td>initial-delivery-count</td><td>sequence-no</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3">undefined<p>            This MUST NOT be null if role is sender, and it is ignored if the role is receiver. See            .          </p><p>flow-control</p></td></tr><tr><td>max-message-size</td><td>ulong</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the maximum message size supported by the link endpoint</i><p>            This field indicates the maximum message size supported by the link endpoint. Any            attempt to deliver a message larger than this results in a message-size-exceeded            . If this field is zero or unset, there is no maximum size            imposed by the link endpoint.          </p><p>link-error</p></td></tr><tr><td>offered-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender supports</i><p>            A list of commonly defined session capabilities and their meanings can be found here:            .          </p><p>http://www.amqp.org/specification/1.0/link-capabilities</p></td></tr><tr><td>desired-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender may use if the receiver supports them</i></td></tr><tr><td>properties</td><td>fields</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>link properties</i><p>            The properties map contains a set of fields intended to indicate information about the            link and its container.          </p><p>            A list of commonly defined link properties and their meanings can be found here:          </p><p>http://www.amqp.org/specification/1.0/link-properties</p></td></tr></table>
 
 <a name="BeginFrame"></a>
 #class: BeginFrame
@@ -677,11 +521,7 @@ Invalid state.
 
 <a name="new_Frame"></a>
 ##new Frame()
-Encapsulates all convenience methods required for encoding a frame to put it out on the wire, and decoding an
-incoming frame.
-
-Frames look like:
-
+Encapsulates all convenience methods required for encoding a frame to put it out on the wire, and decoding anincoming frame.Frames look like:
  <pre>
              +0       +1       +2       +3
         +-----------------------------------+ -.
@@ -712,8 +552,7 @@ Frames look like:
 
 <a name="Frame#outgoing"></a>
 ##frame.outgoing()
-Populate the internal buffer with contents built based on the options.  SIZE and DOFF will be inferred
-based on the options given.
+Populate the internal buffer with contents built based on the options.  SIZE and DOFF will be inferredbased on the options given.
 
 **Access**: private  
 <a name="Frame#readPerformative"></a>
@@ -735,9 +574,7 @@ Used to populate the frame performative from a DescribedType pulled off the wire
 
 <a name="new_AMQPFrame"></a>
 ##new AMQPFrame()
-AMQP Frames are slight variations on the one above, with the first part of the payload taken up
-by the AMQP <i>performative</i> (details of the specific frame type).  For some frames, that's the entire payload.
-
+AMQP Frames are slight variations on the one above, with the first part of the payload taken upby the AMQP <i>performative</i> (details of the specific frame type).  For some frames, that's the entire payload.
 <pre>
       +0       +1       +2       +3
         +-----------------------------------+ -.
@@ -769,15 +606,12 @@ by the AMQP <i>performative</i> (details of the specific frame type).  For some 
 
 <a name="AMQPFrame#_getPerformative"></a>
 ##aMQPFrame._getPerformative()
-Children should implement this method to translate their internal (friendly) representation into the
-representation expected on the wire (a DescribedType(Descriptor, ...) with either a List of values
-(ForcedType'd as necessary) or an object containing an encodeOrdering[] array to clarify ordering).
+Children should implement this method to translate their internal (friendly) representation into therepresentation expected on the wire (a DescribedType(Descriptor, ...) with either a List of values(ForcedType'd as necessary) or an object containing an encodeOrdering[] array to clarify ordering).
 
 **Access**: private  
 <a name="AMQPFrame#_getAdditionalPayload"></a>
 ##aMQPFrame._getAdditionalPayload()
-AMQP Frames consist of two sections of payload - the performative, and the additional actual payload.
-Some frames don't have any additional payload, but for those that do, they should override this to generate it.
+AMQP Frames consist of two sections of payload - the performative, and the additional actual payload.Some frames don't have any additional payload, but for those that do, they should override this to generate it.
 
 **Access**: private  
 <a name="FrameReader"></a>
@@ -799,15 +633,7 @@ For now, just process performative headers.
 **Returns**: [AMQPFrame](#AMQPFrame) - Frame with populated data, undefined if frame is incomplete.  Throws exception on unmatched frame.  
 <a name="FrameReader#_readMessage"></a>
 ##frameReader._readMessage(messageBuf)
-An AMQP Message is composed of:
-
-* Zero or one header
-* Zero or one delivery-annotations
-* Zero or one message-annotations
-* Zero or one properties
-* Zero or one application-properties
-* Body: One or more data sections, one or more amqp-sequence sections, or one amqp-value section
-* Zero or one footer
+An AMQP Message is composed of:* Zero or one header* Zero or one delivery-annotations* Zero or one message-annotations* Zero or one properties* Zero or one application-properties* Body: One or more data sections, one or more amqp-sequence sections, or one amqp-value section* Zero or one footer
 
 **Params**
 
@@ -824,8 +650,7 @@ An AMQP Message is composed of:
 
 <a name="new_HeartbeatFrame"></a>
 ##new HeartbeatFrame()
-Heartbeat frames are under-specified in the AMQP Specification as "an empty frame".  In practice, this
-seems to be interpreted as a an empty header with a type of 0 (or 8 zero bytes).
+Heartbeat frames are under-specified in the AMQP Specification as "an empty frame".  In practice, thisseems to be interpreted as a an empty header with a type of 0 (or 8 zero bytes).
 
 <a name="OpenFrame"></a>
 #class: OpenFrame
@@ -836,131 +661,7 @@ seems to be interpreted as a an empty header with a type of 0 (or 8 zero bytes).
 
 <a name="new_OpenFrame"></a>
 ##new OpenFrame()
-<h2>open performative</h2>
-<i>negotiate Connection parameters</i>
-<p>
-          The first frame sent on a connection in either direction MUST contain an Open body. (Note
-          that the Connection header which is sent first on the Connection is *not* a frame.) The
-          fields indicate the capabilities and limitations of the sending peer.
-        </p>
-<h3>Descriptor</h3>
-<dl>
-<dt>Name</dt>
-<dd>amqp:open:list</dd>
-<dt>Code</dt>
-<dd>0x00000000:0x00000010</dd>
-</dl>
-
-<table border="1">
-<tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr>
-<tr><td>container-id</td><td>string</td><td>true</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the id of the source container</i></td></tr>
-<tr><td>hostname</td><td>string</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the name of the target host</i>
-<p>
-            The dns name of the host (either fully qualified or relative) to which the sending peer
-            is connecting. It is not mandatory to provide the hostname. If no hostname is provided
-            the receiving peer should select a default based on its own configuration. This field
-            can be used by AMQP proxies to determine the correct back-end service to connect
-            the client to.
-          </p>
-<p>
-            This field may already have been specified by the  frame, if a
-            SASL layer is used, or, the server name indication extension as described in
-            RFC-4366, if a TLS layer is used, in which case this field SHOULD be null or contain
-            the same value. It is undefined what a different value to those already specific means.
-          </p>
-<p>sasl-init</p></td></tr>
-<tr><td>max-frame-size</td><td>uint</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>proposed maximum frame size</i>
-<p>
-            The largest frame size that the sending peer is able to accept on this Connection. If
-            this field is not set it means that the peer does not impose any specific limit. A peer
-            MUST NOT send frames larger than its partner can handle. A peer that receives an
-            oversized frame MUST close the Connection with the framing-error error-code.
-          </p>
-<p>
-            Both peers MUST accept frames of up to  octets
-            large.
-          </p>
-<p>MIN-MAX-FRAME-SIZE</p></td></tr>
-<tr><td>channel-max</td><td>ushort</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the maximum channel number that may be used on the Connection</i>
-<p>
-            The channel-max value is the highest channel number that may be used on the Connection.
-            This value plus one is the maximum number of Sessions that can be simultaneously active
-            on the Connection. A peer MUST not use channel numbers outside the range that its
-            partner can handle. A peer that receives a channel number outside the supported range
-            MUST close the Connection with the framing-error error-code.
-          </p></td></tr>
-<tr><td>idle-time-out</td><td>milliseconds</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>idle time-out</i>
-<p>
-            The idle time-out required by the sender. A value of zero is the same as if it was
-            not set (null). If the receiver is unable or unwilling to support the idle time-out
-            then it should close the connection with an error explaining why (eg, because it is
-            too small).
-          </p>
-<p>
-            If the value is not set, then the sender does not have an idle time-out. However,
-            senders doing this should be aware that implementations MAY choose to use an
-            internal default to efficiently manage a peer's resources.
-          </p></td></tr>
-<tr><td>outgoing-locales</td><td>ietf-language-tag</td><td>false</td><td>true</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>locales available for outgoing text</i>
-<p>
-            A list of the locales that the peer supports for sending informational text. This
-            includes Connection, Session and Link error descriptions. A peer MUST support at least
-            the  locale (see ). Since this value is
-            always supported, it need not be supplied in the outgoing-locales. A null value or an
-            empty list implies that only  is supported.
-          </p>
-<p>ietf-language-tag</p></td></tr>
-<tr><td>incoming-locales</td><td>ietf-language-tag</td><td>false</td><td>true</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>desired locales for incoming text in decreasing level of preference</i>
-<p>
-            A list of locales that the sending peer permits for incoming informational text. This
-            list is ordered in decreasing level of preference. The receiving partner will chose the
-            first (most preferred) incoming locale from those which it supports. If none of the
-            requested locales are supported,  will be chosen. Note that
-            need not be supplied in this list as it is always the fallback. A peer may determine
-            which of the permitted incoming locales is chosen by examining the partner's supported
-            locales as specified in the outgoing-locales field. A null value or an empty list
-            implies that only  is supported.
-          </p></td></tr>
-<tr><td>offered-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender supports</i>
-<p>
-            If the receiver of the offered-capabilities requires an extension capability which is
-            not present in the offered-capability list then it MUST close the connection.
-          </p>
-<p>
-            A list of commonly defined connection capabilities and their meanings can be found here:
-            .
-          </p>
-<p>http://www.amqp.org/specification/1.0/connection-capabilities</p></td></tr>
-<tr><td>desired-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender may use if the receiver supports them</i>
-<p>
-            The desired-capability list defines which extension capabilities the sender MAY use if
-            the receiver offers them (i.e. they are in the offered-capabilities list received by the
-            sender of the desired-capabilities). If the receiver of the desired-capabilities offers
-            extension capabilities which are not present in the desired-capability list it received,
-            then it can be sure those (undesired) capabilities will not be used on the
-            Connection.
-          </p></td></tr>
-<tr><td>properties</td><td>fields</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>connection properties</i>
-<p>
-            The properties map contains a set of fields intended to indicate information about the
-            connection and its container.
-          </p>
-<p>
-            A list of commonly defined connection properties and their meanings can be found here:
-
-          </p>
-<p>http://www.amqp.org/specification/1.0/connection-properties</p></td></tr>
-</table>
+<h2>open performative</h2><i>negotiate Connection parameters</i><p>          The first frame sent on a connection in either direction MUST contain an Open body. (Note          that the Connection header which is sent first on the Connection is *not* a frame.) The          fields indicate the capabilities and limitations of the sending peer.        </p><h3>Descriptor</h3><dl><dt>Name</dt><dd>amqp:open:list</dd><dt>Code</dt><dd>0x00000000:0x00000010</dd></dl><table border="1"><tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>container-id</td><td>string</td><td>true</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the id of the source container</i></td></tr><tr><td>hostname</td><td>string</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the name of the target host</i><p>            The dns name of the host (either fully qualified or relative) to which the sending peer            is connecting. It is not mandatory to provide the hostname. If no hostname is provided            the receiving peer should select a default based on its own configuration. This field            can be used by AMQP proxies to determine the correct back-end service to connect            the client to.          </p><p>            This field may already have been specified by the  frame, if a            SASL layer is used, or, the server name indication extension as described in            RFC-4366, if a TLS layer is used, in which case this field SHOULD be null or contain            the same value. It is undefined what a different value to those already specific means.          </p><p>sasl-init</p></td></tr><tr><td>max-frame-size</td><td>uint</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>proposed maximum frame size</i><p>            The largest frame size that the sending peer is able to accept on this Connection. If            this field is not set it means that the peer does not impose any specific limit. A peer            MUST NOT send frames larger than its partner can handle. A peer that receives an            oversized frame MUST close the Connection with the framing-error error-code.          </p><p>            Both peers MUST accept frames of up to  octets            large.          </p><p>MIN-MAX-FRAME-SIZE</p></td></tr><tr><td>channel-max</td><td>ushort</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the maximum channel number that may be used on the Connection</i><p>            The channel-max value is the highest channel number that may be used on the Connection.            This value plus one is the maximum number of Sessions that can be simultaneously active            on the Connection. A peer MUST not use channel numbers outside the range that its            partner can handle. A peer that receives a channel number outside the supported range            MUST close the Connection with the framing-error error-code.          </p></td></tr><tr><td>idle-time-out</td><td>milliseconds</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>idle time-out</i><p>            The idle time-out required by the sender. A value of zero is the same as if it was            not set (null). If the receiver is unable or unwilling to support the idle time-out            then it should close the connection with an error explaining why (eg, because it is            too small).          </p><p>            If the value is not set, then the sender does not have an idle time-out. However,            senders doing this should be aware that implementations MAY choose to use an            internal default to efficiently manage a peer's resources.          </p></td></tr><tr><td>outgoing-locales</td><td>ietf-language-tag</td><td>false</td><td>true</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>locales available for outgoing text</i><p>            A list of the locales that the peer supports for sending informational text. This            includes Connection, Session and Link error descriptions. A peer MUST support at least            the  locale (see ). Since this value is            always supported, it need not be supplied in the outgoing-locales. A null value or an            empty list implies that only  is supported.          </p><p>ietf-language-tag</p></td></tr><tr><td>incoming-locales</td><td>ietf-language-tag</td><td>false</td><td>true</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>desired locales for incoming text in decreasing level of preference</i><p>            A list of locales that the sending peer permits for incoming informational text. This            list is ordered in decreasing level of preference. The receiving partner will chose the            first (most preferred) incoming locale from those which it supports. If none of the            requested locales are supported,  will be chosen. Note that            need not be supplied in this list as it is always the fallback. A peer may determine            which of the permitted incoming locales is chosen by examining the partner's supported            locales as specified in the outgoing-locales field. A null value or an empty list            implies that only  is supported.          </p></td></tr><tr><td>offered-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender supports</i><p>            If the receiver of the offered-capabilities requires an extension capability which is            not present in the offered-capability list then it MUST close the connection.          </p><p>            A list of commonly defined connection capabilities and their meanings can be found here:            .          </p><p>http://www.amqp.org/specification/1.0/connection-capabilities</p></td></tr><tr><td>desired-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender may use if the receiver supports them</i><p>            The desired-capability list defines which extension capabilities the sender MAY use if            the receiver offers them (i.e. they are in the offered-capabilities list received by the            sender of the desired-capabilities). If the receiver of the desired-capabilities offers            extension capabilities which are not present in the desired-capability list it received,            then it can be sure those (undesired) capabilities will not be used on the            Connection.          </p></td></tr><tr><td>properties</td><td>fields</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>connection properties</i><p>            The properties map contains a set of fields intended to indicate information about the            connection and its container.          </p><p>            A list of commonly defined connection properties and their meanings can be found here:          </p><p>http://www.amqp.org/specification/1.0/connection-properties</p></td></tr></table>
 
 <a name="SaslFrame"></a>
 #class: SaslFrame
@@ -971,24 +672,13 @@ seems to be interpreted as a an empty header with a type of 0 (or 8 zero bytes).
 
 <a name="new_SaslFrame"></a>
 ##new SaslFrame()
-Base Frame for SASL authentication.
-
-To establish a SASL tunnel, each peer MUST start by sending a protocol header. The protocol
-header consists of the upper case ASCII letters "AMQP" followed by a protocol id of three,
-followed by three unsigned bytes representing the major, minor, and revision of the
-specification version (see constants.saslVersion). In total this is an 8-octet sequence:
+Base Frame for SASL authentication.To establish a SASL tunnel, each peer MUST start by sending a protocol header. The protocolheader consists of the upper case ASCII letters "AMQP" followed by a protocol id of three,followed by three unsigned bytes representing the major, minor, and revision of thespecification version (see constants.saslVersion). In total this is an 8-octet sequence:
  <pre>
  4 OCTETS   1 OCTET   1 OCTET   1 OCTET   1 OCTET
  +----------+---------+---------+---------+----------+
  |  "AMQP"  |   %d3   |  major  |  minor  | revision |
  +----------+---------+---------+---------+----------+
- </pre>
-
-Other than using a protocol id of three, the exchange of SASL tunnel headers follows the
-same rules specified in the version negotiation section of the transport specification (See
-version-negotiation).
-
-The following diagram illustrates the interaction involved in creating a SASL Security Layer:
+ </pre>Other than using a protocol id of three, the exchange of SASL tunnel headers follows thesame rules specified in the version negotiation section of the transport specification (Seeversion-negotiation).The following diagram illustrates the interaction involved in creating a SASL Security Layer:
  <pre>
  TCP Client                 TCP Server
  =========================================
@@ -1003,12 +693,7 @@ The following diagram illustrates the interaction involved in creating a SASL Se
  < --------  AMQP%d0.1.0.0
  open  -------- >
  < --------  open
- </pre>
-
-SASL is negotiated using framing. A SASL frame has a type code of 0x01.
-Bytes 6 and 7 of the header are ignored. Implementations SHOULD set these to 0x00. The
-extended header is ignored. Implementations SHOULD therefore set DOFF to 0x02.
-
+ </pre>SASL is negotiated using framing. A SASL frame has a type code of 0x01.Bytes 6 and 7 of the header are ignored. Implementations SHOULD set these to 0x00. Theextended header is ignored. Implementations SHOULD therefore set DOFF to 0x02.
  <pre>
  type: 0x01 - SASL frame
  +0       +1       +2       +3
@@ -1033,12 +718,7 @@ extended header is ignored. Implementations SHOULD therefore set DOFF to 0x02.
  +--------------------------+          -'
  &#42;1 SHOULD be set to 0x0000
  &#42;2 Ignored, so DOFF should be set to 0x02
- </pre>
-
-The maximum size of a SASL frame is defined by constants.minMaxFrameSize. There is
-no mechanism within the SASL negotiation to negotiate a different size. The frame body of a
-SASL frame may contain exactly one AMQP type, whose type encoding must have
-sasl-frame. Receipt of an empty frame is an irrecoverable error.
+ </pre>The maximum size of a SASL frame is defined by constants.minMaxFrameSize. There isno mechanism within the SASL negotiation to negotiate a different size. The frame body of aSASL frame may contain exactly one AMQP type, whose type encoding must havesasl-frame. Receipt of an empty frame is an irrecoverable error.
 
 <a name="SaslMechanisms"></a>
 #class: SaslMechanisms
@@ -1049,16 +729,11 @@ sasl-frame. Receipt of an empty frame is an irrecoverable error.
 
 <a name="new_SaslMechanisms"></a>
 ##new SaslMechanisms(options)
-A list of the sasl security mechanisms supported by the sending peer. It is invalid
-for this list to be null or empty. If the sending peer does not require its partner
-to authenticate with it, then it should send a list of one element with its value as
-the SASL mechanism <i>ANONYMOUS</i>. The server mechanisms are ordered in decreasing
-level of preference.
+A list of the sasl security mechanisms supported by the sending peer. It is invalidfor this list to be null or empty. If the sending peer does not require its partnerto authenticate with it, then it should send a list of one element with its value asthe SASL mechanism <i>ANONYMOUS</i>. The server mechanisms are ordered in decreasinglevel of preference.
 
 **Params**
 
-- options  - Either the DescribedType of an incoming SASL Mechanisms frame,
-                 or an array of mechanisms, or a map with a mechanisms key.  
+- options  - Either the DescribedType of an incoming SASL Mechanisms frame,                 or an array of mechanisms, or a map with a mechanisms key.  
 
 <a name="SaslInit"></a>
 #class: SaslInit
@@ -1069,45 +744,7 @@ level of preference.
 
 <a name="new_SaslInit"></a>
 ##new SaslInit(options)
-SASL Init frame, containing the following fields:
-<table border="1">
-    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>
-    <tr><td>mechanism</td><td>symbol</td><td>true</td><td>false</td></tr>
-    <tr><td>&nbsp;</td><td colspan="3">
-The name of the SASL mechanism used for the SASL exchange. If the selected mechanism is
-not supported by the receiving peer, it MUST close the Connection with the
-authentication-failure close-code. Each peer MUST authenticate using the highest-level
-security profile it can handle from the list provided by the partner.
-     </td></tr>
-     <tr><td>initial-response</td><td>binary</td><td>false</td><td>false</td></tr>
-     <tr><td>&nbsp;</td><td colspan="3">
-     <i>security response data</i><br/>
-     <p>
-A block of opaque data passed to the security mechanism. The contents of this data are
-defined by the SASL security mechanism.
-     </p>
-     </td></tr>
-     <tr><td>hostname</td><td>string</td><td>false</td><td>false</td></tr>
-     <tr><td>&nbsp;</td><td colspan="3">
-     <i>the name of the target host</i><br/>
-     <p>
-The DNS name of the host (either fully qualified or relative) to which the sending peer
-is connecting. It is not mandatory to provide the hostname. If no hostname is provided
-the receiving peer should select a default based on its own configuration.
-     </p>
-     <p>
-This field can be used by AMQP proxies to determine the correct back-end service to
-connect the client to, and to determine the domain to validate the client's credentials
-against.
-     </p>
-     <p>
-This field may already have been specified by the server name indication extension as
-described in RFC-4366, if a TLS layer is used, in which case this field SHOULD be null
-or contain the same value. It is undefined what a different value to those already
-specific means.
-     </p>
-     </td></tr>
-</table>
+SASL Init frame, containing the following fields:<table border="1">    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>    <tr><td>mechanism</td><td>symbol</td><td>true</td><td>false</td></tr>    <tr><td>&nbsp;</td><td colspan="3">The name of the SASL mechanism used for the SASL exchange. If the selected mechanism isnot supported by the receiving peer, it MUST close the Connection with theauthentication-failure close-code. Each peer MUST authenticate using the highest-levelsecurity profile it can handle from the list provided by the partner.     </td></tr>     <tr><td>initial-response</td><td>binary</td><td>false</td><td>false</td></tr>     <tr><td>&nbsp;</td><td colspan="3">     <i>security response data</i><br/>     <p>A block of opaque data passed to the security mechanism. The contents of this data aredefined by the SASL security mechanism.     </p>     </td></tr>     <tr><td>hostname</td><td>string</td><td>false</td><td>false</td></tr>     <tr><td>&nbsp;</td><td colspan="3">     <i>the name of the target host</i><br/>     <p>The DNS name of the host (either fully qualified or relative) to which the sending peeris connecting. It is not mandatory to provide the hostname. If no hostname is providedthe receiving peer should select a default based on its own configuration.     </p>     <p>This field can be used by AMQP proxies to determine the correct back-end service toconnect the client to, and to determine the domain to validate the client's credentialsagainst.     </p>     <p>This field may already have been specified by the server name indication extension asdescribed in RFC-4366, if a TLS layer is used, in which case this field SHOULD be nullor contain the same value. It is undefined what a different value to those alreadyspecific means.     </p>     </td></tr></table>
 
 **Params**
 
@@ -1122,16 +759,7 @@ specific means.
 
 <a name="new_SaslChallenge"></a>
 ##new SaslChallenge(options)
-SASL Challenge frame, containing the following field:
-
-<table border="1">
-    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>
-    <tr><td>challenge</td><td>binary</td><td>true</td><td>false</td></tr>
-    <tr><td>&nbsp;</td><td colspan="3">
-Challenge information, a block of opaque binary data passed to the security
-mechanism.
-    </td></tr>
-</table>
+SASL Challenge frame, containing the following field:<table border="1">    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>    <tr><td>challenge</td><td>binary</td><td>true</td><td>false</td></tr>    <tr><td>&nbsp;</td><td colspan="3">Challenge information, a block of opaque binary data passed to the securitymechanism.    </td></tr></table>
 
 **Params**
 
@@ -1146,16 +774,7 @@ mechanism.
 
 <a name="new_SaslResponse"></a>
 ##new SaslResponse(options)
-SASL Response frame, containing the following field:
-
-<table border="1">
-    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>
-    <tr><td>response</td><td>binary</td><td>true</td><td>false</td></tr>
-    <tr><td>&nbsp;</td><td colspan="3">
-A block of opaque data passed to the security mechanism. The contents of this data are
-defined by the SASL security mechanism.
-    </td></tr>
-</table>
+SASL Response frame, containing the following field:<table border="1">    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>    <tr><td>response</td><td>binary</td><td>true</td><td>false</td></tr>    <tr><td>&nbsp;</td><td colspan="3">A block of opaque data passed to the security mechanism. The contents of this data aredefined by the SASL security mechanism.    </td></tr></table>
 
 **Params**
 
@@ -1170,45 +789,7 @@ defined by the SASL security mechanism.
 
 <a name="new_SaslOutcome"></a>
 ##new SaslOutcome(options)
-This frame indicates the outcome of the SASL dialog. Upon successful completion of the
-SASL dialog the Security Layer has been established, and the peers must exchange protocol
-headers to either start a nested Security Layer, or to establish the AMQP Connection.
-
-SASL Outcome frame contains the following fields:
-
-<table border="1">
-    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>
-    <tr><td>code</td><td>sasl-code</td><td>true</td><td>false</td></tr>
-    <tr><td>&nbsp;</td><td colspan="3">
-    <i>indicates the outcome of the sasl dialog</i><br/>
-    </td></tr>
-    <tr><td>additional-data</td><td>binary</td><td>false</td><td>false</td></tr>
-    <tr><td>&nbsp;</td><td colspan="3">
-The additional-data field carries additional data on successful authentication outcome
-as specified by the SASL specification (RFC-4422). If the authentication is
-unsuccessful, this field is not set.
-    </td></tr>
-</table>
-
-SASL Code is a ubyte constrained to the following:
-<table border="1">
-    <tr><th>Byte</th><th>Name</th><th>Details</th></tr>
-    <tr><td>0</td><td>ok</td><td>Connection authentication succeeded.</td></tr>
-    <tr><td>1</td><td>auth</td><td>
-Connection authentication failed due to an unspecified problem with the supplied
-credentials.
-    </td></tr>
-    <tr><td>2</td><td>sys</td><td>
-Connection authentication failed due to a system error.
-    </td></tr>
-    <tr><td>3</td><td>sys-perm</td><td>
-Connection authentication failed due to a system error that is unlikely to be corrected
-without intervention.
-    </td></tr>
-    <tr><td>4</td><td>sys-temp</td><td>
-Connection authentication failed due to a transient system error.
-    </td></tr>
-</table>
+This frame indicates the outcome of the SASL dialog. Upon successful completion of theSASL dialog the Security Layer has been established, and the peers must exchange protocolheaders to either start a nested Security Layer, or to establish the AMQP Connection.SASL Outcome frame contains the following fields:<table border="1">    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>    <tr><td>code</td><td>sasl-code</td><td>true</td><td>false</td></tr>    <tr><td>&nbsp;</td><td colspan="3">    <i>indicates the outcome of the sasl dialog</i><br/>    </td></tr>    <tr><td>additional-data</td><td>binary</td><td>false</td><td>false</td></tr>    <tr><td>&nbsp;</td><td colspan="3">The additional-data field carries additional data on successful authentication outcomeas specified by the SASL specification (RFC-4422). If the authentication isunsuccessful, this field is not set.    </td></tr></table>SASL Code is a ubyte constrained to the following:<table border="1">    <tr><th>Byte</th><th>Name</th><th>Details</th></tr>    <tr><td>0</td><td>ok</td><td>Connection authentication succeeded.</td></tr>    <tr><td>1</td><td>auth</td><td>Connection authentication failed due to an unspecified problem with the suppliedcredentials.    </td></tr>    <tr><td>2</td><td>sys</td><td>Connection authentication failed due to a system error.    </td></tr>    <tr><td>3</td><td>sys-perm</td><td>Connection authentication failed due to a system error that is unlikely to be correctedwithout intervention.    </td></tr>    <tr><td>4</td><td>sys-temp</td><td>Connection authentication failed due to a transient system error.    </td></tr></table>
 
 **Params**
 
@@ -1246,13 +827,7 @@ Currently, only supports SASL-PLAIN
 
 <a name="new_Session"></a>
 ##new Session(conn)
-A Session is a bidirectional sequential conversation between two containers that provides a
-grouping for related links. Sessions serve as the context for link communication. Any number
-of links of any directionality can be <i>attached</i> to a given Session. However, a link
-may be attached to at most one Session at a time.
-
-Session states, from AMQP 1.0 spec:
-
+A Session is a bidirectional sequential conversation between two containers that provides agrouping for related links. Sessions serve as the context for link communication. Any numberof links of any directionality can be <i>attached</i> to a given Session. However, a linkmay be attached to at most one Session at a time.Session states, from AMQP 1.0 spec:
  <dl>
  <dt>UNMAPPED</dt>
  <dd><p>In the UNMAPPED state, the Session endpoint is not mapped to any incoming or outgoing
@@ -1318,12 +893,7 @@ Session states, from AMQP 1.0 spec:
                             |                        |
                             |                        |
                             +------------------------+
-  </pre>
-
-There is no obligation to retain a Session Endpoint when it is in the UNMAPPED state, i.e.
-the UNMAPPED state is equivalent to a NONEXISTENT state.
-
-Note: This implementation *assumes* it is the client, and thus will always be the one BEGIN-ing a Session.
+  </pre>There is no obligation to retain a Session Endpoint when it is in the UNMAPPED state, i.e.the UNMAPPED state is equivalent to a NONEXISTENT state.Note: This implementation *assumes* it is the client, and thus will always be the one BEGIN-ing a Session.
 
 **Params**
 
@@ -1355,8 +925,7 @@ Type definitions, encoders, and decoders - used extensively by [Codec](#Codec).
 
 <a name="Types#_listBuilder"></a>
 ##types._listBuilder(val, bufb, codec, [width])
-Encoder for list types, specified in AMQP 1.0 as:
-
+Encoder for list types, specified in AMQP 1.0 as:
  <pre>
                        +----------= count items =----------+
                        |                                   |
@@ -1387,9 +956,7 @@ Encoder for list types, specified in AMQP 1.0 as:
 **Access**: private  
 <a name="Types#_arrayBuilder"></a>
 ##types._arrayBuilder(val, bufb, codec, [width])
-All array encodings consist of a size followed by a count followed by an element constructor
-followed by <i>count</i> elements of encoded data formatted as required by the element
-constructor:
+All array encodings consist of a size followed by a count followed by an element constructorfollowed by <i>count</i> elements of encoded data formatted as required by the elementconstructor:
  <pre>
                                              +--= count elements =--+
                                              |                      |
@@ -1414,20 +981,13 @@ constructor:
 **Access**: private  
 <a name="Types#_mapBuilder"></a>
 ##types._mapBuilder(val, bufb, codec, [width])
-A map is encoded as a compound value where the constituent elements form alternating key value pairs.
-
+A map is encoded as a compound value where the constituent elements form alternating key value pairs.
  <pre>
   item 0   item 1      item n-1    item n
  +-------+-------+----+---------+---------+
  | key 1 | val 1 | .. | key n/2 | val n/2 |
  +-------+-------+----+---------+---------+
- </pre>
-
-Map encodings must contain an even number of items (i.e. an equal number of keys and
-values). A map in which there exist two identical key values is invalid. Unless known to
-be otherwise, maps must be considered to be ordered - that is the order of the key-value
-pairs is semantically important and two maps which are different only in the order in
-which their key-value pairs are encoded are not equal.
+ </pre>Map encodings must contain an even number of items (i.e. an equal number of keys andvalues). A map in which there exist two identical key values is invalid. Unless known tobe otherwise, maps must be considered to be ordered - that is the order of the key-valuepairs is semantically important and two maps which are different only in the order inwhich their key-value pairs are encoded are not equal.
 
 **Params**
 
@@ -1686,8 +1246,7 @@ Convenience method to assert that a given options object contains the required a
 
 <a name="encoder"></a>
 #encoder(val, buf, [codec])
-Encoder methods are used for all examples of that type and are expected to encode to the proper type (e.g. a uint will
-encode to the fixed-zero-value, the short uint, or the full uint as appropriate).
+Encoder methods are used for all examples of that type and are expected to encode to the proper type (e.g. a uint willencode to the fixed-zero-value, the short uint, or the full uint as appropriate).
 
 **Params**
 
@@ -1707,10 +1266,7 @@ Decoder methods decode an incoming buffer into an appropriate concrete JS entity
 **Returns**:  - Decoded value  
 <a name="onUndef"></a>
 #onUndef(arg1, arg2)
-Simple, *light-weight* function for coalescing an argument with a default.
-Differs from _??_ by operating *only* on undefined, and not on null/zero/empty-string/emtpy-array/etc.
-
-Could use _args_ and slice and work for arbitrary length argument list, but that would no longer be simple.
+Simple, *light-weight* function for coalescing an argument with a default.Differs from _??_ by operating *only* on undefined, and not on null/zero/empty-string/emtpy-array/etc.Could use _args_ and slice and work for arbitrary length argument list, but that would no longer be simple.
 
 **Params**
 
