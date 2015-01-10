@@ -7,6 +7,8 @@ var debug       = require('debug')('amqp10-app'),
     u           = require('./lib/utilities'),
 
     AMQPError   = require('./lib/types/amqp_error'),
+    DescribedType   = require('./lib/types/described_type'),
+    Fields      = require('./lib/types/amqp_composites').Fields,
     Symbol      = require('./lib/types/symbol'),
     Source      = require('./lib/types/source_target').Source,
     Target      = require('./lib/types/source_target').Target,
@@ -21,7 +23,7 @@ var debug       = require('debug')('amqp10-app'),
 
 
 var partitionAcrossSessions = false;
-var sendOnly = true;
+var sendOnly = false;
 
 // @todo A lot of these should be replaced with default policy settings
 // @todo amqp_client should be doing a lot of this work
@@ -115,12 +117,17 @@ function makeReceiver(session, recvAddr, cb) {
     session.attachLink({ options: {
         name: recvAddr,
         role: constants.linkRole.receiver,
-        source: {
-            address: recvAddr
-        },
-        target: {
+        source: new Source({
+            address: recvAddr,
+            filter: new Fields({
+                'apache.org:selector-filter:string' :
+                    new DescribedType(new Symbol('apache.org:selector-filter:string'),
+                        "amqp.annotation.x-opt-offset > '" + 1000 + "'")
+            })
+        }),
+        target: new Target({
             address: 'localhost'
-        },
+        }),
         senderSettleMode: constants.senderSettleMode.settled,
         receiverSettleMode: constants.receiverSettleMode.autoSettle,
         maxMessageSize: 10000,

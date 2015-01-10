@@ -5,8 +5,14 @@ var debug           = require('debug')('amqp10-client'),
     Sasl            = require('./lib/sasl'),
     Session         = require('./lib/session').Session,
     Link            = require('./lib/session').Link,
-    Source          = require('./lib/types/source_target').Source,
-    Target          = require('./lib/types/source_target').Target,
+
+    DescribedType   = require('./lib/types/described_type'),
+    Fields          = require('./lib/types/amqp_composites').Fields,
+    ForcedType      = require('./lib/types/forced_type'),
+    Symbol          = require('./lib/types/symbol'),
+    ST              = require('./lib/types/source_target'),
+    Source          = ST.Source,
+    Target          = ST.Target,
 
     u               = require('./lib/utilities');
 
@@ -34,6 +40,16 @@ var PolicyBase      = require('./lib/policies/policy_base'),
 AMQPClient.policies = {
     'PolicyBase': PolicyBase,
     'EventHubPolicy': EHPolicy
+};
+
+AMQPClient.types = {
+    DescribedType: DescribedType,
+    Fields: Fields,
+    ForcedType: ForcedType,
+    Symbol: Symbol,
+
+    Source: Source,
+    Target: Target
 };
 
 AMQPClient.prototype.connect = function(url, cb) {
@@ -114,15 +130,19 @@ AMQPClient.prototype.send = function(msg, target, cb) {
     }
 };
 
-AMQPClient.prototype.receive = function(source, cb) {
+AMQPClient.prototype.receive = function(source, filter, cb) {
     var self = this;
+    if (cb === undefined) {
+        cb = filter;
+        filter = undefined;
+    }
     if (this._receiveLinks[source]) {
         var link = this._receiveLinks[source];
         debug('Already established Rx Link on ' + source);
     } else {
         var linkPolicy = u.deepMerge({ options: {
             name: source,
-            source: { address: source },
+            source: { address: source, filter: filter },
             target: { address: 'localhost' }
         } }, this.policy.receiverLinkPolicy);
         this._session.on(Session.LinkAttached, function (l) {
@@ -132,7 +152,7 @@ AMQPClient.prototype.receive = function(source, cb) {
                     var payload = m.body[0];
                     var decoded = l.policy.decoder ? l.policy.decoder(payload) : payload;
                     debug('Received ' + decoded + ' from ' + source);
-                    cb(decoded);
+                    cb(decoded, m.annotations);
                 });
             }
         });

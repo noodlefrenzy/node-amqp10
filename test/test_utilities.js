@@ -1,8 +1,14 @@
 var debug       = require('debug')('amqp10-test_utilities'),
     should      = require('should'),
 
+    constants   = require('../lib/constants'),
     u           = require('../lib/utilities'),
+    DescribedType   = require('../lib/types/described_type'),
+    Fields      = require('../lib/types/amqp_composites').Fields,
     Symbol      = require('../lib/types/symbol'),
+    ST          = require('../lib/types/source_target'),
+    Source      = ST.Source,
+    Target      = ST.Target,
     tu          = require('./testing_utils');
 
 describe('Utilities', function() {
@@ -82,14 +88,38 @@ describe('Utilities', function() {
         });
 
         // @todo Fix deepMerge to preserve object __proto__ identity.
-        //it('should work for nested with custom types', function() {
-        //    var nested = { foo: { bar: new Symbol('s1') } };
-        //    var defaults = { foo: { baz: new Symbol('s2') }, bat: new Symbol('s3') };
-        //    var merged = u.deepMerge(nested, defaults);
-        //    merged.bat.should.be.instanceof(Symbol);
-        //    merged.foo.bar.should.be.instanceof(Symbol);
-        //    merged.foo.baz.should.be.instanceof(Symbol);
-        //});
+        it('should work for nested with custom types', function() {
+            var nested = { foo: { bar: new Symbol('s1') } };
+            var defaults = { foo: { baz: new Symbol('s2') }, bat: new Symbol('s3') };
+            var merged = u.deepMerge(nested, defaults);
+            merged.bat.should.be.instanceof(Symbol);
+            merged.foo.bar.should.be.instanceof(Symbol);
+            merged.foo.baz.should.be.instanceof(Symbol);
+        });
+
+        it('should work for attach frame details', function() {
+            var input = { options: {
+                name: 'recv',
+                    role: constants.linkRole.receiver,
+                    source: new Source({
+                    address: 'recv',
+                    filter: new Fields({
+                        'apache.org:selector-filter:string' :
+                            new DescribedType(new Symbol('apache.org:selector-filter:string'),
+                                "amqp.annotation.x-opt-offset > '" + 1000 + "'")
+                    })
+                }),
+                    target: new Target({
+                    address: 'localhost'
+                }),
+                    senderSettleMode: constants.senderSettleMode.settled,
+                    receiverSettleMode: constants.receiverSettleMode.autoSettle,
+                    maxMessageSize: 10000,
+                    initialDeliveryCount: 1
+            }};
+            var merged = u.deepMerge(input);
+            merged.should.eql(input);
+        });
 
         it('should work for chains', function() {
             var last = { a: 1, b: 1, c: 1 };

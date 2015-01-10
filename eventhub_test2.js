@@ -10,13 +10,17 @@ function sendCB(msg, err) {
     }
 }
 
-function recvCB(partition, payload, err) {
+function recvCB(partition, payload, annotations, err) {
     if (err) {
         console.log('ERROR: ');
         console.log(err);
     } else {
         console.log('Recv(' + partition + '): ');
         console.log(payload);
+        if (annotations) {
+            console.log('Annotations:');
+            console.log(annotations);
+        }
         console.log('');
     }
 }
@@ -30,11 +34,16 @@ function sendRecv(settings, client, err) {
         console.log('ERROR: ');
         console.log(err);
     } else {
-        client.send('Testing 1.2.3...', sendAddr, sendCB);
-        for (var idx=0; idx < numPartitions; ++idx) {
+        var filter = new AMQPClient.types.Fields({
+            'apache.org:selector-filter:string' :
+                new AMQPClient.types.DescribedType(new AMQPClient.types.Symbol('apache.org:selector-filter:string'),
+                    "amqp.annotation.x-opt-offset > '" + 43350 + "'")
+        });
+        //client.send('Testing 1.2.3...', sendAddr, sendCB);
+        for (var idx=0; idx < /* numPartitions */ 1; ++idx) {
             var curIdx = idx;
             var curRcvAddr = recvAddr + curIdx;
-            client.receive(curRcvAddr, recvCB.bind(null, curIdx));
+            client.receive(curRcvAddr, filter, recvCB.bind(null, curIdx));
         }
     }
 }
