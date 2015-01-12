@@ -14,6 +14,8 @@ var debug           = require('debug')('amqp10-client'),
     Source          = ST.Source,
     Target          = ST.Target,
 
+    Translator      = require('./lib/adapters/translate_encoder'),
+
     u               = require('./lib/utilities');
 
 function AMQPClient(policy) {
@@ -31,7 +33,8 @@ var EHAdapter = require('./lib/adapters/node_sbus').NodeSbusEventHubAdapter;
  * Map of various adapters from other AMQP-reliant libraries to the interface herein.
  */
 AMQPClient.adapters = {
-    'NodeSbusEventHubAdapter': EHAdapter
+    'NodeSbusEventHubAdapter': EHAdapter,
+    'Translator': Translator
 };
 
 var PolicyBase      = require('./lib/policies/policy_base'),

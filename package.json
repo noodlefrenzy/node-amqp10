@@ -7,10 +7,11 @@
     "node": ">= 0.8"
   },
   "dependencies": {
-    "buffer-builder": "^0.1.0",
+    "buffer-builder": "^0.2.0",
     "butils": "^0.1.0",
     "circular-buffer": "noodlefrenzy/CircularBuffer",
     "debug": "^2.0.0",
+    "node-amqp-encoder": "noodlefrenzy/node-amqp-encoder",
     "node-int64": "^0.3.2",
     "readable-stream": "^1.0.32",
     "stately.js": "^1.2.0",

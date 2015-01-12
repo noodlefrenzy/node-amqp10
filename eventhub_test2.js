@@ -34,11 +34,15 @@ function sendRecv(settings, client, err) {
         console.log('ERROR: ');
         console.log(err);
     } else {
-        var filter = new AMQPClient.types.Fields({
-            'apache.org:selector-filter:string' :
-                new AMQPClient.types.DescribedType(new AMQPClient.types.Symbol('apache.org:selector-filter:string'),
-                    "amqp.annotation.x-opt-offset > '" + 43350 + "'")
-        });
+        //var filter = new AMQPClient.types.Fields({
+        //    'apache.org:selector-filter:string' :
+        //        new AMQPClient.types.DescribedType(new AMQPClient.types.Symbol('apache.org:selector-filter:string'),
+        //            "amqp.annotation.x-opt-offset > '" + 43350 + "'")
+        //});
+        var filter = AMQPClient.adapters.Translator(['map',
+                [ 'symbol', 'apache.org:selector-filter:string' ],
+                [ 'described', [ 'symbol', 'apache.org:selector-filter:string' ], [ 'string', "amqp.annotation.x-opt-offset > '" + 43350 + "'"] ]
+            ]);
         //client.send('Testing 1.2.3...', sendAddr, sendCB);
         for (var idx=0; idx < /* numPartitions */ 1; ++idx) {
             var curIdx = idx;
