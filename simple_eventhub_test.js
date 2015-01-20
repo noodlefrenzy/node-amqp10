@@ -1,7 +1,7 @@
 var AMQPClient  = require('./amqp_client'),
     exceptions  = require('./lib/exceptions');
 
-function sendCB(msg, err) {
+function sendCB(err, msg) {
     if (err) {
         console.log('ERROR: ');
         console.log(err);
@@ -10,7 +10,8 @@ function sendCB(msg, err) {
     }
 }
 
-function recvCB(partition, payload, annotations, err) {
+// Partition is first because it's bound at the setter, not by the callback caller.
+function recvCB(partition, err, payload, annotations) {
     if (err) {
         console.log('ERROR: ');
         console.log(err);
@@ -25,6 +26,8 @@ function recvCB(partition, payload, annotations, err) {
     }
 }
 
+var filterOffset = undefined; // 43350;
+
 function sendRecv(settings, client, err) {
     var sendAddr = settings.eventHubName;
     var recvAddr = settings.eventHubName + '/ConsumerGroups/' + (settings.consumerGroup || '$default') + '/Partitions/';
@@ -34,20 +37,23 @@ function sendRecv(settings, client, err) {
         console.log('ERROR: ');
         console.log(err);
     } else {
-        //var filter = new AMQPClient.types.Fields({
-        //    'apache.org:selector-filter:string' :
-        //        new AMQPClient.types.DescribedType(new AMQPClient.types.Symbol('apache.org:selector-filter:string'),
-        //            "amqp.annotation.x-opt-offset > '" + 43350 + "'")
-        //});
-        var filter = AMQPClient.adapters.Translator(['map',
-                [ 'symbol', 'apache.org:selector-filter:string' ],
-                [ 'described', [ 'symbol', 'apache.org:selector-filter:string' ], [ 'string', "amqp.annotation.x-opt-offset > '" + 43350 + "'"] ]
+        var filter = undefined;
+        if (filterOffset) {
+            filter = AMQPClient.adapters.Translator(['map',
+                ['symbol', 'apache.org:selector-filter:string'],
+                ['described', ['symbol', 'apache.org:selector-filter:string'], ['string', "amqp.annotation.x-opt-offset > '" + filterOffset + "'"]]
             ]);
-        //client.send('Testing 1.2.3...', sendAddr, sendCB);
+        }
+
+        //client.send(JSON.stringify({ "DataString": "From Node", "DataValue": 123 }), sendAddr, sendCB);
         for (var idx=0; idx < /* numPartitions */ 1; ++idx) {
             var curIdx = idx;
             var curRcvAddr = recvAddr + curIdx;
-            client.receive(curRcvAddr, filter, recvCB.bind(null, curIdx));
+            if (filter) {
+                client.receive(curRcvAddr, filter, recvCB.bind(null, curIdx));
+            } else {
+                client.receive(curRcvAddr, recvCB.bind(null, curIdx));
+            }
         }
     }
 }

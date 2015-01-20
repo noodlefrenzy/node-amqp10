@@ -88,7 +88,7 @@ AMQPClient.prototype.send = function(msg, target, cb) {
     message.body.push(enc ? enc(msg) : msg);
     var self = this;
     var errHandler = function(e) {
-        cb(null, e);
+        cb(e);
     };
     var sender = function(_link) {
         if (_link.canSend()) {
@@ -97,7 +97,7 @@ AMQPClient.prototype.send = function(msg, target, cb) {
             _link.sendMessage(message, {deliveryTag: new Buffer([curId])});
             _link.removeListener(Link.ErrorReceived, errHandler);
             _link.removeListener(Link.CreditChange, sender);
-            cb(msg);
+            cb(null, msg);
         }
     };
     if (this._sendLinks[target]) {
@@ -155,7 +155,7 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
                     var payload = m.body[0];
                     var decoded = l.policy.decoder ? l.policy.decoder(payload) : payload;
                     debug('Received ' + decoded + ' from ' + source);
-                    cb(decoded, m.annotations);
+                    cb(null, decoded, m.annotations);
                 });
             }
         });
