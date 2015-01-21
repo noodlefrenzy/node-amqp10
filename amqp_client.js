@@ -163,4 +163,16 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
     }
 };
 
+AMQPClient.prototype.disconnect = function(cb) {
+    debug('Disconnecting');
+    if (this._connection) {
+        this._connection.on(Connection.Disconnected, function() {
+           cb();
+        });
+        this._connection.close();
+        this._connection = null;
+        this._session = null;
+    }
+};
+
 module.exports = AMQPClient;
