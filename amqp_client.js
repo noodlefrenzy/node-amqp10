@@ -18,13 +18,22 @@ var debug           = require('debug')('amqp10-client'),
 
     u               = require('./lib/utilities');
 
-function AMQPClient(policy) {
+function AMQPClient(policy, uri, cb) {
+    if (typeof policy === 'string') {
+        cb = uri;
+        uri = policy;
+        policy = undefined;
+    }
     this.policy = policy || PolicyBase;
     this._connection = null;
     this._session = null;
     this._sendLinks = {};
     this._receiveLinks = {};
     this._sendMsgId = 1;
+
+    if (uri) {
+        this.connect(uri, cb);
+    }
 }
 
 var EHAdapter = require('./lib/adapters/node_sbus').NodeSbusEventHubAdapter;
@@ -65,6 +74,7 @@ AMQPClient.prototype.connect = function(url, cb) {
     debug('Connecting to ' + url);
     var self = this;
     var address = u.parseAddress(url);
+    this._defaultQueue = address.path.substr(1);
     this.policy.connectPolicy.options.hostname = address.host;
     var sasl = address.user ? new Sasl() : null;
     this._connection = new Connection(this.policy.connectPolicy);
@@ -72,17 +82,21 @@ AMQPClient.prototype.connect = function(url, cb) {
         debug('Connected');
         self._session = new Session(c);
         self._session.on(Session.Mapped, function (s) {
-           cb(self);
+           cb(null, self);
         });
         self._session.begin(self.policy.sessionPolicy);
     });
     this._connection.on(Connection.ErrorReceived, function (e) {
-        cb(self, e);
+        cb(e, self);
     });
     this._connection.open(address, sasl);
 };
 
 AMQPClient.prototype.send = function(msg, target, cb) {
+    if (typeof target === 'function') {
+        cb = target;
+        target = this._defaultQueue;
+    }
     var message = new M.Message();
     var enc = this.policy.senderLinkPolicy.encoder;
     message.body.push(enc ? enc(msg) : msg);
@@ -105,19 +119,20 @@ AMQPClient.prototype.send = function(msg, target, cb) {
         if (link.canSend()) {
             sender(link);
         } else {
-            l.on(Link.ErrorReceived, errHandler);
+            link.on(Link.ErrorReceived, errHandler);
             link.on(Link.CreditChange, function(_l) {
                 sender(_l);
             });
         }
     } else {
+        var linkName = target + "_TX";
         var linkPolicy = u.deepMerge({ options: {
-            name: target,
+            name: linkName,
             source: { address: 'localhost' },
             target: { address: target }
         } }, this.policy.senderLinkPolicy);
         this._session.on(Session.LinkAttached, function (l) {
-            if (l.name === target) {
+            if (l.name === linkName && l.isSender()) {
                 self._sendLinks[target] = l;
                 if (l.canSend()) {
                     sender(l);
@@ -136,20 +151,32 @@ AMQPClient.prototype.send = function(msg, target, cb) {
 AMQPClient.prototype.receive = function(source, filter, cb) {
     var self = this;
     if (cb === undefined) {
-        cb = filter;
-        filter = undefined;
+        if (typeof source === 'function') {
+            cb = source;
+            source = this._defaultQueue;
+            filter = undefined;
+        } else if (typeof source !== 'string') {
+            cb = filter;
+            filter = source;
+            source = this._defaultQueue;
+        } else {
+            cb = filter;
+            filter = undefined;
+        }
     }
+
     if (this._receiveLinks[source]) {
         var link = this._receiveLinks[source];
         debug('Already established Rx Link on ' + source);
     } else {
+        var linkName = source + "_RX";
         var linkPolicy = u.deepMerge({ options: {
-            name: source,
+            name: linkName,
             source: { address: source, filter: filter },
             target: { address: 'localhost' }
         } }, this.policy.receiverLinkPolicy);
         this._session.on(Session.LinkAttached, function (l) {
-            if (l.name === source) {
+            if (l.name === linkName) {
                 self._receiveLinks[source] = l;
                 l.on(Link.MessageReceived, function (m) {
                     var payload = m.body[0];

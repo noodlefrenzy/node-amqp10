@@ -170,6 +170,17 @@ describe('Utilities', function() {
             });
         });
 
+        it('should match ip + port', function() {
+            var addr = 'amqp://10.42.1.193:5672/testqueue';
+            var result = u.parseAddress(addr);
+            result.should.eql({
+                protocol: 'amqp',
+                host: '10.42.1.193',
+                port: 5672,
+                path: '/testqueue'
+            });
+        });
+
         it('should match credentials no port no route', function () {
             var addr = 'amqp://username:password@my.amqp.server';
             var result = u.parseAddress(addr);
