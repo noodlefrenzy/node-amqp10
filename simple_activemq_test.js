@@ -1,13 +1,18 @@
 var AMQPClient  = require('./amqp_client'),
     exceptions  = require('./lib/exceptions');
 
-function sendCB(err, msg) {
+function disconnectCB(err) {
+    console.log('Disconnect complete.');
+}
+
+function sendCB(client, err, msg) {
     if (err) {
         console.log('ERROR: ');
         console.log(err);
     } else {
         console.log('Sent: ' + msg);
     }
+    client.disconnect(disconnectCB);
 }
 
 function recvCB(err, payload, annotations) {
@@ -26,14 +31,14 @@ function recvCB(err, payload, annotations) {
 }
 
 function sendRecv(settings, client, err) {
-    var sendAddr = settings.hostname || 'localhost';
+    var sendAddr = settings.queuename || 'random';
     var recvAddr = sendAddr;
 
     if (err) {
         console.log('ERROR: ');
         console.log(err);
     } else {
-        //client.send(JSON.stringify({ "DataString": "From Node", "DataValue": 123 }), sendAddr, sendCB);
+        //client.send(JSON.stringify({ "DataString": "From Node", "DataValue": 123 }), sendAddr, sendCB.bind(null, client));
         client.receive(recvAddr, recvCB);
     }
 }
