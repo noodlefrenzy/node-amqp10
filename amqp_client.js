@@ -150,7 +150,8 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
             target: { address: target }
         } }, this.policy.senderLinkPolicy);
         this._session.on(Session.LinkAttached, function (l) {
-            if (l.name === linkName && l.isSender()) {
+            if (l.name === linkName) {
+                debug('Sender link ' + linkName + ' attached');
                 self._sendLinks[target] = l;
                 if (l.canSend()) {
                     sender(l);
@@ -195,6 +196,7 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
         } }, this.policy.receiverLinkPolicy);
         this._session.on(Session.LinkAttached, function (l) {
             if (l.name === linkName) {
+                debug('Receiver link ' + linkName + ' attached');
                 self._receiveLinks[source] = l;
                 l.on(Link.MessageReceived, function (m) {
                     var payload = m.body[0];
