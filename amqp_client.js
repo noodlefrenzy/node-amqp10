@@ -92,12 +92,30 @@ AMQPClient.prototype.connect = function(url, cb) {
     this._connection.open(address, sasl);
 };
 
-AMQPClient.prototype.send = function(msg, target, cb) {
-    if (typeof target === 'function') {
-        cb = target;
+AMQPClient.prototype.send = function(msg, target, annotations, cb) {
+    if (cb === undefined) {
+        if (annotations === undefined) {
+            cb = target;
+            target = undefined;
+        } else {
+            if (typeof target === 'string') {
+                cb = annotations;
+                annotations = undefined;
+            } else {
+                cb = annotations;
+                annotations = target;
+                target = undefined;
+            }
+        }
+    }
+    if (!target) {
         target = this._defaultQueue;
     }
+
     var message = new M.Message();
+    if (annotations) {
+        message.annotations = new M.Annotations(annotations);
+    }
     var enc = this.policy.senderLinkPolicy.encoder;
     message.body.push(enc ? enc(msg) : msg);
     var self = this;
