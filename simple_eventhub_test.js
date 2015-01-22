@@ -10,6 +10,8 @@ function sendCB(err, msg) {
     }
 }
 
+var msgVal = Math.floor(Math.random() * 10000);
+
 // Partition is first because it's bound at the setter, not by the callback caller.
 function recvCB(partition, err, payload, annotations) {
     if (err) {
@@ -28,7 +30,7 @@ function recvCB(partition, err, payload, annotations) {
 
 var filterOffset = undefined; // 43350;
 
-function sendRecv(settings, client, err) {
+function sendRecv(settings, err, client) {
     var sendAddr = settings.eventHubName;
     var recvAddr = settings.eventHubName + '/ConsumerGroups/' + (settings.consumerGroup || '$default') + '/Partitions/';
     var numPartitions = settings.partitions;
@@ -45,8 +47,8 @@ function sendRecv(settings, client, err) {
             ]);
         }
 
-        //client.send(JSON.stringify({ "DataString": "From Node", "DataValue": 123 }), sendAddr, sendCB);
-        for (var idx=0; idx < /* numPartitions */ 1; ++idx) {
+        client.send(JSON.stringify({ "DataString": "From Node", "DataValue": msgVal }), sendAddr, { 'x-opt-partition-key' : 'pk1' }, sendCB);
+        for (var idx=0; idx < numPartitions; ++idx) {
             var curIdx = idx;
             var curRcvAddr = recvAddr + curIdx;
             if (filter) {
