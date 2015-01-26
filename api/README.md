@@ -1105,7 +1105,15 @@ For now, just process performative headers.
 **Returns**: [AMQPFrame](#AMQPFrame) - Frame with populated data, undefined if frame is incomplete.  Throws exception on unmatched frame.  
 <a name="FrameReader#_readMessage"></a>
 ##frameReader._readMessage(messageBuf)
-An AMQP Message is composed of:* Zero or one header* Zero or one delivery-annotations* Zero or one message-annotations* Zero or one properties* Zero or one application-properties* Body: One or more data sections, one or more amqp-sequence sections, or one amqp-value section* Zero or one footer
+An AMQP Message is composed of:
+
+* Zero or one header
+* Zero or one delivery-annotations
+* Zero or one message-annotations
+* Zero or one properties
+* Zero or one application-properties
+* Body: One or more data sections, one or more amqp-sequence sections, or one amqp-value section
+* Zero or one footer
 
 **Params**
 

@@ -114,6 +114,10 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
 
     var message = new M.Message();
     if (annotations) {
+        // Convert encoded values
+        if (annotations instanceof Array && annotations[0] === 'map') {
+            annotations = AMQPClient.adapters.Translator(annotations);
+        }
         message.annotations = new M.Annotations(annotations);
     }
     var enc = this.policy.senderLinkPolicy.encoder;
@@ -184,6 +188,10 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
         }
     }
 
+    if (filter && filter instanceof Array && filter[0] === 'map') {
+        // Convert encoded values
+        filter = AMQPClient.adapters.Translator(filter);
+    }
     if (this._receiveLinks[source]) {
         var link = this._receiveLinks[source];
         debug('Already established Rx Link on ' + source);

@@ -57,28 +57,31 @@ client.connectAsync(uri).then(function () {
         console.log('Error Sending ' + e);
     });
 }).then(function() {
-    client.receiveAsync().then(function (message) {
-        var payload = message[0];
-        var annotations = message[1];
-        console.log('Recv: ');
-        console.log(payload);
-        if (annotations) {
-            console.log('Annotations:');
-            console.log(annotations);
-        }
-        console.log('');
-        try {
-            var asJson = JSON.parse(payload);
-            if (asJson.DataValue === msgId) {
-                client.disconnect(function () {
-                    console.log("Received expected message.  Disconnected.");
-                });
+    // Note, can't use Promisified version because callback is invoked for every message (i.e. multiple promises).
+    client.receive(function (err, payload, annotations) {
+        if (err) {
+            console.log('Error Receiving ' + err);
+        } else {
+            console.log('Recv: ');
+            console.log(payload);
+            if (annotations) {
+                console.log('Annotations:');
+                console.log(annotations);
             }
-        } catch (e) {
-            console.log("Error parsing payload " + payload);
-            console.log(e);
+            console.log('');
+            try {
+                var asJson = JSON.parse(payload);
+                if (asJson.DataValue === msgId) {
+                    client.disconnect(function () {
+                        console.log("Received expected message.  Disconnected.");
+                    });
+                }
+            } catch (e) {
+                console.log("Error parsing payload " + payload);
+                console.log(e);
+            }
         }
-    }).catch(function (e) { console.log('Error Receiving'); });
+    });
 }).catch(function (e) {
     console.log('Error Connecting: ' + e);
 });

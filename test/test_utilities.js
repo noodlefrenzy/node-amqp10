@@ -97,6 +97,15 @@ describe('Utilities', function() {
             merged.foo.baz.should.be.instanceof(Symbol);
         });
 
+        it('should work for described types', function() {
+            var dt = new DescribedType(new Symbol('keyname'), 'value string');
+            var merged = u.deepMerge({ options: dt });
+            merged.options.should.be.instanceof(DescribedType);
+            merged.options.descriptor.should.be.instanceof(Symbol);
+            merged.options.descriptor.contents.should.eql('keyname');
+            merged.options.value.should.eql('value string');
+        });
+
         it('should work for attach frame details', function() {
             var input = { options: {
                 name: 'recv',
