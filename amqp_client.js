@@ -6,6 +6,7 @@ var debug           = require('debug')('amqp10-client'),
     Session         = require('./lib/session').Session,
     Link            = require('./lib/session').Link,
 
+    constants       = require('./lib/constants'),
     DescribedType   = require('./lib/types/described_type'),
     Fields          = require('./lib/types/amqp_composites').Fields,
     ForcedType      = require('./lib/types/forced_type'),
@@ -18,6 +19,40 @@ var debug           = require('debug')('amqp10-client'),
 
     u               = require('./lib/utilities');
 
+/**
+ * AMQPClient is the top-level class for interacting with node-amqp-1-0.  Instantiate this class, connect, and then send/receive
+ * as needed and behind the scenes it will do the appropriate work to setup and teardown connections, sessions, and links and manage flow.
+ * The code does its best to avoid exposing AMQP-specific types and attempts to convert them where possible, but on the off-chance you
+ * need to speak AMQP-specific (e.g. to set a filter to a described-type), you can use node-amqp-encoder and the
+ * AMQPClient.adapters.Translator adapter to convert it to our internal types.  See simple_eventhub_test.js for an example.
+ *
+ * Configuring AMQPClient is done through a Policy class.  By default, PolicyBase will be used - it assumes AMQP defaults wherever
+ * possible, and for values with no spec-defined defaults it tries to assume something reasonable (e.g. timeout, max message size).
+ *
+ * To define a new policy, you can merge your values into an existing one by calling AMQPClient.policies.merge(yourPolicy, existingPolicy).
+ * This does a deep-merge, allowing you to only replace values you need.  For instance, if you wanted the default sender settle policy to be auto-settle instead of mixed,
+ * you could just use
+ *
+ <pre>
+ var AMQPClient = require('node-amqp-1-0');
+ var client = new AMQPClient(AMQPClient.policies.merge({ senderLinkPolicy: { options: { senderSettleMode: AMQPClient.constants.senderSettleMode.settled } } });
+ </pre>
+ *
+ * Obviously, setting some of these options requires some in-depth knowledge of AMQP, so I've tried to define specific policies where I can.
+ * For instance, for Azure EventHub connections, you can use the pre-build EventHubPolicy.
+ *
+ * Also, within the policy, see the encoder and decoder defined in the send/receive policies.  These define what to do with the message
+ * sent/received, and by default do a simple pass-through, leaving the encoding to/decoding from AMQP-specific types up to the library which
+ * does a best-effort job.  See EventHubPolicy for a more complicated example, turning objects into UTF8-encoded buffers of JSON-strings.
+ *
+ * If, on construction, you provide a uri and a callback, I will immediately attempt to connect, allowing you to go directly from
+ * instantiation to sending messages.
+ *
+ * @param {PolicyBase} [policy]     Policy to use for connection, sessions, links, etc.  Defaults to PolicyBase.
+ * @param {string} [uri]            If provided, must provide cb.  Will attempt connection, set default queue.
+ * @param {function} [cb]           If provided, must provide uri.  Will attempt connection and call cb when established/failed.
+ * @constructor
+ */
 function AMQPClient(policy, uri, cb) {
     if (typeof policy === 'string') {
         cb = uri;
@@ -36,34 +71,43 @@ function AMQPClient(policy, uri, cb) {
     }
 }
 
-var EHAdapter = require('./lib/adapters/node_sbus').NodeSbusEventHubAdapter;
+/**
+ * Exposes various AMQP-related constants, for use in policy overrides.
+ *
+ * @type {*}
+ */
+AMQPClient.constants = constants;
 
 /**
  * Map of various adapters from other AMQP-reliant libraries to the interface herein.
+ *
+ * Of primary interest in Translator, which allows you to translate from node-amqp-encoder'd values into the
+ * internal types used in this library.  (e.g. [ 'symbol', 'symval' ] => Symbol('symval') ).
  */
 AMQPClient.adapters = {
-    'NodeSbusEventHubAdapter': EHAdapter,
     'Translator': Translator
 };
 
 var PolicyBase      = require('./lib/policies/policy_base'),
     EHPolicy        = require('./lib/policies/event_hub_policy');
 
+/**
+ * Map of various pre-defined policies (including PolicyBase), as well as a merge function allowing you
+ * to create your own.
+ */
 AMQPClient.policies = {
     'PolicyBase': PolicyBase,
-    'EventHubPolicy': EHPolicy
+    'EventHubPolicy': EHPolicy,
+    merge: function(newPolicy, base) { return u.deepMerge(newPolicy, base || PolicyBase); }
 };
 
-AMQPClient.types = {
-    DescribedType: DescribedType,
-    Fields: Fields,
-    ForcedType: ForcedType,
-    Symbol: Symbol,
-
-    Source: Source,
-    Target: Target
-};
-
+/**
+ * Connects to a given AMQP server endpoint, and then calls the associated callback.  Sets the default queue, so e.g.
+ * amqp://my-activemq-host/my-queue-name would set the default queue to my-queue-name for future send/receive calls.
+ *
+ * @param {string} url      URI to connect to - right now only supports amqp|amqps as protocol.
+ * @param {function} cb     Callback to call on success - called with (error, self).
+ */
 AMQPClient.prototype.connect = function(url, cb) {
     if (this._connection) {
         this._connection.close();
@@ -92,6 +136,18 @@ AMQPClient.prototype.connect = function(url, cb) {
     this._connection.open(address, sasl);
 };
 
+/**
+ * Sends the given message, with the given annotations, to the given target.
+ *
+ * @param {*} msg               Message to send.  Will be encoded using sender link policy's encoder.
+ * @param {string} [target]     Target to send to.  If not set, will use default queue from uri used to connect.
+ * @param {*} [annotations]     Annotations for the message, if any.  See AMQP spec for details, and server for specific
+ *                               annotations that might be relevant (e.g. x-opt-partition-key on EventHub).  If node-amqp-encoder'd
+ *                               map is given, it will be translated to appropriate internal types.  Simple maps will be converted
+ *                               to AMQP Fields type as defined in the spec.
+ * @param {function} cb         Callback, called when message is sent.
+ * @todo  Currently, cb is called immediately when sent.  Need to fix to wait for corresponding Disposition frame receipt.
+ */
 AMQPClient.prototype.send = function(msg, target, annotations, cb) {
     if (cb === undefined) {
         if (annotations === undefined) {
@@ -171,6 +227,17 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
     }
 };
 
+/**
+ * Set up callback to be called whenever message is received from the given source (subject to the given filter).
+ * Callback is called with (error, payload, annotations), and the payload is decoded using the receiver link policy's
+ * decoder method.
+ *
+ * @param {string} [source]     Source of the link to connect to.  If not provided will use default queue from connection uri.
+ * @param {*} [filter]          Filter used in connecting to the source.  See AMQP spec for details, and your server's documentation
+ *                               for possible values.  node-amqp-encoder'd maps will be translated, and simple maps will be converted
+ *                               to AMQP Fields type as defined in the spec.
+ * @param {function} cb         Callback to invoke on every receipt.  Called with (error, payload, annotations).
+ */
 AMQPClient.prototype.receive = function(source, filter, cb) {
     var self = this;
     if (cb === undefined) {
@@ -218,6 +285,11 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
     }
 };
 
+/**
+ * Disconnect tears down any existing connection with appropriate Close performatives and TCP socket teardowns.
+ *
+ * @param {function} cb     Called when connection is completely disconnected.
+ */
 AMQPClient.prototype.disconnect = function(cb) {
     debug('Disconnecting');
     if (this._connection) {

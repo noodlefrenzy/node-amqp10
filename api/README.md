@@ -2,6 +2,15 @@
 
 **Classes**
 
+* [class: AMQPClient](#AMQPClient)
+  * [new AMQPClient([policy], [uri], [cb])](#new_AMQPClient)
+  * [AMQPClient.constants](#AMQPClient.constants)
+  * [AMQPClient.adapters](#AMQPClient.adapters)
+  * [AMQPClient.policies](#AMQPClient.policies)
+  * [aMQPClient.connect(url, cb)](#AMQPClient#connect)
+  * [aMQPClient.send(msg, [target], [annotations], cb)](#AMQPClient#send)
+  * [aMQPClient.receive([source], [filter], cb)](#AMQPClient#receive)
+  * [aMQPClient.disconnect(cb)](#AMQPClient#disconnect)
 * [class: NodeSbusEventHubAdapter](#NodeSbusEventHubAdapter)
   * [new NodeSbusEventHubAdapter()](#new_NodeSbusEventHubAdapter)
 * [class: Codec](#Codec)
@@ -124,6 +133,119 @@
 
 * [payload](#payload)
  
+<a name="AMQPClient"></a>
+#class: AMQPClient
+**Members**
+
+* [class: AMQPClient](#AMQPClient)
+  * [new AMQPClient([policy], [uri], [cb])](#new_AMQPClient)
+  * [AMQPClient.constants](#AMQPClient.constants)
+  * [AMQPClient.adapters](#AMQPClient.adapters)
+  * [AMQPClient.policies](#AMQPClient.policies)
+  * [aMQPClient.connect(url, cb)](#AMQPClient#connect)
+  * [aMQPClient.send(msg, [target], [annotations], cb)](#AMQPClient#send)
+  * [aMQPClient.receive([source], [filter], cb)](#AMQPClient#receive)
+  * [aMQPClient.disconnect(cb)](#AMQPClient#disconnect)
+
+<a name="new_AMQPClient"></a>
+##new AMQPClient([policy], [uri], [cb])
+AMQPClient is the top-level class for interacting with node-amqp-1-0.  Instantiate this class, connect, and then send/receive
+as needed and behind the scenes it will do the appropriate work to setup and teardown connections, sessions, and links and manage flow.
+The code does its best to avoid exposing AMQP-specific types and attempts to convert them where possible, but on the off-chance you
+need to speak AMQP-specific (e.g. to set a filter to a described-type), you can use node-amqp-encoder and the
+AMQPClient.adapters.Translator adapter to convert it to our internal types.  See simple_eventhub_test.js for an example.
+
+Configuring AMQPClient is done through a Policy class.  By default, PolicyBase will be used - it assumes AMQP defaults wherever
+possible, and for values with no spec-defined defaults it tries to assume something reasonable (e.g. timeout, max message size).
+
+To define a new policy, you can merge your values into an existing one by calling AMQPClient.policies.merge(yourPolicy, existingPolicy).
+This does a deep-merge, allowing you to only replace values you need.  For instance, if you wanted the default sender settle policy to be auto-settle instead of mixed,
+you could just use
+
+ <pre>
+ var AMQPClient = require('node-amqp-1-0');
+ var client = new AMQPClient(AMQPClient.policies.merge({ senderLinkPolicy: { options: { senderSettleMode: AMQPClient.constants.senderSettleMode.settled } } });
+ </pre>
+
+Obviously, setting some of these options requires some in-depth knowledge of AMQP, so I've tried to define specific policies where I can.
+For instance, for Azure EventHub connections, you can use the pre-build EventHubPolicy.
+
+Also, within the policy, see the encoder and decoder defined in the send/receive policies.  These define what to do with the message
+sent/received, and by default do a simple pass-through, leaving the encoding to/decoding from AMQP-specific types up to the library which
+does a best-effort job.  See EventHubPolicy for a more complicated example, turning objects into UTF8-encoded buffers of JSON-strings.
+
+If, on construction, you provide a uri and a callback, I will immediately attempt to connect, allowing you to go directly from
+instantiation to sending messages.
+
+**Params**
+
+- \[policy\] `PolicyBase` - Policy to use for connection, sessions, links, etc.  Defaults to PolicyBase.  
+- \[uri\] `string` - If provided, must provide cb.  Will attempt connection, set default queue.  
+- \[cb\] `function` - If provided, must provide uri.  Will attempt connection and call cb when established/failed.  
+
+<a name="AMQPClient.constants"></a>
+##AMQPClient.constants
+Exposes various AMQP-related constants, for use in policy overrides.
+
+**Type**: `*`  
+<a name="AMQPClient.adapters"></a>
+##AMQPClient.adapters
+Map of various adapters from other AMQP-reliant libraries to the interface herein.
+
+Of primary interest in Translator, which allows you to translate from node-amqp-encoder'd values into the
+internal types used in this library.  (e.g. [ 'symbol', 'symval' ] => Symbol('symval') ).
+
+<a name="AMQPClient.policies"></a>
+##AMQPClient.policies
+Map of various pre-defined policies (including PolicyBase), as well as a merge function allowing you
+to create your own.
+
+<a name="AMQPClient#connect"></a>
+##aMQPClient.connect(url, cb)
+Connects to a given AMQP server endpoint, and then calls the associated callback.  Sets the default queue, so e.g.
+amqp://my-activemq-host/my-queue-name would set the default queue to my-queue-name for future send/receive calls.
+
+**Params**
+
+- url `string` - URI to connect to - right now only supports amqp|amqps as protocol.  
+- cb `function` - Callback to call on success - called with (error, self).  
+
+<a name="AMQPClient#send"></a>
+##aMQPClient.send(msg, [target], [annotations], cb)
+Sends the given message, with the given annotations, to the given target.
+
+**Params**
+
+- msg `*` - Message to send.  Will be encoded using sender link policy's encoder.  
+- \[target\] `string` - Target to send to.  If not set, will use default queue from uri used to connect.  
+- \[annotations\] `*` - Annotations for the message, if any.  See AMQP spec for details, and server for specific
+                              annotations that might be relevant (e.g. x-opt-partition-key on EventHub).  If node-amqp-encoder'd
+                              map is given, it will be translated to appropriate internal types.  Simple maps will be converted
+                              to AMQP Fields type as defined in the spec.  
+- cb `function` - Callback, called when message is sent.  
+
+<a name="AMQPClient#receive"></a>
+##aMQPClient.receive([source], [filter], cb)
+Set up callback to be called whenever message is received from the given source (subject to the given filter).
+Callback is called with (error, payload, annotations), and the payload is decoded using the receiver link policy's
+decoder method.
+
+**Params**
+
+- \[source\] `string` - Source of the link to connect to.  If not provided will use default queue from connection uri.  
+- \[filter\] `*` - Filter used in connecting to the source.  See AMQP spec for details, and your server's documentation
+                              for possible values.  node-amqp-encoder'd maps will be translated, and simple maps will be converted
+                              to AMQP Fields type as defined in the spec.  
+- cb `function` - Callback to invoke on every receipt.  Called with (error, payload, annotations).  
+
+<a name="AMQPClient#disconnect"></a>
+##aMQPClient.disconnect(cb)
+Disconnect tears down any existing connection with appropriate Close performatives and TCP socket teardowns.
+
+**Params**
+
+- cb `function` - Called when connection is completely disconnected.  
+
 <a name="NodeSbusEventHubAdapter"></a>
 #class: NodeSbusEventHubAdapter
 **Members**
@@ -317,7 +439,7 @@ Also could be DISCARDING if an error condition triggered the CLOSE
 
 <a name="Connection#open"></a>
 ##connection.open(address, sasl)
-Open a connection to the given (parsed) address (@see `AMQPClient`).
+Open a connection to the given (parsed) address (@see [AMQPClient](#AMQPClient)).
 
 **Params**
 
@@ -1714,7 +1836,13 @@ Currently, only supports SASL-PLAIN
 
 <a name="new_Session"></a>
 ##new Session(conn)
-A Session is a bidirectional sequential conversation between two containers that provides agrouping for related links. Sessions serve as the context for link communication. Any numberof links of any directionality can be <i>attached</i> to a given Session. However, a linkmay be attached to at most one Session at a time.Session states, from AMQP 1.0 spec:
+A Session is a bidirectional sequential conversation between two containers that provides a
+grouping for related links. Sessions serve as the context for link communication. Any number
+of links of any directionality can be <i>attached</i> to a given Session. However, a link
+may be attached to at most one Session at a time.
+
+Session states, from AMQP 1.0 spec:
+
  <dl>
  <dt>UNMAPPED</dt>
  <dd><p>In the UNMAPPED state, the Session endpoint is not mapped to any incoming or outgoing
@@ -1780,7 +1908,12 @@ A Session is a bidirectional sequential conversation between two containers that
                             |                        |
                             |                        |
                             +------------------------+
-  </pre>There is no obligation to retain a Session Endpoint when it is in the UNMAPPED state, i.e.the UNMAPPED state is equivalent to a NONEXISTENT state.Note: This implementation *assumes* it is the client, and thus will always be the one BEGIN-ing a Session.
+  </pre>
+
+There is no obligation to retain a Session Endpoint when it is in the UNMAPPED state, i.e.
+the UNMAPPED state is equivalent to a NONEXISTENT state.
+
+Note: This implementation *assumes* it is the client, and thus will always be the one BEGIN-ing a Session.
 
 **Params**
 
