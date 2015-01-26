@@ -4,8 +4,8 @@ var exceptions  = require('./lib/exceptions');
 
 var msgVal = Math.floor(Math.random() * 10000);
 
-var filterOffset = undefined; // example filter offset value might be: 43350;
-var filter = undefined;
+var filterOffset; // example filter offset value might be: 43350;
+var filter;
 if (filterOffset) {
     filter = {
         'apache.org:selector-filter:string': AMQPClient.adapters.Translator(
@@ -41,6 +41,9 @@ if (process.argv.length < 3) {
             for (var idx = 0; idx < numPartitions; ++idx) {
                 var curIdx = idx;
                 var curRcvAddr = recvAddr + curIdx;
+                // We're being lazy and defining this callback inline to close over curIdx, jshint gets mad.
+                // Since this is example code, I'm ok ignoring jshint in this case - it's easier to read than defining above and using bind.
+                /* jshint ignore:start */
                 var receiveHandler = function (err, payload, annotations) {
                     if (err) {
                         console.log('ERROR: ');
@@ -60,6 +63,7 @@ if (process.argv.length < 3) {
                         }
                     }
                 };
+                /* jshint ignore:end */
 
                 if (filter) {
                     client.receive(curRcvAddr, filter, receiveHandler);

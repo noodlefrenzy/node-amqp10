@@ -1,7 +1,7 @@
-var Promise     = require('bluebird');
+var bluebird     = require('bluebird');
     AMQPClient  = require('./amqp_client');
 
-Promise.promisifyAll(AMQPClient.prototype);
+bluebird.promisifyAll(AMQPClient.prototype);
 
 var uri = 'amqp://localhost/random2';
 var msgId = Math.floor(Math.random() * 10000);
