@@ -5,28 +5,53 @@ node-amqp-1-0
 [![Dependency Status](https://david-dm.org/noodlefrenzy/node-amqp-1-0.png)](https://david-dm.org/noodlefrenzy/node-amqp-1-0)
 
 AMQP 1.0-compliant Node.js client.  Since AMQP 1.0 is such a large departure from 0.9.1, 
-I've started a new project rather than fork from node-amqp or amqp.node.  Both node-amqp and amqp.node are
-great 0.9.1 clients and I recommend them, but neither is pursuing a 1.0 implementation.  If I can find an
+I've started a new project rather than fork from [node-amqp](https://github.com/postwait/node-amqp) or [amqp.node](https://github.com/squaremo/amqp.node).
+Both node-amqp and amqp.node are great 0.9.1 clients and I recommend them, but neither is pursuing a 1.0 implementation.  If I can find an
 easy way to integrate this code back into them, I'll definitely be submitting a PR.
 
-## Caveats ##
+## Usage ##
 
-Just getting this working, so might have bugs against various server implementations.  Also, configuring it is painful at the moment
-since it's exposing the raw AMQP parameters - I'll be working on tidying that up.
+See `simple_eventhub_test.js` or `simple_activemq_test.js` for examples.
 
-I haven't yet completed the flow-control!  So, if you decide to use it now, you'll have to do your own.  Give me a bit and I'll
-be adding that in.
+The basic usage is to require the module, new up a client with the appropriate policy for the server you're connecting against,
+connect, and then send/receive as necessary.  So a simple example for a local ActiveMQ server would look like:
 
-Currently, I've only verified that this can send and receive against EventHub.
+    var AMQPClient = require('node-amqp-1-0');
+    var client = new AMQPClient(); // Uses PolicyBase default policy
+    client.connect('amqp://localhost/myqueue', function(conn_err) {
+      // ... check for errors ...
+      client.send(JSON.stringify({ key: "Value" }), function (send_err) {
+        // ... check for errors ...
+      });
+      client.receive(function (rx_err, payload, annotations) {
+        // ... check for errors ...
+        console.log('Rx message: ');
+        console.log(JSON.parse(payload));
+      });
+    });
+
+Note that the above JSON.stringify/JSON.parse on send/receive can be moved into the encoder/decoder methods on the policy object -
+see the Event Hub policy for an example.
+
+## Caveats and Todos ##
+
+I'm trying to manage my remaining work items via Github issues, but they aren't always kept up to date.  If you'd like to contribute,
+feel free to send me an email or pull request.  Below is a high-level list of known open issues:
+
+1. Disposition frames are not dealt with properly, and thus message lifecycles aren't tracked correctly.  Currently we work fine for auto-settled
+   workflows, but not for handshake transfers.
+2. We work well for sunny-day scenarios, but don't deal well with re-establishing sessions/links when they're severed.
+3. There are some AMQP types we don't process - notably GUID, and the Decimal23/64/128 types.  These are unused by the protocol, and no-one seems to
+   be using them to convey information in messages, so ignoring them is likely safe.
 
 ## Implementation Notes ##
 
-Here are my current implementation plans - if you have feedback or critiques on any of these choices, feel free to
+Here are my current implementation notes - if you have feedback or critiques on any of these choices, feel free to
 submit an Issue or even a PR.  Trust me, I don't take criticism personally, and I'm new to Nodejs so I could be making
 "obviously bad" choices to someone who is more familiar with the landscape.
 
-+   I'm planning on using Node's built-in net/socket classes for communicating with the server.
-+   Data from the server will be written to a circular buffer based on [CBarrick's](https://github.com/cbarrick/CircularBuffer).
++   I've used Node's built-in net/tls classes for communicating with the server.
++   Data from the server is written to a circular buffer based on [CBarrick's](https://github.com/cbarrick/CircularBuffer).
 +   Outgoing data will be encoded using [this buffer builder](https://github.com/PeterReid/node-buffer-builder) - streaming
     output won't really work since each outgoing payload needs to be prefixed with its encoded size.
 +   The connection state will be managed using [Stately.js](https://github.com/fschaefer/Stately.js), with state transitions
@@ -34,42 +59,11 @@ submit an Issue or even a PR.  Trust me, I don't take criticism personally, and 
     and then install a callback to ensure the correct version.  Once incoming data is written to the circular buffer, this
     callback is invoked, and a comparison vs. the expected version triggers another transition).
 +   Bit-twiddling is done via [node-butils](https://github.com/nlf/node-butils).
++   Debug output is done via [debug](https://www.npmjs.com/package/debug) with the prefix `amqp10-`.  The main client's debug
+    name is `amqp10-client` so setting `DEBUG=amqp10-client` will get you all top-level debugging output.
 
 Further, detailed implementation nodes are available in the [API Readme](api/).
 
-## Protocol Notes ##
-
-The [AMQP 1.0 Protocol](http://docs.oasis-open.org/amqp/core/v1.0/amqp-core-complete-v1.0.pdf) differs substantially 
-from the [0.9.1 protocol](http://www.rabbitmq.com/resources/specs/amqp0-9-1.pdf), with 0.9.1 defining exchanges, brokers, 
-types of queues (fanout, topic, etc.) and 1.0 focusing on more robust data interchange specifications and leaving much 
-of the server implementation to the implementor.  This section is just attempting to document features of this protocol 
-with the aim of enlightening those looking into the defined classes (and helping me drive my implementation).
-
-+   Connection
-
-    An AMQP connection is a full-duplex ordered sequence of frames.
-    
-+   Frame
-
-    A Frame is the bitstream defining a full parsable unit.
-    
-+   Channel
-
-    A connection is divided into a negotiated number of independent unidirectional channels.  Frames are marked with
-    their parent channel number.
-    
-+   Session
-
-    Correlation of two channels to form a bi-di sequential conversation.
-    
-    Connections may have multiple independent sessions active simultaneously, up to the negotiated channel limit.
-
-+   Link
-    
-    Connection between two nodes.  Provides a credit-based flow-control scheme, each terminus of a link must track 
-    stream state.  Links are named, and may outlive their associated connections, allowing reconnection and retention
-    of associated state.
-    
 ## License ##
 
 MIT License.  If you need a more permissive license, or you want to try your hand at integrating this code into

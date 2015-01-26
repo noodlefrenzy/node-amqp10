@@ -35,7 +35,9 @@ var debug           = require('debug')('amqp10-client'),
  *
  <pre>
  var AMQPClient = require('node-amqp-1-0');
- var client = new AMQPClient(AMQPClient.policies.merge({ senderLinkPolicy: { options: { senderSettleMode: AMQPClient.constants.senderSettleMode.settled } } });
+ var client = new AMQPClient(AMQPClient.policies.merge({
+                  senderLinkPolicy: {
+                    options: { senderSettleMode: AMQPClient.constants.senderSettleMode.settled } } });
  </pre>
  *
  * Obviously, setting some of these options requires some in-depth knowledge of AMQP, so I've tried to define specific policies where I can.
@@ -73,8 +75,6 @@ function AMQPClient(policy, uri, cb) {
 
 /**
  * Exposes various AMQP-related constants, for use in policy overrides.
- *
- * @type {*}
  */
 AMQPClient.constants = constants;
 
@@ -105,7 +105,7 @@ AMQPClient.policies = {
  * Connects to a given AMQP server endpoint, and then calls the associated callback.  Sets the default queue, so e.g.
  * amqp://my-activemq-host/my-queue-name would set the default queue to my-queue-name for future send/receive calls.
  *
- * @param {string} url      URI to connect to - right now only supports amqp|amqps as protocol.
+ * @param {string} url      URI to connect to - right now only supports <code>amqp|amqps</code> as protocol.
  * @param {function} cb     Callback to call on success - called with (error, self).
  */
 AMQPClient.prototype.connect = function(url, cb) {
