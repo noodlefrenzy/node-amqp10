@@ -89,7 +89,9 @@ AMQPClient.adapters = {
 };
 
 var PolicyBase      = require('./lib/policies/policy_base'),
-    EHPolicy        = require('./lib/policies/event_hub_policy');
+    EHPolicy        = require('./lib/policies/event_hub_policy'),
+    SBQueuePolicy   = require('./lib/policies/service_bus_queue_policy'),
+    SBTopicPolicy   = require('./lib/policies/service_bus_topic_policy');
 
 /**
  * Map of various pre-defined policies (including PolicyBase), as well as a merge function allowing you
@@ -98,6 +100,8 @@ var PolicyBase      = require('./lib/policies/policy_base'),
 AMQPClient.policies = {
     'PolicyBase': PolicyBase,
     'EventHubPolicy': EHPolicy,
+    'ServiceBusQueuePolicy': SBQueuePolicy,
+    'ServiceBusTopicPolicy': SBTopicPolicy,
     merge: function(newPolicy, base) { return u.deepMerge(newPolicy, base || PolicyBase); }
 };
 
@@ -259,6 +263,11 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
         // Convert encoded values
         filter = AMQPClient.adapters.Translator(filter);
     }
+
+    var errHandler = function(e) {
+        cb(e);
+    };
+
     if (this._receiveLinks[source]) {
         var link = this._receiveLinks[source];
         debug('Already established Rx Link on ' + source);
@@ -273,6 +282,7 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
             if (l.name === linkName) {
                 debug('Receiver link ' + linkName + ' attached');
                 self._receiveLinks[source] = l;
+                l.on(Link.ErrorReceived, errHandler);
                 l.on(Link.MessageReceived, function (m) {
                     var payload = m.body[0];
                     var decoded = l.policy.decoder ? l.policy.decoder(payload) : payload;
