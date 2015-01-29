@@ -155,6 +155,7 @@ describe('Utilities', function() {
                 protocol: 'amqps',
                 host: '127.0.0.1',
                 port: 5671,
+                rootUri: 'amqps://127.0.0.1:5671',
                 path: '/'
             });
         });
@@ -166,6 +167,7 @@ describe('Utilities', function() {
                 protocol: 'amqp',
                 host: 'localhost',
                 port: 1234,
+                rootUri: 'amqp://localhost:1234',
                 path: '/'
             });
 
@@ -175,6 +177,7 @@ describe('Utilities', function() {
                 protocol: 'amqps',
                 host: 'mq.myhost.com',
                 port: 1235,
+                rootUri: 'amqps://mq.myhost.com:1235',
                 path: '/myroute?with=arguments&multiple=arguments'
             });
         });
@@ -186,6 +189,7 @@ describe('Utilities', function() {
                 protocol: 'amqp',
                 host: '10.42.1.193',
                 port: 5672,
+                rootUri: 'amqp://10.42.1.193:5672',
                 path: '/testqueue'
             });
         });
@@ -199,7 +203,8 @@ describe('Utilities', function() {
                 port: 5672,
                 path: '/',
                 user: 'username',
-                pass: 'password'
+                pass: 'password',
+                rootUri: 'amqp://username:password@my.amqp.server:5672'
             });
         });
 
@@ -212,7 +217,8 @@ describe('Utilities', function() {
                 pass: 'password',
                 host: '192.168.1.1',
                 port: 1234,
-                path: '/myroute'
+                path: '/myroute',
+                rootUri: 'amqps://username:password@192.168.1.1:1234'
             });
         });
 

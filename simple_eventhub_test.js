@@ -32,7 +32,7 @@ if (process.argv.length < 3) {
     var msgVal = Math.floor(Math.random() * 10000);
 
     var uri = 'amqps://' + encodeURIComponent(sasName) + ':' + encodeURIComponent(sasKey) + '@' + serviceBusHost;
-    var sendAddr = settings.eventHubName;
+    var sendAddr = eventHubName;
     var recvAddr = eventHubName + '/ConsumerGroups/$default/Partitions/';
 
     var client = new AMQPClient(AMQPClient.policies.EventHubPolicy);

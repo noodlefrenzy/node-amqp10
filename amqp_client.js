@@ -153,6 +153,7 @@ AMQPClient.prototype.connect = function(url, cb) {
  * @todo  Currently, cb is called immediately when sent.  Need to fix to wait for corresponding Disposition frame receipt.
  */
 AMQPClient.prototype.send = function(msg, target, annotations, cb) {
+    var self = this;
     if (cb === undefined) {
         if (annotations === undefined) {
             cb = target;
@@ -168,6 +169,24 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
             }
         }
     }
+
+    // If we're given a full address, ensure we're connected first.
+    if (target && target.toLowerCase().lastIndexOf('amqp', 0) === 0) {
+        var address = u.parseAddress(target);
+        target = address.path.substring(1);
+        if (!this._connection) {
+            // If we're not connected yet, connect, then callback into ourselves.
+            this.connect(address.rootUri, function (conn_err) {
+                if (conn_err) {
+                    cb(conn_err);
+                } else {
+                    self.send(msg, target, annotations, cb);
+                }
+            });
+            return;
+        }
+    }
+
     if (!target) {
         target = this._defaultQueue;
     }
@@ -182,7 +201,6 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
     }
     var enc = this.policy.senderLinkPolicy.encoder;
     message.body.push(enc ? enc(msg) : msg);
-    var self = this;
     var errHandler = function(e) {
         cb(e);
     };
@@ -262,6 +280,23 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
     if (filter && filter instanceof Array && filter[0] === 'map') {
         // Convert encoded values
         filter = AMQPClient.adapters.Translator(filter);
+    }
+
+    // If we're given a full address, ensure we're connected first.
+    if (source && source.toLowerCase().lastIndexOf('amqp', 0) === 0) {
+        var address = u.parseAddress(source);
+        source = address.path.substring(1);
+        if (!this._connection) {
+            // If we're not connected yet, connect, then callback into ourselves.
+            this.connect(address.rootUri, function (conn_err) {
+                if (conn_err) {
+                    cb(conn_err);
+                } else {
+                    self.receive(source, filter, cb);
+                }
+            });
+            return;
+        }
     }
 
     var errHandler = function(e) {
