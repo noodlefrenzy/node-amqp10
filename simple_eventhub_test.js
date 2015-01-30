@@ -18,7 +18,7 @@ if (process.argv.length < 3) {
 } else {
     var settingsFile = process.argv[2];
     var settings = require('./' + settingsFile);
-    exceptions.assertArguments(settings, [ 'serviceBusHost', 'SASKeyName', 'SASKey', 'eventHubName']);
+    exceptions.assertArguments(settings, [ 'serviceBusHost', 'SASKeyName', 'SASKey', 'eventHubName', 'partitions' ]);
     var protocol = settings.protocol || 'amqps';
     var serviceBusHost = settings.serviceBusHost + '.servicebus.windows.net';
     if (settings.serviceBusHost.indexOf(".") !== -1) {

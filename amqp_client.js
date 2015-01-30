@@ -67,6 +67,8 @@ function AMQPClient(policy, uri, cb) {
     this._sendLinks = {};
     this._receiveLinks = {};
     this._sendMsgId = 1;
+    this._mapped = false;
+    this._onMapped = []; // Could use eventing, but given this will only fire once, seemed too heavyweight
 
     if (uri) {
         this.connect(uri, cb);
@@ -130,7 +132,12 @@ AMQPClient.prototype.connect = function(url, cb) {
         debug('Connected');
         self._session = new Session(c);
         self._session.on(Session.Mapped, function (s) {
-           cb(null, self);
+            self._mapped = true;
+            cb(null, self);
+            while (self._onMapped && self._onMapped.length > 0) {
+                var curCB = self._onMapped.pop();
+                curCB();
+            }
         });
         self._session.begin(self.policy.sessionPolicy);
     });
@@ -174,15 +181,22 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
     if (target && target.toLowerCase().lastIndexOf('amqp', 0) === 0) {
         var address = u.parseAddress(target);
         target = address.path.substring(1);
-        if (!this._connection) {
-            // If we're not connected yet, connect, then callback into ourselves.
-            this.connect(address.rootUri, function (conn_err) {
-                if (conn_err) {
-                    cb(conn_err);
-                } else {
+        if (!this._mapped) {
+            if (!this._connection) {
+                // If we're not connected yet, connect, then callback into ourselves.
+                this.connect(address.rootUri, function (conn_err) {
+                    if (conn_err) {
+                        cb(conn_err);
+                    } else {
+                        self.send(msg, target, annotations, cb);
+                    }
+                });
+            } else {
+                // We're connecting, but our session isn't yet mapped.  Add ourselves to the list for calling when mapped.
+                this._onMapped.push(function() {
                     self.send(msg, target, annotations, cb);
-                }
-            });
+                });
+            }
             return;
         }
     }
@@ -286,15 +300,22 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
     if (source && source.toLowerCase().lastIndexOf('amqp', 0) === 0) {
         var address = u.parseAddress(source);
         source = address.path.substring(1);
-        if (!this._connection) {
-            // If we're not connected yet, connect, then callback into ourselves.
-            this.connect(address.rootUri, function (conn_err) {
-                if (conn_err) {
-                    cb(conn_err);
-                } else {
+        if (!this._mapped) {
+            if (!this._connection) {
+                // If we're not connected yet, connect, then callback into ourselves.
+                this.connect(address.rootUri, function (conn_err) {
+                    if (conn_err) {
+                        cb(conn_err);
+                    } else {
+                        self.receive(source, filter, cb);
+                    }
+                });
+            } else {
+                // We're connecting, but our session isn't yet mapped.  Add ourselves to the list for calling when mapped.
+                this._onMapped.push(function() {
                     self.receive(source, filter, cb);
-                }
-            });
+                });
+            }
             return;
         }
     }
