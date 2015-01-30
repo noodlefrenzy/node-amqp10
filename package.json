@@ -1,6 +1,6 @@
 {
   "name": "node-amqp-1-0",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "AMQP-1.0 compatible Node client, not based on native code (e.g. no proton).",
   "main": "amqp_client.js",
   "engines": {
@@ -11,7 +11,7 @@
     "butils": "^0.1.0",
     "circular-buffer": "noodlefrenzy/CircularBuffer",
     "debug": "^2.0.0",
-    "node-amqp-encoder": "noodlefrenzy/node-amqp-encoder",
+    "node-amqp-encoder": "^0.0.2",
     "node-int64": "^0.3.2",
     "readable-stream": "^1.0.32",
     "stately.js": "^1.2.0"
