@@ -183,6 +183,19 @@ describe('Codec', function() {
             codec.encode(newBuf([0xFF]), bufb);
             tu.shouldBufEql([0xA0, 1, 0xFF], bufb);
         });
+        it('should encode long buffers', function() {
+            var bufb = new builder();
+            bufb.appendUInt8(0xB0);
+            bufb.appendUInt32BE(1024 * 4);
+            for (var idx = 0; idx < 1024; ++idx) {
+                bufb.appendUInt32BE(idx);
+            }
+            var expected = bufb.get();
+            var encoded = expected.slice(5);
+            var actual = new builder();
+            codec.encode(encoded, actual);
+            tu.shouldBufEql(expected, actual);
+        });
         it('should encode numbers', function() {
             var bufb = new builder();
             codec.encode(123.456, bufb);
