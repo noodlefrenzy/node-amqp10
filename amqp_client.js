@@ -64,11 +64,11 @@ function AMQPClient(policy, uri, cb) {
     this.policy = policy || PolicyBase;
     this._connection = null;
     this._session = null;
-    this._sendLinks = {};
-    this._receiveLinks = {};
     this._sendMsgId = 1;
-    this._mapped = false;
-    this._onMapped = []; // Could use eventing, but given this will only fire once, seemed too heavyweight
+    this._attaching = {};
+    this._attached = {};
+    this._onReceipt = {};
+    this._pendingSends = {};
 
     if (uri) {
         this.connect(uri, cb);
@@ -132,12 +132,8 @@ AMQPClient.prototype.connect = function(url, cb) {
         debug('Connected');
         self._session = new Session(c);
         self._session.on(Session.Mapped, function (s) {
-            self._mapped = true;
+            debug('Mapped');
             cb(null, self);
-            while (self._onMapped && self._onMapped.length > 0) {
-                var curCB = self._onMapped.pop();
-                curCB();
-            }
         });
         self._session.begin(self.policy.sessionPolicy);
     });
@@ -177,33 +173,14 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
         }
     }
 
-    // If we're given a full address, ensure we're connected first.
-    if (target && target.toLowerCase().lastIndexOf('amqp', 0) === 0) {
-        var address = u.parseAddress(target);
-        target = address.path.substring(1);
-        if (!this._mapped) {
-            if (!this._connection) {
-                // If we're not connected yet, connect, then callback into ourselves.
-                this.connect(address.rootUri, function (conn_err) {
-                    if (conn_err) {
-                        cb(conn_err);
-                    } else {
-                        self.send(msg, target, annotations, cb);
-                    }
-                });
-            } else {
-                // We're connecting, but our session isn't yet mapped.  Add ourselves to the list for calling when mapped.
-                this._onMapped.push(function() {
-                    self.send(msg, target, annotations, cb);
-                });
-            }
-            return;
-        }
-    }
-
     if (!target) {
         target = this._defaultQueue;
     }
+    var linkName = target + "_TX";
+    // Set some initial state for the link.
+    if (this._pendingSends[linkName] === undefined) this._pendingSends[linkName] = [];
+    if (this._attached[linkName] === undefined) this._attached[linkName] = null;
+    if (this._attaching[linkName] === undefined) this._attaching[linkName] = false;
 
     var message = new M.Message();
     if (annotations) {
@@ -215,51 +192,92 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
     }
     var enc = this.policy.senderLinkPolicy.encoder;
     message.body.push(enc ? enc(msg) : msg);
-    var errHandler = function(e) {
-        cb(e);
-    };
-    var sender = function(_link) {
-        if (_link.canSend()) {
-            var curId = self._sendMsgId++;
-            debug('Sending ' + msg);
+    var curId = self._sendMsgId++;
+
+    var sender = function(err, _link) {
+        if (err) {
+            cb(err);
+        } else {
+            debug('Sending ', msg);
             _link.sendMessage(message, {deliveryTag: new Buffer([curId])});
-            _link.removeListener(Link.ErrorReceived, errHandler);
-            _link.removeListener(Link.CreditChange, sender);
             cb(null, msg);
         }
     };
-    if (this._sendLinks[target]) {
-        var link = this._sendLinks[target];
-        if (link.canSend()) {
-            sender(link);
-        } else {
-            link.on(Link.ErrorReceived, errHandler);
-            link.on(Link.CreditChange, function(_l) {
-                sender(_l);
-            });
-        }
-    } else {
-        var linkName = target + "_TX";
+
+    if (this._attaching[linkName]) {
+        // We're connecting, but our link isn't yet attached.  Add ourselves to the list for calling when attached.
+        this._pendingSends[linkName].push(sender);
+        return;
+    }
+
+    var attach = function() {
+        self._attaching[linkName] = true;
+        self._session.on(Session.LinkAttached, function (l) {
+            if (l.name === linkName) {
+                debug('Sender link ' + linkName + ' attached');
+                self._attaching[linkName] = false;
+                self._attached[linkName] = l;
+                while (l.canSend() && self._pendingSends[linkName] && self._pendingSends[linkName].length > 0) {
+                    var curSend = self._pendingSends[linkName].shift();
+                    curSend(null, l);
+                }
+                l.on(Link.ErrorReceived, function(err) {
+                    if (self._pendingSends[linkName] && self._pendingSends[linkName].length > 0) {
+                        for (var idx=0; idx < self._pendingSends.length; ++idx) {
+                            self._pendingSends[idx](err, l);
+                        }
+                    }
+                });
+                l.on(Link.CreditChange, function(_l) {
+                    debug('Credit received');
+                    while (_l.canSend() && self._pendingSends[linkName] && self._pendingSends[linkName].length > 0) {
+                        var curSend = self._pendingSends[linkName].shift();
+                        curSend(null, _l);
+                    }
+                });
+            }
+        });
         var linkPolicy = u.deepMerge({ options: {
             name: linkName,
             source: { address: 'localhost' },
             target: { address: target }
-        } }, this.policy.senderLinkPolicy);
-        this._session.on(Session.LinkAttached, function (l) {
-            if (l.name === linkName) {
-                debug('Sender link ' + linkName + ' attached');
-                self._sendLinks[target] = l;
-                if (l.canSend()) {
-                    sender(l);
-                } else {
-                    l.on(Link.ErrorReceived, errHandler);
-                    l.on(Link.CreditChange, function(_l) {
-                        sender(_l);
-                    });
-                }
+        } }, self.policy.senderLinkPolicy);
+        self._session.attachLink(linkPolicy);
+    };
+
+    // If we're given a full address, ensure we're connected first.
+    if (target && target.toLowerCase().lastIndexOf('amqp', 0) === 0) {
+        var address = u.parseAddress(target);
+        target = address.path.substring(1);
+        if (!this._attached[linkName]) {
+            if (!this._connection) {
+                this._attaching[linkName] = true;
+                this._pendingSends[linkName].push(sender);
+
+                // If we're not connected yet, connect, then callback into ourselves.
+                this.connect(address.rootUri, function (conn_err) {
+                    if (conn_err) {
+                        cb(conn_err);
+                    } else {
+                        attach();
+                    }
+                });
+                return;
             }
-        });
-        this._session.attachLink(linkPolicy);
+        }
+    } else {
+        if (!this._attached[linkName]) {
+            self._pendingSends[linkName].push(sender);
+            attach();
+            return;
+        }
+    }
+
+    var link = this._attached[linkName];
+    if (link.canSend()) {
+        sender(null, link);
+    } else {
+        this._pendingSends[linkName].push(sender);
     }
 };
 
@@ -291,16 +309,20 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
         }
     }
 
-    if (filter && filter instanceof Array && filter[0] === 'map') {
-        // Convert encoded values
-        filter = AMQPClient.adapters.Translator(filter);
-    }
+    var linkName = source + "_RX";
+    // Set some initial state for the link.
+    if (this._onReceipt[linkName] === undefined) this._onReceipt[linkName] = [];
+    if (this._attached[linkName] === undefined) this._attached[linkName] = null;
+    if (this._attaching[linkName] === undefined) this._attaching[linkName] = false;
+
+    this._onReceipt[linkName].push(cb);
+    if (this._attaching[linkName] || this._attached[linkName]) return;
 
     // If we're given a full address, ensure we're connected first.
     if (source && source.toLowerCase().lastIndexOf('amqp', 0) === 0) {
         var address = u.parseAddress(source);
         source = address.path.substring(1);
-        if (!this._mapped) {
+        if (!this._attached[linkName]) {
             if (!this._connection) {
                 // If we're not connected yet, connect, then callback into ourselves.
                 this.connect(address.rootUri, function (conn_err) {
@@ -310,25 +332,17 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
                         self.receive(source, filter, cb);
                     }
                 });
-            } else {
-                // We're connecting, but our session isn't yet mapped.  Add ourselves to the list for calling when mapped.
-                this._onMapped.push(function() {
-                    self.receive(source, filter, cb);
-                });
+                return;
             }
-            return;
         }
     }
 
-    var errHandler = function(e) {
-        cb(e);
-    };
+    if (filter && filter instanceof Array && filter[0] === 'map') {
+        // Convert encoded values
+        filter = AMQPClient.adapters.Translator(filter);
+    }
 
-    if (this._receiveLinks[source]) {
-        var link = this._receiveLinks[source];
-        debug('Already established Rx Link on ' + source);
-    } else {
-        var linkName = source + "_RX";
+    if (!this._attaching[linkName]) {
         var linkPolicy = u.deepMerge({ options: {
             name: linkName,
             source: { address: source, filter: filter },
@@ -337,13 +351,26 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
         this._session.on(Session.LinkAttached, function (l) {
             if (l.name === linkName) {
                 debug('Receiver link ' + linkName + ' attached');
-                self._receiveLinks[source] = l;
-                l.on(Link.ErrorReceived, errHandler);
+                self._attaching[linkName] = false;
+                self._attached[linkName] = l;
+                l.on(Link.ErrorReceived, function (err) {
+                    var cbs = self._onReceipt[linkName];
+                    if (cbs && cbs.length > 0) {
+                        for (var idx = 0; idx < cbs.length; ++idx) {
+                            cbs[idx](err);
+                        }
+                    }
+                });
                 l.on(Link.MessageReceived, function (m) {
                     var payload = m.body[0];
                     var decoded = l.policy.decoder ? l.policy.decoder(payload) : payload;
                     debug('Received ' + decoded + ' from ' + source);
-                    cb(null, decoded, m.annotations);
+                    var cbs = self._onReceipt[linkName];
+                    if (cbs && cbs.length > 0) {
+                        for (var idx = 0; idx < cbs.length; ++idx) {
+                            cbs[idx](null, decoded, m.annotations);
+                        }
+                    }
                 });
             }
         });
