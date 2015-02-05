@@ -199,7 +199,7 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
             cb(err);
         } else {
             debug('Sending ', msg);
-            _link.sendMessage(message, {deliveryTag: new Buffer([curId])});
+            _link.sendMessage(message, {deliveryTag: new Buffer(curId.toString())});
             cb(null, msg);
         }
     };

@@ -59,6 +59,7 @@ if (process.argv.length < 3) {
                         if (payload.DataValue === msgVal) {
                             client.disconnect(function () {
                                 console.log("Disconnected, when we saw the value we'd inserted.");
+                                process.exit(0);
                             });
                         }
                     }

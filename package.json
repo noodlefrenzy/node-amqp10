@@ -1,6 +1,6 @@
 {
   "name": "node-amqp-1-0",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "AMQP-1.0 compatible Node client, not based on native code (e.g. no proton).",
   "main": "amqp_client.js",
   "engines": {
