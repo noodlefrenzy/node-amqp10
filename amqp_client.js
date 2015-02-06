@@ -226,6 +226,9 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
                         for (var idx=0; idx < self._pendingSends.length; ++idx) {
                             self._pendingSends[idx](err, l);
                         }
+                    } else {
+                        // @todo What do we do with errors when no operations are in-flight and thus no callbacks are prepared to receive them?
+                        console.log('Out of band error: ', err);
                     }
                 });
                 l.on(Link.CreditChange, function(_l) {
@@ -234,6 +237,10 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
                         var curSend = self._pendingSends[linkName].shift();
                         curSend(null, _l);
                     }
+                });
+                l.on(Link.Detached, function() {
+                    debug('Link detached');
+                    self._attached[linkName] = undefined;
                 });
             }
         });
@@ -262,6 +269,11 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
                         attach();
                     }
                 });
+                return;
+            } else {
+                // We must've dropped our link, but connection is still active.  Try and re-establish.
+                self._pendingSends[linkName].push(sender);
+                attach();
                 return;
             }
         }
