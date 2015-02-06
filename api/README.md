@@ -7,10 +7,10 @@
   * [AMQPClient.constants](#AMQPClient.constants)
   * [AMQPClient.adapters](#AMQPClient.adapters)
   * [AMQPClient.policies](#AMQPClient.policies)
-  * [aMQPClient.connect(url, cb)](#AMQPClient#connect)
-  * [aMQPClient.send(msg, [target], [annotations], cb)](#AMQPClient#send)
-  * [aMQPClient.receive([source], [filter], cb)](#AMQPClient#receive)
-  * [aMQPClient.disconnect(cb)](#AMQPClient#disconnect)
+  * [amqpClient.connect(url, cb)](#AMQPClient#connect)
+  * [amqpClient.send(msg, [target], [annotations], cb)](#AMQPClient#send)
+  * [amqpClient.receive([source], [filter], cb)](#AMQPClient#receive)
+  * [amqpClient.disconnect(cb)](#AMQPClient#disconnect)
 * [class: NodeSbusEventHubAdapter](#NodeSbusEventHubAdapter)
   * [new NodeSbusEventHubAdapter()](#new_NodeSbusEventHubAdapter)
 * [class: Codec](#Codec)
@@ -57,8 +57,8 @@
   * [frame.readPerformative(describedType)](#Frame#readPerformative)
 * [class: AMQPFrame](#AMQPFrame)
   * [new AMQPFrame()](#new_AMQPFrame)
-  * [aMQPFrame._getPerformative()](#AMQPFrame#_getPerformative)
-  * [aMQPFrame._getAdditionalPayload()](#AMQPFrame#_getAdditionalPayload)
+  * [amqpFrame._getPerformative()](#AMQPFrame#_getPerformative)
+  * [amqpFrame._getAdditionalPayload()](#AMQPFrame#_getAdditionalPayload)
 * [class: FrameReader](#FrameReader)
   * [frameReader.read(cbuf)](#FrameReader#read)
   * [frameReader._readMessage(messageBuf)](#FrameReader#_readMessage)
@@ -142,10 +142,10 @@
   * [AMQPClient.constants](#AMQPClient.constants)
   * [AMQPClient.adapters](#AMQPClient.adapters)
   * [AMQPClient.policies](#AMQPClient.policies)
-  * [aMQPClient.connect(url, cb)](#AMQPClient#connect)
-  * [aMQPClient.send(msg, [target], [annotations], cb)](#AMQPClient#send)
-  * [aMQPClient.receive([source], [filter], cb)](#AMQPClient#receive)
-  * [aMQPClient.disconnect(cb)](#AMQPClient#disconnect)
+  * [amqpClient.connect(url, cb)](#AMQPClient#connect)
+  * [amqpClient.send(msg, [target], [annotations], cb)](#AMQPClient#send)
+  * [amqpClient.receive([source], [filter], cb)](#AMQPClient#receive)
+  * [amqpClient.disconnect(cb)](#AMQPClient#disconnect)
 
 <a name="new_AMQPClient"></a>
 ##new AMQPClient([policy], [uri], [cb])
@@ -164,7 +164,9 @@ you could just use
 
  <pre>
  var AMQPClient = require('node-amqp-1-0');
- var client = new AMQPClient(AMQPClient.policies.merge({ senderLinkPolicy: { options: { senderSettleMode: AMQPClient.constants.senderSettleMode.settled } } });
+ var client = new AMQPClient(AMQPClient.policies.merge({
+                  senderLinkPolicy: {
+                    options: { senderSettleMode: AMQPClient.constants.senderSettleMode.settled } } });
  </pre>
 
 Obviously, setting some of these options requires some in-depth knowledge of AMQP, so I've tried to define specific policies where I can.
@@ -187,7 +189,6 @@ instantiation to sending messages.
 ##AMQPClient.constants
 Exposes various AMQP-related constants, for use in policy overrides.
 
-**Type**: `*`  
 <a name="AMQPClient.adapters"></a>
 ##AMQPClient.adapters
 Map of various adapters from other AMQP-reliant libraries to the interface herein.
@@ -201,17 +202,17 @@ Map of various pre-defined policies (including PolicyBase), as well as a merge f
 to create your own.
 
 <a name="AMQPClient#connect"></a>
-##aMQPClient.connect(url, cb)
+##amqpClient.connect(url, cb)
 Connects to a given AMQP server endpoint, and then calls the associated callback.  Sets the default queue, so e.g.
 amqp://my-activemq-host/my-queue-name would set the default queue to my-queue-name for future send/receive calls.
 
 **Params**
 
-- url `string` - URI to connect to - right now only supports amqp|amqps as protocol.  
+- url `string` - URI to connect to - right now only supports <code>amqp|amqps</code> as protocol.  
 - cb `function` - Callback to call on success - called with (error, self).  
 
 <a name="AMQPClient#send"></a>
-##aMQPClient.send(msg, [target], [annotations], cb)
+##amqpClient.send(msg, [target], [annotations], cb)
 Sends the given message, with the given annotations, to the given target.
 
 **Params**
@@ -225,7 +226,7 @@ Sends the given message, with the given annotations, to the given target.
 - cb `function` - Callback, called when message is sent.  
 
 <a name="AMQPClient#receive"></a>
-##aMQPClient.receive([source], [filter], cb)
+##amqpClient.receive([source], [filter], cb)
 Set up callback to be called whenever message is received from the given source (subject to the given filter).
 Callback is called with (error, payload, annotations), and the payload is decoded using the receiver link policy's
 decoder method.
@@ -239,7 +240,7 @@ decoder method.
 - cb `function` - Callback to invoke on every receipt.  Called with (error, payload, annotations).  
 
 <a name="AMQPClient#disconnect"></a>
-##aMQPClient.disconnect(cb)
+##amqpClient.disconnect(cb)
 Disconnect tears down any existing connection with appropriate Close performatives and TCP socket teardowns.
 
 **Params**
@@ -315,8 +316,7 @@ Encode the given value as an AMQP 1.0 bitstring.We do a best-effort to determi
 
 <a name="new_Connection"></a>
 ##new Connection(connectPolicy)
-Connection states, from AMQP 1.0 spec:
-
+Connection states, from AMQP 1.0 spec:
  <dl>
  <dt>START</dt>
  <dd><p>In this state a Connection exists, but nothing has been sent or received. This is the
@@ -383,10 +383,7 @@ Connection states, from AMQP 1.0 spec:
  <dt>END</dt>
  <dd><p>In this state it is illegal for either endpoint to write anything more onto the
  Connection. The Connection may be safely closed and discarded.</p></dd>
- </dl>
-
-Connection negotiation state diagram from AMQP 1.0 spec:
-
+ </dl>Connection negotiation state diagram from AMQP 1.0 spec:
  <pre>
               R:HDR +=======+ S:HDR             R:HDR[!=S:HDR]
            +--------| START |-----+    +--------------------------------+
@@ -425,13 +422,7 @@ Connection negotiation state diagram from AMQP 1.0 spec:
  |    S:HDR[!=R:HDR]    |                R:HDR[!=S:HDR]                 |
  +----------------------+-----------------------------------------------+
 
- </pre>
-
-R:<b>CTRL</b> = Received <b>CTRL</b>
-
-S:<b>CTRL</b> = Sent <b>CTRL</b>
-
-Also could be DISCARDING if an error condition triggered the CLOSE
+ </pre>R:<b>CTRL</b> = Received <b>CTRL</b>S:<b>CTRL</b> = Sent <b>CTRL</b>Also could be DISCARDING if an error condition triggered the CLOSE
 
 **Params**
 
@@ -1158,8 +1149,8 @@ Used to populate the frame performative from a DescribedType pulled off the wire
 
 * [class: AMQPFrame](#AMQPFrame)
   * [new AMQPFrame()](#new_AMQPFrame)
-  * [aMQPFrame._getPerformative()](#AMQPFrame#_getPerformative)
-  * [aMQPFrame._getAdditionalPayload()](#AMQPFrame#_getAdditionalPayload)
+  * [amqpFrame._getPerformative()](#AMQPFrame#_getPerformative)
+  * [amqpFrame._getAdditionalPayload()](#AMQPFrame#_getAdditionalPayload)
 
 <a name="new_AMQPFrame"></a>
 ##new AMQPFrame()
@@ -1196,14 +1187,14 @@ by the AMQP <i>performative</i> (details of the specific frame type).  For some 
 </pre>
 
 <a name="AMQPFrame#_getPerformative"></a>
-##aMQPFrame._getPerformative()
+##amqpFrame._getPerformative()
 Children should implement this method to translate their internal (friendly) representation into the
 representation expected on the wire (a DescribedType(Descriptor, ...) with either a List of values
 (ForcedType'd as necessary) or an object containing an encodeOrdering[] array to clarify ordering).
 
 **Access**: private  
 <a name="AMQPFrame#_getAdditionalPayload"></a>
-##aMQPFrame._getAdditionalPayload()
+##amqpFrame._getAdditionalPayload()
 AMQP Frames consist of two sections of payload - the performative, and the additional actual payload.
 Some frames don't have any additional payload, but for those that do, they should override this to generate it.
 
@@ -1252,8 +1243,7 @@ An AMQP Message is composed of:
 
 <a name="new_HeartbeatFrame"></a>
 ##new HeartbeatFrame()
-Heartbeat frames are under-specified in the AMQP Specification as "an empty frame".  In practice, this
-seems to be interpreted as a an empty header with a type of 0 (or 8 zero bytes).
+Heartbeat frames are under-specified in the AMQP Specification as "an empty frame".  In practice, thisseems to be interpreted as a an empty header with a type of 0 (or 0x0000 0008 0200 0000).
 
 <a name="OpenFrame"></a>
 #class: OpenFrame

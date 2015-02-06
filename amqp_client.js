@@ -1,4 +1,6 @@
-var debug           = require('debug')('amqp10-client'),
+var EventEmitter    = require('events').EventEmitter,
+    debug           = require('debug')('amqp10-client'),
+    util            = require('util'),
 
     Connection      = require('./lib/connection'),
     M               = require('./lib/types/message'),
@@ -74,6 +76,16 @@ function AMQPClient(policy, uri, cb) {
         this.connect(uri, cb);
     }
 }
+util.inherits(AMQPClient, EventEmitter);
+
+// Events - mostly for internal use.
+AMQPClient.ErrorReceived = "ErrorReceived"; // Called with error
+AMQPClient.ConnectionOpened = "Connection.Opened";
+AMQPClient.SessionMapped = "Session.Mapped";
+AMQPClient.LinkAttached = "Link.Attached"; // Called with link
+AMQPClient.LinkDetached = "Link.Detached"; // Called with link
+AMQPClient.SessionUnmapped = "Session.Unmapped";
+AMQPClient.ConnectionClosed = "Connection.Closed";
 
 /**
  * Exposes various AMQP-related constants, for use in policy overrides.
@@ -130,15 +142,39 @@ AMQPClient.prototype.connect = function(url, cb) {
     this._connection = new Connection(this.policy.connectPolicy);
     this._connection.on(Connection.Connected, function (c) {
         debug('Connected');
+        self.emit(AMQPClient.ConnectionOpened);
         self._session = new Session(c);
         self._session.on(Session.Mapped, function (s) {
             debug('Mapped');
             cb(null, self);
+            self.emit(AMQPClient.SessionMapped);
+        });
+        self._session.on(Session.Unmapped, function (s) {
+            debug('Unmapped');
+            self.emit(AMQPClient.SessionUnmapped);
+        });
+        self._session.on(Session.ErrorReceived, function (e) {
+            debug('Session error: ', e);
+            self.emit(AMQPClient.ErrorReceived, e);
+        });
+        self._session.on(Session.LinkAttached, function (l) {
+            debug('Link ' + l.name + ' attached');
+            self.emit(AMQPClient.LinkAttached, l);
+        });
+        self._session.on(Session.LinkDetached, function (l) {
+            debug('Link ' + l.name + ' detached');
+            self.emit(AMQPClient.LinkDetached, l);
         });
         self._session.begin(self.policy.sessionPolicy);
     });
+    this._connection.on(Connection.Disconnected, function() {
+        debug('Disconnected');
+        self.emit(AMQPClient.ConnectionClosed);
+    });
     this._connection.on(Connection.ErrorReceived, function (e) {
+        debug('Connection error: ', e);
         cb(e, self);
+        self.emit(AMQPClient.ErrorReceived, e);
     });
     this._connection.open(address, sasl);
 };
@@ -195,12 +231,14 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
     var curId = self._sendMsgId++;
 
     var sender = function(err, _link) {
-        if (err) {
-            cb(err);
-        } else {
-            debug('Sending ', msg);
-            _link.sendMessage(message, {deliveryTag: new Buffer(curId.toString())});
-            cb(null, msg);
+        if (_link.name === linkName) {
+            if (err) {
+                cb(err);
+            } else {
+                debug('Sending ', msg);
+                _link.sendMessage(message, {deliveryTag: new Buffer(curId.toString())});
+                cb(null, msg);
+            }
         }
     };
 
@@ -212,7 +250,7 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
 
     var attach = function() {
         self._attaching[linkName] = true;
-        self._session.on(Session.LinkAttached, function (l) {
+        self.on(AMQPClient.LinkAttached, function (l) {
             if (l.name === linkName) {
                 debug('Sender link ' + linkName + ' attached');
                 self._attaching[linkName] = false;
@@ -226,10 +264,8 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
                         for (var idx=0; idx < self._pendingSends.length; ++idx) {
                             self._pendingSends[idx](err, l);
                         }
-                    } else {
-                        // @todo What do we do with errors when no operations are in-flight and thus no callbacks are prepared to receive them?
-                        console.log('Out of band error: ', err);
                     }
+                    self.emit(AMQPClient.ErrorReceived, err);
                 });
                 l.on(Link.CreditChange, function(_l) {
                     debug('Credit received');
@@ -244,12 +280,27 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
                 });
             }
         });
-        var linkPolicy = u.deepMerge({ options: {
-            name: linkName,
-            source: { address: 'localhost' },
-            target: { address: target }
-        } }, self.policy.senderLinkPolicy);
-        self._session.attachLink(linkPolicy);
+        if (self._session) {
+            var linkPolicy = u.deepMerge({
+                options: {
+                    name: linkName,
+                    source: {address: 'localhost'},
+                    target: {address: target}
+                }
+            }, self.policy.senderLinkPolicy);
+            self._session.attachLink(linkPolicy);
+        } else {
+            self.on(AMQPClient.SessionMapped, function() {
+                var linkPolicy = u.deepMerge({
+                    options: {
+                        name: linkName,
+                        source: {address: 'localhost'},
+                        target: {address: target}
+                    }
+                }, self.policy.senderLinkPolicy);
+                self._session.attachLink(linkPolicy);
+            });
+        }
     };
 
     // If we're given a full address, ensure we're connected first.
@@ -321,46 +372,19 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
         }
     }
 
+    if (filter && filter instanceof Array && filter[0] === 'map') {
+        // Convert encoded values
+        filter = AMQPClient.adapters.Translator(filter);
+    }
+
     var linkName = source + "_RX";
     // Set some initial state for the link.
     if (this._onReceipt[linkName] === undefined) this._onReceipt[linkName] = [];
     if (this._attached[linkName] === undefined) this._attached[linkName] = null;
     if (this._attaching[linkName] === undefined) this._attaching[linkName] = false;
 
-    this._onReceipt[linkName].push(cb);
-    if (this._attaching[linkName] || this._attached[linkName]) return;
-
-    // If we're given a full address, ensure we're connected first.
-    if (source && source.toLowerCase().lastIndexOf('amqp', 0) === 0) {
-        var address = u.parseAddress(source);
-        source = address.path.substring(1);
-        if (!this._attached[linkName]) {
-            if (!this._connection) {
-                // If we're not connected yet, connect, then callback into ourselves.
-                this.connect(address.rootUri, function (conn_err) {
-                    if (conn_err) {
-                        cb(conn_err);
-                    } else {
-                        self.receive(source, filter, cb);
-                    }
-                });
-                return;
-            }
-        }
-    }
-
-    if (filter && filter instanceof Array && filter[0] === 'map') {
-        // Convert encoded values
-        filter = AMQPClient.adapters.Translator(filter);
-    }
-
-    if (!this._attaching[linkName]) {
-        var linkPolicy = u.deepMerge({ options: {
-            name: linkName,
-            source: { address: source, filter: filter },
-            target: { address: 'localhost' }
-        } }, this.policy.receiverLinkPolicy);
-        this._session.on(Session.LinkAttached, function (l) {
+    var attach = function() {
+        self.on(AMQPClient.LinkAttached, function (l) {
             if (l.name === linkName) {
                 debug('Receiver link ' + linkName + ' attached');
                 self._attaching[linkName] = false;
@@ -386,7 +410,58 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
                 });
             }
         });
-        this._session.attachLink(linkPolicy);
+        if (self._session) {
+            var linkPolicy = u.deepMerge({
+                options: {
+                    name: linkName,
+                    source: {address: source, filter: filter},
+                    target: {address: 'localhost'}
+                }
+            }, self.policy.receiverLinkPolicy);
+            self._session.attachLink(linkPolicy);
+        } else {
+            self.on(AMQPClient.SessionMapped, function() {
+                var linkPolicy = u.deepMerge({
+                    options: {
+                        name: linkName,
+                        source: {address: source, filter: filter},
+                        target: {address: 'localhost'}
+                    }
+                }, self.policy.receiverLinkPolicy);
+                self._session.attachLink(linkPolicy);
+            });
+        }
+    };
+
+    this._onReceipt[linkName].push(cb);
+    if (this._attaching[linkName] || this._attached[linkName]) return;
+
+    // If we're given a full address, ensure we're connected first.
+    if (source && source.toLowerCase().lastIndexOf('amqp', 0) === 0) {
+        var address = u.parseAddress(source);
+        source = address.path.substring(1);
+        if (!this._attached[linkName]) {
+            if (!this._connection) {
+                // If we're not connected yet, connect, then callback into ourselves.
+                this.connect(address.rootUri, function (conn_err) {
+                    if (conn_err) {
+                        cb(conn_err);
+                    } else {
+                        attach();
+                    }
+                });
+                return;
+            } else {
+                // We must've dropped our link, but connection is still active.  Try and re-establish.
+                attach();
+                return;
+            }
+        }
+    } else {
+        if (!this._attached[linkName]) {
+            attach();
+            return;
+        }
     }
 };
 
