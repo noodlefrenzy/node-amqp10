@@ -170,6 +170,7 @@ AMQPClient.prototype.connect = function(url, cb) {
     this._connection.on(Connection.Disconnected, function() {
         debug('Disconnected');
         self.emit(AMQPClient.ConnectionClosed);
+        self._clearConnectionState();
     });
     this._connection.on(Connection.ErrorReceived, function (e) {
         debug('Connection error: ', e);
@@ -212,6 +213,15 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
     if (!target) {
         target = this._defaultQueue;
     }
+
+    // If given full address, pull out target first to avoid leaking credentials in error messages containing linkName.
+    var rootUri;
+    if (target && target.toLowerCase().lastIndexOf('amqp', 0) === 0) {
+        var address = u.parseAddress(target);
+        rootUri = address.rootUri;
+        target = address.path.substring(1);
+    }
+
     var linkName = target + "_TX";
     // Set some initial state for the link.
     if (this._pendingSends[linkName] === undefined) this._pendingSends[linkName] = [];
@@ -304,16 +314,14 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
     };
 
     // If we're given a full address, ensure we're connected first.
-    if (target && target.toLowerCase().lastIndexOf('amqp', 0) === 0) {
-        var address = u.parseAddress(target);
-        target = address.path.substring(1);
+    if (rootUri) {
         if (!this._attached[linkName]) {
             if (!this._connection) {
                 this._attaching[linkName] = true;
                 this._pendingSends[linkName].push(sender);
 
                 // If we're not connected yet, connect, then callback into ourselves.
-                this.connect(address.rootUri, function (conn_err) {
+                this.connect(rootUri, function (conn_err) {
                     if (conn_err) {
                         cb(conn_err);
                     } else {
@@ -377,6 +385,14 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
         filter = AMQPClient.adapters.Translator(filter);
     }
 
+    // If given full address, pull out source first to avoid leaking credentials in error messages containing linkName.
+    var rootUri;
+    if (source && source.toLowerCase().lastIndexOf('amqp', 0) === 0) {
+        var address = u.parseAddress(source);
+        rootUri = address.rootUri;
+        source = address.path.substring(1);
+    }
+
     var linkName = source + "_RX";
     // Set some initial state for the link.
     if (this._onReceipt[linkName] === undefined) this._onReceipt[linkName] = [];
@@ -437,13 +453,11 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
     if (this._attaching[linkName] || this._attached[linkName]) return;
 
     // If we're given a full address, ensure we're connected first.
-    if (source && source.toLowerCase().lastIndexOf('amqp', 0) === 0) {
-        var address = u.parseAddress(source);
-        source = address.path.substring(1);
+    if (rootUri) {
         if (!this._attached[linkName]) {
             if (!this._connection) {
                 // If we're not connected yet, connect, then callback into ourselves.
-                this.connect(address.rootUri, function (conn_err) {
+                this.connect(rootUri, function (conn_err) {
                     if (conn_err) {
                         cb(conn_err);
                     } else {
@@ -477,9 +491,15 @@ AMQPClient.prototype.disconnect = function(cb) {
            cb();
         });
         this._connection.close();
-        this._connection = null;
-        this._session = null;
+        this._clearConnectionState();
     }
+};
+
+AMQPClient.prototype._clearConnectionState = function() {
+    this._attached = {};
+    this._attaching = {};
+    this._connection = null;
+    this._session = null;
 };
 
 module.exports = AMQPClient;
