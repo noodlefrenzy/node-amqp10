@@ -38,39 +38,30 @@ if (process.argv.length < 3) {
     var client = new AMQPClient(AMQPClient.policies.EventHubPolicy);
     client.connect(uri, function() {
         client.send({ "DataString": "From Node", "DataValue": msgVal }, sendAddr, { 'x-opt-partition-key' : 'pk1' }, function() {
+            var receiveHandler = function (myIdx, err, payload, annotations) {
+                if (err) {
+                    console.log('ERROR: ');
+                    console.log(err);
+                } else {
+                    console.log('Recv(' + curIdx + '): ');
+                    console.log(payload);
+                    if (annotations) {
+                        console.log('Annotations:');
+                        console.log(annotations);
+                    }
+                    console.log('');
+                    if (payload.DataValue === msgVal) {
+                        client.disconnect(function () {
+                            console.log("Disconnected, when we saw the value we'd inserted.");
+                            process.exit(0);
+                        });
+                    }
+                }
+            };
             for (var idx = 0; idx < numPartitions; ++idx) {
                 var curIdx = idx;
                 var curRcvAddr = recvAddr + curIdx;
-                // We're being lazy and defining this callback inline to close over curIdx, jshint gets mad.
-                // Since this is example code, I'm ok ignoring jshint in this case - it's easier to read than defining above and using bind.
-                /* jshint ignore:start */
-                var receiveHandler = function (err, payload, annotations) {
-                    if (err) {
-                        console.log('ERROR: ');
-                        console.log(err);
-                    } else {
-                        console.log('Recv(' + curIdx + '): ');
-                        console.log(payload);
-                        if (annotations) {
-                            console.log('Annotations:');
-                            console.log(annotations);
-                        }
-                        console.log('');
-                        if (payload.DataValue === msgVal) {
-                            client.disconnect(function () {
-                                console.log("Disconnected, when we saw the value we'd inserted.");
-                                process.exit(0);
-                            });
-                        }
-                    }
-                };
-                /* jshint ignore:end */
-
-                if (filter) {
-                    client.receive(curRcvAddr, filter, receiveHandler);
-                } else {
-                    client.receive(curRcvAddr, receiveHandler);
-                }
+                client.receive(curRcvAddr, filter, receiveHandler.bind(null, curIdx));
             }
         });
     });

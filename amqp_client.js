@@ -424,6 +424,11 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
                         }
                     }
                 });
+                l.on(Link.Detached, function() {
+                    debug('Link detached');
+                    self._attached[linkName] = undefined;
+                    attach();
+                });
             }
         });
         if (self._session) {
