@@ -14,6 +14,7 @@ var EventEmitter    = require('events').EventEmitter,
     ForcedType      = require('./lib/types/forced_type'),
     Symbol          = require('./lib/types/symbol'),
     ST              = require('./lib/types/source_target'),
+    DeliveryStates  = require('./lib/types/delivery_state'),
     Source          = ST.Source,
     Target          = ST.Target,
 
@@ -71,6 +72,7 @@ function AMQPClient(policy, uri, cb) {
     this._attached = {};
     this._onReceipt = {};
     this._pendingSends = {};
+    this._unsettledSends = {};
 
     if (uri) {
         this.connect(uri, cb);
@@ -165,6 +167,27 @@ AMQPClient.prototype.connect = function(url, cb) {
             debug('Link ' + l.name + ' detached');
             self.emit(AMQPClient.LinkDetached, l);
         });
+        self._session.on(Session.DispositionReceived, function (details) {
+            if (details.settled) {
+                var err = null;
+                if (details.state instanceof DeliveryStates.Rejected) {
+                    err = details.state.error;
+                }
+                if (details.last) {
+                    for (var msgid = details.first; msgid < details.last; ++msgid) {
+                        if (self._unsettledSends[msgid]) {
+                            self._unsettledSends[msgid](err, details.state);
+                            self._unsettledSends[msgid] = undefined;
+                        }
+                    }
+                } else {
+                    if (self._unsettledSends[details.first]) {
+                        self._unsettledSends[details.first](err, details.state);
+                        self._unsettledSends[details.first] = undefined;
+                    }
+                }
+            }
+        });
         self._session.begin(self.policy.sessionPolicy);
     });
     this._connection.on(Connection.Disconnected, function() {
@@ -189,8 +212,7 @@ AMQPClient.prototype.connect = function(url, cb) {
  *                               annotations that might be relevant (e.g. x-opt-partition-key on EventHub).  If node-amqp-encoder'd
  *                               map is given, it will be translated to appropriate internal types.  Simple maps will be converted
  *                               to AMQP Fields type as defined in the spec.
- * @param {function} cb         Callback, called when message is sent.
- * @todo  Currently, cb is called immediately when sent.  Need to fix to wait for corresponding Disposition frame receipt.
+ * @param {function} cb         Callback, called when settled disposition is received from target.  Called with (error, delivery-state).
  */
 AMQPClient.prototype.send = function(msg, target, annotations, cb) {
     var self = this;
@@ -246,8 +268,7 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
                 cb(err);
             } else {
                 debug('Sending ', msg);
-                _link.sendMessage(message, {deliveryTag: new Buffer(curId.toString())});
-                cb(null, msg);
+                self._unsettledSends[_link.sendMessage(message, {deliveryTag: new Buffer(curId.toString())})] = cb;
             }
         }
     };
@@ -503,6 +524,7 @@ AMQPClient.prototype.disconnect = function(cb) {
 AMQPClient.prototype._clearConnectionState = function() {
     this._attached = {};
     this._attaching = {};
+    this._unsettledSends = {};
     this._connection = null;
     this._session = null;
 };

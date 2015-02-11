@@ -37,7 +37,7 @@ if (process.argv.length < 3) {
 
     var client = new AMQPClient(AMQPClient.policies.EventHubPolicy);
     client.connect(uri, function() {
-        client.send({ "DataString": "From Node", "DataValue": msgVal }, sendAddr, { 'x-opt-partition-key' : 'pk1' }, function() {
+        client.send({ "DataString": "From Node", "DataValue": msgVal }, sendAddr, { 'x-opt-partition-key' : 'pk1' }, function(tx_err, state) {
             var receiveHandler = function (myIdx, err, payload, annotations) {
                 if (err) {
                     console.log('ERROR: ');
@@ -52,6 +52,9 @@ if (process.argv.length < 3) {
                     console.log('');
                     if (payload.DataValue === msgVal) {
                         client.disconnect(function () {
+                            if (state) {
+                                console.log('State from disposition: ', state);
+                            }
                             console.log("Disconnected, when we saw the value we'd inserted.");
                             process.exit(0);
                         });

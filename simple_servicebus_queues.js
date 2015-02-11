@@ -24,14 +24,15 @@ if (process.argv.length < 3) {
     var uri = 'amqps://' + encodeURIComponent(sasName) + ':' + encodeURIComponent(sasKey) + '@' + serviceBusHost + '/' + queueName;
 
     var client = new AMQPClient(AMQPClient.policies.ServiceBusQueuePolicy);
-    client.send({"DataString": "From Node", "DataValue": msgVal}, uri, function (tx_err) {
+    client.send({"DataString": "From Node", "DataValue": msgVal}, uri, function (tx_err, state) {
         if (tx_err) {
             console.log('Error Sending: ');
             console.log(tx_err);
         } else {
+            console.log('State: ', state);
             client.receive(uri, function (rx_err, payload, annotations) {
                 if (rx_err) {
-                    console.log('ERROR: ');
+                    console.log('Error Receiving: ');
                     console.log(rx_err);
                 } else {
                     console.log('Recv: ');
