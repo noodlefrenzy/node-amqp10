@@ -256,7 +256,9 @@ Disconnect tears down any existing connection with appropriate Close performativ
 
 <a name="new_NodeSbusEventHubAdapter"></a>
 ##new NodeSbusEventHubAdapter()
-Adapts node-amqp-1-0 to adhere to the interface defined by the node-sbus adapter,for EventHub support.  Defines "subscribe" and "message" events, and buildsa messenger.
+Adapts node-amqp-1-0 to adhere to the interface defined by the node-sbus adapter,
+for EventHub support.  Defines "subscribe" and "message" events, and builds
+a messenger.
 
 <a name="Codec"></a>
 #class: Codec
@@ -274,16 +276,19 @@ Build a codec.
 
 <a name="Codec#_readFullValue"></a>
 ##codec._readFullValue(buf, [offset], [doNotConsume], [forcedCode])
-Reads a full value's worth of bytes from a circular or regular buffer, or returns undefined if not enough bytes are there.Note that for Buffers, the returned Buffer will be a slice (so backed by the original storage)!
+Reads a full value's worth of bytes from a circular or regular buffer, or returns undefined if not enough bytes are there.
+Note that for Buffers, the returned Buffer will be a slice (so backed by the original storage)!
 
 **Params**
 
 - buf `Buffer` | `CBuffer` - Buffer or circular buffer to read from.  If a Buffer is given, it is assumed to be full.  
 - \[offset=0\] `integer` - Offset - only valid for Buffer, not CBuffer.  
-- \[doNotConsume=false\] `boolean` - If set to true, will peek bytes instead of reading them - useful for leaving                                         circular buffer in original state for described values that are not yet complete.  
+- \[doNotConsume=false\] `boolean` - If set to true, will peek bytes instead of reading them - useful for leaving
+                                         circular buffer in original state for described values that are not yet complete.  
 - \[forcedCode\] `Number` - If given, first byte is not assumed to be code and given code will be used - useful for arrays.  
 
-**Returns**: `Array` - Buffer of full value + number of bytes read.                                         For described types, will return [ [ descriptor-buffer, value-buffer ], total-bytes ].  
+**Returns**: `Array` - Buffer of full value + number of bytes read.
+                                         For described types, will return [ [ descriptor-buffer, value-buffer ], total-bytes ].  
 **Access**: private  
 <a name="Codec#decode"></a>
 ##codec.decode(buf, [offset], [forcedCode])
@@ -298,7 +303,13 @@ Decode a single entity from a buffer (starting at offset 0).  Only simple values
 **Returns**: `Array` - Single decoded value + number of bytes consumed.  
 <a name="Codec#encode"></a>
 ##codec.encode(val, buf, [forceType])
-Encode the given value as an AMQP 1.0 bitstring.We do a best-effort to determine type.  Objects will be encoded as <code>maps</code>, unless:+ They are DescribedTypes, in which case they will be encoded as such.+ They contain an encodeOrdering array, in which case they will be encoded as a <code>list</code> of their values  in the specified order.+ They are Int64s, in which case they will be encoded as <code>longs</code>.
+Encode the given value as an AMQP 1.0 bitstring.
+
+We do a best-effort to determine type.  Objects will be encoded as <code>maps</code>, unless:
++ They are DescribedTypes, in which case they will be encoded as such.
++ They contain an encodeOrdering array, in which case they will be encoded as a <code>list</code> of their values
+  in the specified order.
++ They are Int64s, in which case they will be encoded as <code>longs</code>.
 
 **Params**
 
@@ -316,7 +327,8 @@ Encode the given value as an AMQP 1.0 bitstring.We do a best-effort to determi
 
 <a name="new_Connection"></a>
 ##new Connection(connectPolicy)
-Connection states, from AMQP 1.0 spec:
+Connection states, from AMQP 1.0 spec:
+
  <dl>
  <dt>START</dt>
  <dd><p>In this state a Connection exists, but nothing has been sent or received. This is the
@@ -383,7 +395,10 @@ Connection states, from AMQP 1.0 spec:
  <dt>END</dt>
  <dd><p>In this state it is illegal for either endpoint to write anything more onto the
  Connection. The Connection may be safely closed and discarded.</p></dd>
- </dl>Connection negotiation state diagram from AMQP 1.0 spec:
+ </dl>
+
+Connection negotiation state diagram from AMQP 1.0 spec:
+
  <pre>
               R:HDR +=======+ S:HDR             R:HDR[!=S:HDR]
            +--------| START |-----+    +--------------------------------+
@@ -422,7 +437,13 @@ Connection states, from AMQP 1.0 spec:
  |    S:HDR[!=R:HDR]    |                R:HDR[!=S:HDR]                 |
  +----------------------+-----------------------------------------------+
 
- </pre>R:<b>CTRL</b> = Received <b>CTRL</b>S:<b>CTRL</b> = Sent <b>CTRL</b>Also could be DISCARDING if an error condition triggered the CLOSE
+ </pre>
+
+R:<b>CTRL</b> = Received <b>CTRL</b>
+
+S:<b>CTRL</b> = Sent <b>CTRL</b>
+
+Also could be DISCARDING if an error condition triggered the CLOSE
 
 **Params**
 
@@ -566,142 +587,7 @@ Invalid state.
 
 <a name="new_AttachFrame"></a>
 ##new AttachFrame()
-<h2>attach performative</h2>
-<i>attach a Link to a Session</i>
-<p>
-          The  frame indicates that a Link Endpoint has been
-          attached to the Session. The opening flag is used to indicate that the Link Endpoint is
-          newly created.
-        </p>
-<p>attach</p>
-<h3>Descriptor</h3>
-<dl>
-<dt>Name</dt>
-<dd>amqp:attach:list</dd>
-<dt>Code</dt>
-<dd>0x00000000:0x00000012</dd>
-</dl>
-
-<table border="1">
-<tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>name</td><td>string</td><td>true</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the name of the link</i>
-<p>
-            This name uniquely identifies the link from the container of the source to the container
-            of the target node, e.g. if the container of the source node is A, and the container of
-            the target node is B, the link may be globally identified by the (ordered) tuple
-            .
-          </p></td></tr>
-<tr><td>handle</td><td>handle</td><td>true</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3">undefined
-<p>
-            The handle MUST NOT be used for other open Links. An attempt to attach using a handle
-            which is already associated with a Link MUST be responded to with an immediate
-             carrying a Handle-in-use .
-           </p>
-<p>close</p>
-<p>
-             To make it easier to monitor AMQP link attach frames, it is recommended that
-             implementations always assign the lowest available handle to this field.
-           </p></td></tr>
-<tr><td>role</td><td>role</td><td>true</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>role of the link endpoint</i></td></tr>
-<tr><td>snd-settle-mode</td><td>sender-settle-mode</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>settlement mode for the Sender</i>
-<p>
-            Determines the settlement policy for deliveries sent at the Sender. When set at the
-            Receiver this indicates the desired value for the settlement mode at the Sender.  When
-            set at the Sender this indicates the actual settlement mode in use.
-          </p></td></tr>
-<tr><td>rcv-settle-mode</td><td>receiver-settle-mode</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the settlement mode of the Receiver</i>
-<p>
-            Determines the settlement policy for unsettled deliveries received at the Receiver. When
-            set at the Sender this indicates the desired value for the settlement mode at the
-            Receiver. When set at the Receiver this indicates the actual settlement mode in use.
-          </p></td></tr>
-<tr><td>source</td><td>*</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the source for Messages</i>
-<p>
-            If no source is specified on an outgoing Link, then there is no source currently
-            attached to the Link. A Link with no source will never produce outgoing Messages.
-          </p></td></tr>
-<tr><td>target</td><td>*</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the target for Messages</i>
-<p>
-            If no target is specified on an incoming Link, then there is no target currently
-            attached to the Link. A Link with no target will never permit incoming Messages.
-          </p></td></tr>
-<tr><td>unsettled</td><td>map</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>unsettled delivery state</i>
-<p>
-            This is used to indicate any unsettled delivery states when a suspended link is resumed.
-            The map is keyed by delivery-tag with values indicating the delivery state. The local
-            and remote delivery states for a given delivery-tag MUST be compared to resolve any
-            in-doubt deliveries. If necessary, deliveries MAY be resent, or resumed based on the
-            outcome of this comparison. See .
-          </p>
-<p>resuming-deliveries</p>
-<p>
-            If the local unsettled map is too large to be encoded within a frame of the agreed
-            maximum frame size then the session may be ended with the frame-size-too-small error
-            (see ). The endpoint SHOULD make use of the ability to send an
-            incomplete unsettled map (see below) to avoid sending an error.
-          </p>
-<p>amqp-error</p>
-<p>
-            The unsettled map MUST NOT contain null valued keys.
-          </p>
-<p>
-            When reattaching (as opposed to resuming), the unsettled map MUST be null.
-          </p></td></tr>
-<tr><td>incomplete-unsettled</td><td>boolean</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3">undefined
-<p>
-            If set to true this field indicates that the unsettled map provided is not complete.
-            When the map is incomplete the recipient of the map cannot take the absence of a
-            delivery tag from the map as evidence of settlement. On receipt of an incomplete
-            unsettled map a sending endpoint MUST NOT send any new deliveries (i.e. deliveries where
-            resume is not set to true) to its partner (and a receiving endpoint which sent an
-            incomplete unsettled map MUST detach with an error on receiving a transfer which does
-            not have the resume flag set to true).
-          </p></td></tr>
-<tr><td>initial-delivery-count</td><td>sequence-no</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3">undefined
-<p>
-            This MUST NOT be null if role is sender, and it is ignored if the role is receiver. See
-            .
-          </p>
-<p>flow-control</p></td></tr>
-<tr><td>max-message-size</td><td>ulong</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the maximum message size supported by the link endpoint</i>
-<p>
-            This field indicates the maximum message size supported by the link endpoint. Any
-            attempt to deliver a message larger than this results in a message-size-exceeded
-            . If this field is zero or unset, there is no maximum size
-            imposed by the link endpoint.
-          </p>
-<p>link-error</p></td></tr>
-<tr><td>offered-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender supports</i>
-<p>
-            A list of commonly defined session capabilities and their meanings can be found here:
-            .
-          </p>
-<p>http://www.amqp.org/specification/1.0/link-capabilities</p></td></tr>
-<tr><td>desired-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender may use if the receiver supports them</i></td></tr>
-<tr><td>properties</td><td>fields</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>link properties</i>
-<p>
-            The properties map contains a set of fields intended to indicate information about the
-            link and its container.
-          </p>
-<p>
-            A list of commonly defined link properties and their meanings can be found here:
-
-          </p>
-<p>http://www.amqp.org/specification/1.0/link-properties</p></td></tr>
-</table>
+<h2>attach performative</h2><i>attach a Link to a Session</i><p>          The  frame indicates that a Link Endpoint has been          attached to the Session. The opening flag is used to indicate that the Link Endpoint is          newly created.        </p><p>attach</p><h3>Descriptor</h3><dl><dt>Name</dt><dd>amqp:attach:list</dd><dt>Code</dt><dd>0x00000000:0x00000012</dd></dl><table border="1"><tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>name</td><td>string</td><td>true</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the name of the link</i><p>            This name uniquely identifies the link from the container of the source to the container            of the target node, e.g. if the container of the source node is A, and the container of            the target node is B, the link may be globally identified by the (ordered) tuple            .          </p></td></tr><tr><td>handle</td><td>handle</td><td>true</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3">undefined<p>            The handle MUST NOT be used for other open Links. An attempt to attach using a handle            which is already associated with a Link MUST be responded to with an immediate             carrying a Handle-in-use .           </p><p>close</p><p>             To make it easier to monitor AMQP link attach frames, it is recommended that             implementations always assign the lowest available handle to this field.           </p></td></tr><tr><td>role</td><td>role</td><td>true</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>role of the link endpoint</i></td></tr><tr><td>snd-settle-mode</td><td>sender-settle-mode</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>settlement mode for the Sender</i><p>            Determines the settlement policy for deliveries sent at the Sender. When set at the            Receiver this indicates the desired value for the settlement mode at the Sender.  When            set at the Sender this indicates the actual settlement mode in use.          </p></td></tr><tr><td>rcv-settle-mode</td><td>receiver-settle-mode</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the settlement mode of the Receiver</i><p>            Determines the settlement policy for unsettled deliveries received at the Receiver. When            set at the Sender this indicates the desired value for the settlement mode at the            Receiver. When set at the Receiver this indicates the actual settlement mode in use.          </p></td></tr><tr><td>source</td><td>*</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the source for Messages</i><p>            If no source is specified on an outgoing Link, then there is no source currently            attached to the Link. A Link with no source will never produce outgoing Messages.          </p></td></tr><tr><td>target</td><td>*</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the target for Messages</i><p>            If no target is specified on an incoming Link, then there is no target currently            attached to the Link. A Link with no target will never permit incoming Messages.          </p></td></tr><tr><td>unsettled</td><td>map</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>unsettled delivery state</i><p>            This is used to indicate any unsettled delivery states when a suspended link is resumed.            The map is keyed by delivery-tag with values indicating the delivery state. The local            and remote delivery states for a given delivery-tag MUST be compared to resolve any            in-doubt deliveries. If necessary, deliveries MAY be resent, or resumed based on the            outcome of this comparison. See .          </p><p>resuming-deliveries</p><p>            If the local unsettled map is too large to be encoded within a frame of the agreed            maximum frame size then the session may be ended with the frame-size-too-small error            (see ). The endpoint SHOULD make use of the ability to send an            incomplete unsettled map (see below) to avoid sending an error.          </p><p>amqp-error</p><p>            The unsettled map MUST NOT contain null valued keys.          </p><p>            When reattaching (as opposed to resuming), the unsettled map MUST be null.          </p></td></tr><tr><td>incomplete-unsettled</td><td>boolean</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3">undefined<p>            If set to true this field indicates that the unsettled map provided is not complete.            When the map is incomplete the recipient of the map cannot take the absence of a            delivery tag from the map as evidence of settlement. On receipt of an incomplete            unsettled map a sending endpoint MUST NOT send any new deliveries (i.e. deliveries where            resume is not set to true) to its partner (and a receiving endpoint which sent an            incomplete unsettled map MUST detach with an error on receiving a transfer which does            not have the resume flag set to true).          </p></td></tr><tr><td>initial-delivery-count</td><td>sequence-no</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3">undefined<p>            This MUST NOT be null if role is sender, and it is ignored if the role is receiver. See            .          </p><p>flow-control</p></td></tr><tr><td>max-message-size</td><td>ulong</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the maximum message size supported by the link endpoint</i><p>            This field indicates the maximum message size supported by the link endpoint. Any            attempt to deliver a message larger than this results in a message-size-exceeded            . If this field is zero or unset, there is no maximum size            imposed by the link endpoint.          </p><p>link-error</p></td></tr><tr><td>offered-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender supports</i><p>            A list of commonly defined session capabilities and their meanings can be found here:            .          </p><p>http://www.amqp.org/specification/1.0/link-capabilities</p></td></tr><tr><td>desired-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender may use if the receiver supports them</i></td></tr><tr><td>properties</td><td>fields</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>link properties</i><p>            The properties map contains a set of fields intended to indicate information about the            link and its container.          </p><p>            A list of commonly defined link properties and their meanings can be found here:          </p><p>http://www.amqp.org/specification/1.0/link-properties</p></td></tr></table>
 
 <a name="BeginFrame"></a>
 #class: BeginFrame
@@ -712,68 +598,7 @@ Invalid state.
 
 <a name="new_BeginFrame"></a>
 ##new BeginFrame()
-<h2>begin performative</h2>
-<i>begin a Session on a channel</i>
-<p>
-          Indicate that a Session has begun on the channel.
-        </p>
-<h3>Descriptor</h3>
-<dl>
-<dt>Name</dt>
-<dd>amqp:begin:list</dd>
-<dt>Code</dt>
-<dd>0x00000000:0x00000011</dd>
-</dl>
-
-<table border="1">
-<tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>remote-channel</td><td>ushort</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the remote channel for this Session</i>
-<p>
-            If a Session is locally initiated, the remote-channel MUST NOT be set. When an endpoint
-            responds to a remotely initiated Session, the remote-channel MUST be set to the channel
-            on which the remote Session sent the begin.
-          </p></td></tr>
-<tr><td>next-outgoing-id</td><td>transfer-number</td><td>true</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the transfer-id of the first transfer id the sender will send</i>
-<p>See .</p>
-<p>session-flow-control</p></td></tr>
-<tr><td>incoming-window</td><td>uint</td><td>true</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the initial incoming-window of the sender</i>
-<p>See .</p>
-<p>session-flow-control</p></td></tr>
-<tr><td>outgoing-window</td><td>uint</td><td>true</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the initial outgoing-window of the sender</i>
-<p>See .</p>
-<p>session-flow-control</p></td></tr>
-<tr><td>handle-max</td><td>handle</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the maximum handle value that may be used on the Session</i>
-<p>
-            The handle-max value is the highest handle value that may be used on the Session.
-            A peer MUST NOT attempt to attach a Link using a handle value outside the range that its
-            partner can handle. A peer that receives a handle outside the supported range MUST close
-            the Connection with the framing-error error-code.
-          </p></td></tr>
-<tr><td>offered-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender supports</i>
-<p>
-            A list of commonly defined session capabilities and their meanings can be found here:
-            .
-          </p>
-<p>http://www.amqp.org/specification/1.0/session-capabilities</p></td></tr>
-<tr><td>desired-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender may use if the receiver supports them</i></td></tr>
-<tr><td>properties</td><td>fields</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>session properties</i>
-<p>
-            The properties map contains a set of fields intended to indicate information about the
-            session and its container.
-          </p>
-<p>
-            A list of commonly defined session properties and their meanings can be found here:
-            .
-          </p>
-<p>http://www.amqp.org/specification/1.0/session-properties</p></td></tr>
-</table>
+<h2>begin performative</h2><i>begin a Session on a channel</i><p>          Indicate that a Session has begun on the channel.        </p><h3>Descriptor</h3><dl><dt>Name</dt><dd>amqp:begin:list</dd><dt>Code</dt><dd>0x00000000:0x00000011</dd></dl><table border="1"><tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>remote-channel</td><td>ushort</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the remote channel for this Session</i><p>            If a Session is locally initiated, the remote-channel MUST NOT be set. When an endpoint            responds to a remotely initiated Session, the remote-channel MUST be set to the channel            on which the remote Session sent the begin.          </p></td></tr><tr><td>next-outgoing-id</td><td>transfer-number</td><td>true</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the transfer-id of the first transfer id the sender will send</i><p>See .</p><p>session-flow-control</p></td></tr><tr><td>incoming-window</td><td>uint</td><td>true</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the initial incoming-window of the sender</i><p>See .</p><p>session-flow-control</p></td></tr><tr><td>outgoing-window</td><td>uint</td><td>true</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the initial outgoing-window of the sender</i><p>See .</p><p>session-flow-control</p></td></tr><tr><td>handle-max</td><td>handle</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the maximum handle value that may be used on the Session</i><p>            The handle-max value is the highest handle value that may be used on the Session.            A peer MUST NOT attempt to attach a Link using a handle value outside the range that its            partner can handle. A peer that receives a handle outside the supported range MUST close            the Connection with the framing-error error-code.          </p></td></tr><tr><td>offered-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender supports</i><p>            A list of commonly defined session capabilities and their meanings can be found here:            .          </p><p>http://www.amqp.org/specification/1.0/session-capabilities</p></td></tr><tr><td>desired-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender may use if the receiver supports them</i></td></tr><tr><td>properties</td><td>fields</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>session properties</i><p>            The properties map contains a set of fields intended to indicate information about the            session and its container.          </p><p>            A list of commonly defined session properties and their meanings can be found here:            .          </p><p>http://www.amqp.org/specification/1.0/session-properties</p></td></tr></table>
 
 <a name="CloseFrame"></a>
 #class: CloseFrame
@@ -784,30 +609,7 @@ Invalid state.
 
 <a name="new_CloseFrame"></a>
 ##new CloseFrame()
-<h2>close performative</h2>
-<i>signal a Connection close</i>
-<p>
-          Sending a close signals that the sender will not be sending any more frames (or bytes of
-          any other kind) on the Connection. Orderly shutdown requires that this frame MUST be
-          written by the sender. It is illegal to send any more frames (or bytes of any other kind)
-          after sending a close frame.
-        </p>
-<h3>Descriptor</h3>
-<dl>
-<dt>Name</dt>
-<dd>amqp:close:list</dd>
-<dt>Code</dt>
-<dd>0x00000000:0x00000018</dd>
-</dl>
-
-<table border="1">
-<tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>error</td><td>error</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>error causing the close</i>
-<p>
-            If set, this field indicates that the Connection is being closed due to an error
-            condition. The value of the field should contain details on the cause of the error.
-          </p></td></tr>
-</table>
+<h2>close performative</h2><i>signal a Connection close</i><p>          Sending a close signals that the sender will not be sending any more frames (or bytes of          any other kind) on the Connection. Orderly shutdown requires that this frame MUST be          written by the sender. It is illegal to send any more frames (or bytes of any other kind)          after sending a close frame.        </p><h3>Descriptor</h3><dl><dt>Name</dt><dd>amqp:close:list</dd><dt>Code</dt><dd>0x00000000:0x00000018</dd></dl><table border="1"><tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>error</td><td>error</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>error causing the close</i><p>            If set, this field indicates that the Connection is being closed due to an error            condition. The value of the field should contain details on the cause of the error.          </p></td></tr></table>
 
 <a name="DetachFrame"></a>
 #class: DetachFrame
@@ -818,34 +620,7 @@ Invalid state.
 
 <a name="new_DetachFrame"></a>
 ##new DetachFrame()
-<h2>detach performative</h2>
-<i>detach the Link Endpoint from the Session</i>
-<p>
-          Detach the Link Endpoint from the Session. This un-maps the handle and makes it available
-          for use by other Links.
-        </p>
-<h3>Descriptor</h3>
-<dl>
-<dt>Name</dt>
-<dd>amqp:detach:list</dd>
-<dt>Code</dt>
-<dd>0x00000000:0x00000016</dd>
-</dl>
-
-<table border="1">
-<tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>handle</td><td>handle</td><td>true</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the local handle of the link to be detached</i></td></tr>
-<tr><td>closed</td><td>boolean</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>if true then the sender has closed the link</i>
-<p>See .</p>
-<p>closing-a-link</p></td></tr>
-<tr><td>error</td><td>error</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>error causing the detach</i>
-<p>
-            If set, this field indicates that the Link is being detached due to an error condition.
-            The value of the field should contain details on the cause of the error.
-          </p></td></tr>
-</table>
+<h2>detach performative</h2><i>detach the Link Endpoint from the Session</i><p>          Detach the Link Endpoint from the Session. This un-maps the handle and makes it available          for use by other Links.        </p><h3>Descriptor</h3><dl><dt>Name</dt><dd>amqp:detach:list</dd><dt>Code</dt><dd>0x00000000:0x00000016</dd></dl><table border="1"><tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>handle</td><td>handle</td><td>true</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the local handle of the link to be detached</i></td></tr><tr><td>closed</td><td>boolean</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>if true then the sender has closed the link</i><p>See .</p><p>closing-a-link</p></td></tr><tr><td>error</td><td>error</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>error causing the detach</i><p>            If set, this field indicates that the Link is being detached due to an error condition.            The value of the field should contain details on the cause of the error.          </p></td></tr></table>
 
 <a name="DispositionFrame"></a>
 #class: DispositionFrame
@@ -856,73 +631,7 @@ Invalid state.
 
 <a name="new_DispositionFrame"></a>
 ##new DispositionFrame()
-<h2>disposition performative</h2>
-<i>inform remote peer of delivery state changes</i>
-<p>
-          The disposition frame is used to inform the remote peer of local changes in the state of
-          deliveries. The disposition frame may reference deliveries from many different links
-          associated with a session, although all links MUST have the directionality indicated by
-          the specified .
-        </p>
-<p>
-          Note that it is possible for a disposition sent from sender to receiver to refer to a
-          delivery which has not yet completed (i.e. a delivery which is spread over multiple
-          frames and not all frames have yet been sent). The use of such interleaving is
-          discouraged in favor of carrying the modified state on the next
-          performative for the delivery.
-        </p>
-<p>transfer</p>
-<p>
-          The disposition performative may refer to deliveries on links that are no longer attached.
-          As long as the links have not been closed or detached with an error then the deliveries
-          are still "live" and the updated state MUST be applied.
-        </p>
-<h3>Descriptor</h3>
-<dl>
-<dt>Name</dt>
-<dd>amqp:disposition:list</dd>
-<dt>Code</dt>
-<dd>0x00000000:0x00000015</dd>
-</dl>
-
-<table border="1">
-<tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>role</td><td>role</td><td>true</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>directionality of disposition</i>
-<p>
-            The role identifies whether the disposition frame contains information
-            about  link endpoints or  link endpoints.
-          </p></td></tr>
-<tr><td>first</td><td>delivery-number</td><td>true</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>lower bound of deliveries</i>
-<p>
-            Identifies the lower bound of delivery-ids for the deliveries in this set.
-          </p></td></tr>
-<tr><td>last</td><td>delivery-number</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>upper bound of deliveries</i>
-<p>
-            Identifies the upper bound of delivery-ids for the deliveries in this set. If not set,
-            this is taken to be the same as .
-          </p></td></tr>
-<tr><td>settled</td><td>boolean</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>indicates deliveries are settled</i>
-<p>
-            If true, indicates that the referenced deliveries are considered settled by the issuing
-            endpoint.
-          </p></td></tr>
-<tr><td>state</td><td>*</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>indicates state of deliveries</i>
-<p>
-            Communicates the state of all the deliveries referenced by this disposition.
-          </p></td></tr>
-<tr><td>batchable</td><td>boolean</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>batchable hint</i>
-<p>
-            If true, then the issuer is hinting that there is no need for the peer to urgently
-            communicate the impact of the updated delivery states. This hint may be used to
-            artificially increase the amount of batching an implementation uses when communicating
-            delivery states, and thereby save bandwidth.
-          </p></td></tr>
-</table>
+<h2>disposition performative</h2><i>inform remote peer of delivery state changes</i><p>          The disposition frame is used to inform the remote peer of local changes in the state of          deliveries. The disposition frame may reference deliveries from many different links          associated with a session, although all links MUST have the directionality indicated by          the specified .        </p><p>          Note that it is possible for a disposition sent from sender to receiver to refer to a          delivery which has not yet completed (i.e. a delivery which is spread over multiple          frames and not all frames have yet been sent). The use of such interleaving is          discouraged in favor of carrying the modified state on the next          performative for the delivery.        </p><p>transfer</p><p>          The disposition performative may refer to deliveries on links that are no longer attached.          As long as the links have not been closed or detached with an error then the deliveries          are still "live" and the updated state MUST be applied.        </p><h3>Descriptor</h3><dl><dt>Name</dt><dd>amqp:disposition:list</dd><dt>Code</dt><dd>0x00000000:0x00000015</dd></dl><table border="1"><tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>role</td><td>role</td><td>true</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>directionality of disposition</i><p>            The role identifies whether the disposition frame contains information            about  link endpoints or  link endpoints.          </p></td></tr><tr><td>first</td><td>delivery-number</td><td>true</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>lower bound of deliveries</i><p>            Identifies the lower bound of delivery-ids for the deliveries in this set.          </p></td></tr><tr><td>last</td><td>delivery-number</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>upper bound of deliveries</i><p>            Identifies the upper bound of delivery-ids for the deliveries in this set. If not set,            this is taken to be the same as .          </p></td></tr><tr><td>settled</td><td>boolean</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>indicates deliveries are settled</i><p>            If true, indicates that the referenced deliveries are considered settled by the issuing            endpoint.          </p></td></tr><tr><td>state</td><td>*</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>indicates state of deliveries</i><p>            Communicates the state of all the deliveries referenced by this disposition.          </p></td></tr><tr><td>batchable</td><td>boolean</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>batchable hint</i><p>            If true, then the issuer is hinting that there is no need for the peer to urgently            communicate the impact of the updated delivery states. This hint may be used to            artificially increase the amount of batching an implementation uses when communicating            delivery states, and thereby save bandwidth.          </p></td></tr></table>
 
 <a name="EndFrame"></a>
 #class: EndFrame
@@ -933,25 +642,7 @@ Invalid state.
 
 <a name="new_EndFrame"></a>
 ##new EndFrame()
-<h2>end performative</h2>
-<i>end the Session</i>
-<p>Indicates that the Session has ended.</p>
-<h3>Descriptor</h3>
-<dl>
-<dt>Name</dt>
-<dd>amqp:end:list</dd>
-<dt>Code</dt>
-<dd>0x00000000:0x00000017</dd>
-</dl>
-
-<table border="1">
-<tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>error</td><td>error</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>error causing the end</i>
-<p>
-            If set, this field indicates that the Session is being ended due to an error condition.
-            The value of the field should contain details on the cause of the error.
-          </p></td></tr>
-</table>
+<h2>end performative</h2><i>end the Session</i><p>Indicates that the Session has ended.</p><h3>Descriptor</h3><dl><dt>Name</dt><dd>amqp:end:list</dd><dt>Code</dt><dd>0x00000000:0x00000017</dd></dl><table border="1"><tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>error</td><td>error</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>error causing the end</i><p>            If set, this field indicates that the Session is being ended due to an error condition.            The value of the field should contain details on the cause of the error.          </p></td></tr></table>
 
 <a name="FlowFrame"></a>
 #class: FlowFrame
@@ -962,128 +653,7 @@ Invalid state.
 
 <a name="new_FlowFrame"></a>
 ##new FlowFrame()
-<h2>flow performative</h2>
-<i>update link state</i>
-<p>Updates the flow state for the specified Link.</p>
-<h3>Descriptor</h3>
-<dl>
-<dt>Name</dt>
-<dd>amqp:flow:list</dd>
-<dt>Code</dt>
-<dd>0x00000000:0x00000013</dd>
-</dl>
-
-<table border="1">
-<tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>next-incoming-id</td><td>transfer-number</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3">undefined
-<p>
-            Identifies the expected transfer-id of the next incoming  frame.
-            This value is not set if and only if the sender has not yet received the
-             frame for the session. See
-             for more details.
-          </p>
-<p>transfer</p></td></tr>
-<tr><td>incoming-window</td><td>uint</td><td>true</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3">undefined
-<p>
-            Defines the maximum number of incoming  frames that the endpoint
-            can currently receive. See  for more
-            details.
-          </p>
-<p>transfer</p></td></tr>
-<tr><td>next-outgoing-id</td><td>transfer-number</td><td>true</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3">undefined
-<p>
-            The transfer-id that will be assigned to the next outgoing
-            frame. See  for more details.
-          </p>
-<p>transfer</p></td></tr>
-<tr><td>outgoing-window</td><td>uint</td><td>true</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3">undefined
-<p>
-            Defines the maximum number of outgoing  frames that the endpoint
-            could potentially currently send, if it was not constrained by restrictions imposed by
-            its peer's incoming-window. See  for more
-            details.
-          </p>
-<p>transfer</p></td></tr>
-<tr><td>handle</td><td>handle</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3">undefined
-<p>
-            If set, indicates that the flow frame carries flow state information for the local Link
-            Endpoint associated with the given handle.  If not set, the flow frame is carrying only
-            information pertaining to the Session Endpoint.
-          </p>
-<p>
-            If set to a handle that is not currently associated with an attached Link, the
-            recipient MUST respond by ending the session with an  session error.
-          </p>
-<p>session-error</p></td></tr>
-<tr><td>delivery-count</td><td>sequence-no</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the endpoint's delivery-count</i>
-<p>
-            When the handle field is not set, this field MUST NOT be set.
-          </p>
-<p>
-            When the handle identifies that the flow state is being sent from the Sender Link
-            Endpoint to Receiver Link Endpoint this field MUST be set to the current delivery-count
-            of the Link Endpoint.
-          </p>
-<p>
-            When the flow state is being sent from the Receiver Endpoint to the Sender Endpoint this
-            field MUST be set to the last known value of the corresponding Sending Endpoint. In the
-            event that the Receiving Link Endpoint has not yet  seen the initial
-             frame from the Sender this field MUST NOT be set.
-          </p>
-<p>attach</p>
-<p>
-            See  for more details.
-          </p>
-<p>flow-control</p></td></tr>
-<tr><td>link-credit</td><td>uint</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the current maximum number of Messages that can be received</i>
-<p>
-            The current maximum number of Messages that can be handled at the Receiver
-            Endpoint of the Link. Only the receiver endpoint can independently set this value. The
-            sender endpoint sets this to the last known value seen from the receiver. See
-             for more details.
-          </p>
-<p>flow-control</p>
-<p>
-            When the handle field is not set, this field MUST NOT be set.
-          </p></td></tr>
-<tr><td>available</td><td>uint</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the number of available Messages</i>
-<p>
-            The number of Messages awaiting credit at the link sender endpoint. Only the
-            sender can independently set this value. The receiver sets this to the last known value
-            seen from the sender. See  for more details.
-          </p>
-<p>flow-control</p>
-<p>
-            When the handle field is not set, this field MUST NOT be set.
-          </p></td></tr>
-<tr><td>drain</td><td>boolean</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>indicates drain mode</i>
-<p>
-            When flow state is sent from the sender to the receiver, this field contains the actual
-            drain mode of the sender. When flow state is sent from the receiver to the sender, this
-            field contains the desired drain mode of the receiver. See  for more details.
-          </p>
-<p>flow-control</p>
-<p>
-            When the handle field is not set, this field MUST NOT be set.
-          </p></td></tr>
-<tr><td>echo</td><td>boolean</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>request link state from other endpoint</i></td></tr>
-<tr><td>properties</td><td>fields</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>link state properties</i>
-<p>
-            A list of commonly defined link state properties and their meanings can be found here:
-
-          </p>
-<p>http://www.amqp.org/specification/1.0/link-state-properties</p></td></tr>
-</table>
+<h2>flow performative</h2><i>update link state</i><p>Updates the flow state for the specified Link.</p><h3>Descriptor</h3><dl><dt>Name</dt><dd>amqp:flow:list</dd><dt>Code</dt><dd>0x00000000:0x00000013</dd></dl><table border="1"><tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>next-incoming-id</td><td>transfer-number</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3">undefined<p>            Identifies the expected transfer-id of the next incoming  frame.            This value is not set if and only if the sender has not yet received the             frame for the session. See             for more details.          </p><p>transfer</p></td></tr><tr><td>incoming-window</td><td>uint</td><td>true</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3">undefined<p>            Defines the maximum number of incoming  frames that the endpoint            can currently receive. See  for more            details.          </p><p>transfer</p></td></tr><tr><td>next-outgoing-id</td><td>transfer-number</td><td>true</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3">undefined<p>            The transfer-id that will be assigned to the next outgoing            frame. See  for more details.          </p><p>transfer</p></td></tr><tr><td>outgoing-window</td><td>uint</td><td>true</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3">undefined<p>            Defines the maximum number of outgoing  frames that the endpoint            could potentially currently send, if it was not constrained by restrictions imposed by            its peer's incoming-window. See  for more            details.          </p><p>transfer</p></td></tr><tr><td>handle</td><td>handle</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3">undefined<p>            If set, indicates that the flow frame carries flow state information for the local Link            Endpoint associated with the given handle.  If not set, the flow frame is carrying only            information pertaining to the Session Endpoint.          </p><p>            If set to a handle that is not currently associated with an attached Link, the            recipient MUST respond by ending the session with an  session error.          </p><p>session-error</p></td></tr><tr><td>delivery-count</td><td>sequence-no</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the endpoint's delivery-count</i><p>            When the handle field is not set, this field MUST NOT be set.          </p><p>            When the handle identifies that the flow state is being sent from the Sender Link            Endpoint to Receiver Link Endpoint this field MUST be set to the current delivery-count            of the Link Endpoint.          </p><p>            When the flow state is being sent from the Receiver Endpoint to the Sender Endpoint this            field MUST be set to the last known value of the corresponding Sending Endpoint. In the            event that the Receiving Link Endpoint has not yet  seen the initial             frame from the Sender this field MUST NOT be set.          </p><p>attach</p><p>            See  for more details.          </p><p>flow-control</p></td></tr><tr><td>link-credit</td><td>uint</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the current maximum number of Messages that can be received</i><p>            The current maximum number of Messages that can be handled at the Receiver            Endpoint of the Link. Only the receiver endpoint can independently set this value. The            sender endpoint sets this to the last known value seen from the receiver. See             for more details.          </p><p>flow-control</p><p>            When the handle field is not set, this field MUST NOT be set.          </p></td></tr><tr><td>available</td><td>uint</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the number of available Messages</i><p>            The number of Messages awaiting credit at the link sender endpoint. Only the            sender can independently set this value. The receiver sets this to the last known value            seen from the sender. See  for more details.          </p><p>flow-control</p><p>            When the handle field is not set, this field MUST NOT be set.          </p></td></tr><tr><td>drain</td><td>boolean</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>indicates drain mode</i><p>            When flow state is sent from the sender to the receiver, this field contains the actual            drain mode of the sender. When flow state is sent from the receiver to the sender, this            field contains the desired drain mode of the receiver. See  for more details.          </p><p>flow-control</p><p>            When the handle field is not set, this field MUST NOT be set.          </p></td></tr><tr><td>echo</td><td>boolean</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>request link state from other endpoint</i></td></tr><tr><td>properties</td><td>fields</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>link state properties</i><p>            A list of commonly defined link state properties and their meanings can be found here:          </p><p>http://www.amqp.org/specification/1.0/link-state-properties</p></td></tr></table>
 
 <a name="Frame"></a>
 #class: Frame
@@ -1096,11 +666,7 @@ Invalid state.
 
 <a name="new_Frame"></a>
 ##new Frame()
-Encapsulates all convenience methods required for encoding a frame to put it out on the wire, and decoding an
-incoming frame.
-
-Frames look like:
-
+Encapsulates all convenience methods required for encoding a frame to put it out on the wire, and decoding anincoming frame.Frames look like:
  <pre>
              +0       +1       +2       +3
         +-----------------------------------+ -.
@@ -1131,8 +697,7 @@ Frames look like:
 
 <a name="Frame#outgoing"></a>
 ##frame.outgoing()
-Populate the internal buffer with contents built based on the options.  SIZE and DOFF will be inferred
-based on the options given.
+Populate the internal buffer with contents built based on the options.  SIZE and DOFF will be inferredbased on the options given.
 
 **Access**: private  
 <a name="Frame#readPerformative"></a>
@@ -1154,9 +719,7 @@ Used to populate the frame performative from a DescribedType pulled off the wire
 
 <a name="new_AMQPFrame"></a>
 ##new AMQPFrame()
-AMQP Frames are slight variations on the one above, with the first part of the payload taken up
-by the AMQP <i>performative</i> (details of the specific frame type).  For some frames, that's the entire payload.
-
+AMQP Frames are slight variations on the one above, with the first part of the payload taken upby the AMQP <i>performative</i> (details of the specific frame type).  For some frames, that's the entire payload.
 <pre>
       +0       +1       +2       +3
         +-----------------------------------+ -.
@@ -1188,15 +751,12 @@ by the AMQP <i>performative</i> (details of the specific frame type).  For some 
 
 <a name="AMQPFrame#_getPerformative"></a>
 ##amqpFrame._getPerformative()
-Children should implement this method to translate their internal (friendly) representation into the
-representation expected on the wire (a DescribedType(Descriptor, ...) with either a List of values
-(ForcedType'd as necessary) or an object containing an encodeOrdering[] array to clarify ordering).
+Children should implement this method to translate their internal (friendly) representation into therepresentation expected on the wire (a DescribedType(Descriptor, ...) with either a List of values(ForcedType'd as necessary) or an object containing an encodeOrdering[] array to clarify ordering).
 
 **Access**: private  
 <a name="AMQPFrame#_getAdditionalPayload"></a>
 ##amqpFrame._getAdditionalPayload()
-AMQP Frames consist of two sections of payload - the performative, and the additional actual payload.
-Some frames don't have any additional payload, but for those that do, they should override this to generate it.
+AMQP Frames consist of two sections of payload - the performative, and the additional actual payload.Some frames don't have any additional payload, but for those that do, they should override this to generate it.
 
 **Access**: private  
 <a name="FrameReader"></a>
@@ -1218,15 +778,7 @@ For now, just process performative headers.
 **Returns**: [AMQPFrame](#AMQPFrame) - Frame with populated data, undefined if frame is incomplete.  Throws exception on unmatched frame.  
 <a name="FrameReader#_readMessage"></a>
 ##frameReader._readMessage(messageBuf)
-An AMQP Message is composed of:
-
-* Zero or one header
-* Zero or one delivery-annotations
-* Zero or one message-annotations
-* Zero or one properties
-* Zero or one application-properties
-* Body: One or more data sections, one or more amqp-sequence sections, or one amqp-value section
-* Zero or one footer
+An AMQP Message is composed of:* Zero or one header* Zero or one delivery-annotations* Zero or one message-annotations* Zero or one properties* Zero or one application-properties* Body: One or more data sections, one or more amqp-sequence sections, or one amqp-value section* Zero or one footer
 
 **Params**
 
@@ -1243,7 +795,8 @@ An AMQP Message is composed of:
 
 <a name="new_HeartbeatFrame"></a>
 ##new HeartbeatFrame()
-Heartbeat frames are under-specified in the AMQP Specification as "an empty frame".  In practice, thisseems to be interpreted as a an empty header with a type of 0 (or 0x0000 0008 0200 0000).
+Heartbeat frames are under-specified in the AMQP Specification as "an empty frame".  In practice, this
+seems to be interpreted as a an empty header with a type of 0 (or 0x0000 0008 0200 0000).
 
 <a name="OpenFrame"></a>
 #class: OpenFrame
@@ -1254,131 +807,7 @@ Heartbeat frames are under-specified in the AMQP Specification as "an empty fram
 
 <a name="new_OpenFrame"></a>
 ##new OpenFrame()
-<h2>open performative</h2>
-<i>negotiate Connection parameters</i>
-<p>
-          The first frame sent on a connection in either direction MUST contain an Open body. (Note
-          that the Connection header which is sent first on the Connection is *not* a frame.) The
-          fields indicate the capabilities and limitations of the sending peer.
-        </p>
-<h3>Descriptor</h3>
-<dl>
-<dt>Name</dt>
-<dd>amqp:open:list</dd>
-<dt>Code</dt>
-<dd>0x00000000:0x00000010</dd>
-</dl>
-
-<table border="1">
-<tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr>
-<tr><td>container-id</td><td>string</td><td>true</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the id of the source container</i></td></tr>
-<tr><td>hostname</td><td>string</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the name of the target host</i>
-<p>
-            The dns name of the host (either fully qualified or relative) to which the sending peer
-            is connecting. It is not mandatory to provide the hostname. If no hostname is provided
-            the receiving peer should select a default based on its own configuration. This field
-            can be used by AMQP proxies to determine the correct back-end service to connect
-            the client to.
-          </p>
-<p>
-            This field may already have been specified by the  frame, if a
-            SASL layer is used, or, the server name indication extension as described in
-            RFC-4366, if a TLS layer is used, in which case this field SHOULD be null or contain
-            the same value. It is undefined what a different value to those already specific means.
-          </p>
-<p>sasl-init</p></td></tr>
-<tr><td>max-frame-size</td><td>uint</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>proposed maximum frame size</i>
-<p>
-            The largest frame size that the sending peer is able to accept on this Connection. If
-            this field is not set it means that the peer does not impose any specific limit. A peer
-            MUST NOT send frames larger than its partner can handle. A peer that receives an
-            oversized frame MUST close the Connection with the framing-error error-code.
-          </p>
-<p>
-            Both peers MUST accept frames of up to  octets
-            large.
-          </p>
-<p>MIN-MAX-FRAME-SIZE</p></td></tr>
-<tr><td>channel-max</td><td>ushort</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the maximum channel number that may be used on the Connection</i>
-<p>
-            The channel-max value is the highest channel number that may be used on the Connection.
-            This value plus one is the maximum number of Sessions that can be simultaneously active
-            on the Connection. A peer MUST not use channel numbers outside the range that its
-            partner can handle. A peer that receives a channel number outside the supported range
-            MUST close the Connection with the framing-error error-code.
-          </p></td></tr>
-<tr><td>idle-time-out</td><td>milliseconds</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>idle time-out</i>
-<p>
-            The idle time-out required by the sender. A value of zero is the same as if it was
-            not set (null). If the receiver is unable or unwilling to support the idle time-out
-            then it should close the connection with an error explaining why (eg, because it is
-            too small).
-          </p>
-<p>
-            If the value is not set, then the sender does not have an idle time-out. However,
-            senders doing this should be aware that implementations MAY choose to use an
-            internal default to efficiently manage a peer's resources.
-          </p></td></tr>
-<tr><td>outgoing-locales</td><td>ietf-language-tag</td><td>false</td><td>true</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>locales available for outgoing text</i>
-<p>
-            A list of the locales that the peer supports for sending informational text. This
-            includes Connection, Session and Link error descriptions. A peer MUST support at least
-            the  locale (see ). Since this value is
-            always supported, it need not be supplied in the outgoing-locales. A null value or an
-            empty list implies that only  is supported.
-          </p>
-<p>ietf-language-tag</p></td></tr>
-<tr><td>incoming-locales</td><td>ietf-language-tag</td><td>false</td><td>true</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>desired locales for incoming text in decreasing level of preference</i>
-<p>
-            A list of locales that the sending peer permits for incoming informational text. This
-            list is ordered in decreasing level of preference. The receiving partner will chose the
-            first (most preferred) incoming locale from those which it supports. If none of the
-            requested locales are supported,  will be chosen. Note that
-            need not be supplied in this list as it is always the fallback. A peer may determine
-            which of the permitted incoming locales is chosen by examining the partner's supported
-            locales as specified in the outgoing-locales field. A null value or an empty list
-            implies that only  is supported.
-          </p></td></tr>
-<tr><td>offered-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender supports</i>
-<p>
-            If the receiver of the offered-capabilities requires an extension capability which is
-            not present in the offered-capability list then it MUST close the connection.
-          </p>
-<p>
-            A list of commonly defined connection capabilities and their meanings can be found here:
-            .
-          </p>
-<p>http://www.amqp.org/specification/1.0/connection-capabilities</p></td></tr>
-<tr><td>desired-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender may use if the receiver supports them</i>
-<p>
-            The desired-capability list defines which extension capabilities the sender MAY use if
-            the receiver offers them (i.e. they are in the offered-capabilities list received by the
-            sender of the desired-capabilities). If the receiver of the desired-capabilities offers
-            extension capabilities which are not present in the desired-capability list it received,
-            then it can be sure those (undesired) capabilities will not be used on the
-            Connection.
-          </p></td></tr>
-<tr><td>properties</td><td>fields</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>connection properties</i>
-<p>
-            The properties map contains a set of fields intended to indicate information about the
-            connection and its container.
-          </p>
-<p>
-            A list of commonly defined connection properties and their meanings can be found here:
-
-          </p>
-<p>http://www.amqp.org/specification/1.0/connection-properties</p></td></tr>
-</table>
+<h2>open performative</h2><i>negotiate Connection parameters</i><p>          The first frame sent on a connection in either direction MUST contain an Open body. (Note          that the Connection header which is sent first on the Connection is *not* a frame.) The          fields indicate the capabilities and limitations of the sending peer.        </p><h3>Descriptor</h3><dl><dt>Name</dt><dd>amqp:open:list</dd><dt>Code</dt><dd>0x00000000:0x00000010</dd></dl><table border="1"><tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>container-id</td><td>string</td><td>true</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the id of the source container</i></td></tr><tr><td>hostname</td><td>string</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the name of the target host</i><p>            The dns name of the host (either fully qualified or relative) to which the sending peer            is connecting. It is not mandatory to provide the hostname. If no hostname is provided            the receiving peer should select a default based on its own configuration. This field            can be used by AMQP proxies to determine the correct back-end service to connect            the client to.          </p><p>            This field may already have been specified by the  frame, if a            SASL layer is used, or, the server name indication extension as described in            RFC-4366, if a TLS layer is used, in which case this field SHOULD be null or contain            the same value. It is undefined what a different value to those already specific means.          </p><p>sasl-init</p></td></tr><tr><td>max-frame-size</td><td>uint</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>proposed maximum frame size</i><p>            The largest frame size that the sending peer is able to accept on this Connection. If            this field is not set it means that the peer does not impose any specific limit. A peer            MUST NOT send frames larger than its partner can handle. A peer that receives an            oversized frame MUST close the Connection with the framing-error error-code.          </p><p>            Both peers MUST accept frames of up to  octets            large.          </p><p>MIN-MAX-FRAME-SIZE</p></td></tr><tr><td>channel-max</td><td>ushort</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the maximum channel number that may be used on the Connection</i><p>            The channel-max value is the highest channel number that may be used on the Connection.            This value plus one is the maximum number of Sessions that can be simultaneously active            on the Connection. A peer MUST not use channel numbers outside the range that its            partner can handle. A peer that receives a channel number outside the supported range            MUST close the Connection with the framing-error error-code.          </p></td></tr><tr><td>idle-time-out</td><td>milliseconds</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>idle time-out</i><p>            The idle time-out required by the sender. A value of zero is the same as if it was            not set (null). If the receiver is unable or unwilling to support the idle time-out            then it should close the connection with an error explaining why (eg, because it is            too small).          </p><p>            If the value is not set, then the sender does not have an idle time-out. However,            senders doing this should be aware that implementations MAY choose to use an            internal default to efficiently manage a peer's resources.          </p></td></tr><tr><td>outgoing-locales</td><td>ietf-language-tag</td><td>false</td><td>true</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>locales available for outgoing text</i><p>            A list of the locales that the peer supports for sending informational text. This            includes Connection, Session and Link error descriptions. A peer MUST support at least            the  locale (see ). Since this value is            always supported, it need not be supplied in the outgoing-locales. A null value or an            empty list implies that only  is supported.          </p><p>ietf-language-tag</p></td></tr><tr><td>incoming-locales</td><td>ietf-language-tag</td><td>false</td><td>true</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>desired locales for incoming text in decreasing level of preference</i><p>            A list of locales that the sending peer permits for incoming informational text. This            list is ordered in decreasing level of preference. The receiving partner will chose the            first (most preferred) incoming locale from those which it supports. If none of the            requested locales are supported,  will be chosen. Note that            need not be supplied in this list as it is always the fallback. A peer may determine            which of the permitted incoming locales is chosen by examining the partner's supported            locales as specified in the outgoing-locales field. A null value or an empty list            implies that only  is supported.          </p></td></tr><tr><td>offered-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender supports</i><p>            If the receiver of the offered-capabilities requires an extension capability which is            not present in the offered-capability list then it MUST close the connection.          </p><p>            A list of commonly defined connection capabilities and their meanings can be found here:            .          </p><p>http://www.amqp.org/specification/1.0/connection-capabilities</p></td></tr><tr><td>desired-capabilities</td><td>symbol</td><td>false</td><td>true</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the extension capabilities the sender may use if the receiver supports them</i><p>            The desired-capability list defines which extension capabilities the sender MAY use if            the receiver offers them (i.e. they are in the offered-capabilities list received by the            sender of the desired-capabilities). If the receiver of the desired-capabilities offers            extension capabilities which are not present in the desired-capability list it received,            then it can be sure those (undesired) capabilities will not be used on the            Connection.          </p></td></tr><tr><td>properties</td><td>fields</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>connection properties</i><p>            The properties map contains a set of fields intended to indicate information about the            connection and its container.          </p><p>            A list of commonly defined connection properties and their meanings can be found here:          </p><p>http://www.amqp.org/specification/1.0/connection-properties</p></td></tr></table>
 
 <a name="SaslFrame"></a>
 #class: SaslFrame
@@ -1389,24 +818,13 @@ Heartbeat frames are under-specified in the AMQP Specification as "an empty fram
 
 <a name="new_SaslFrame"></a>
 ##new SaslFrame()
-Base Frame for SASL authentication.
-
-To establish a SASL tunnel, each peer MUST start by sending a protocol header. The protocol
-header consists of the upper case ASCII letters "AMQP" followed by a protocol id of three,
-followed by three unsigned bytes representing the major, minor, and revision of the
-specification version (see constants.saslVersion). In total this is an 8-octet sequence:
+Base Frame for SASL authentication.To establish a SASL tunnel, each peer MUST start by sending a protocol header. The protocolheader consists of the upper case ASCII letters "AMQP" followed by a protocol id of three,followed by three unsigned bytes representing the major, minor, and revision of thespecification version (see constants.saslVersion). In total this is an 8-octet sequence:
  <pre>
  4 OCTETS   1 OCTET   1 OCTET   1 OCTET   1 OCTET
  +----------+---------+---------+---------+----------+
  |  "AMQP"  |   %d3   |  major  |  minor  | revision |
  +----------+---------+---------+---------+----------+
- </pre>
-
-Other than using a protocol id of three, the exchange of SASL tunnel headers follows the
-same rules specified in the version negotiation section of the transport specification (See
-version-negotiation).
-
-The following diagram illustrates the interaction involved in creating a SASL Security Layer:
+ </pre>Other than using a protocol id of three, the exchange of SASL tunnel headers follows thesame rules specified in the version negotiation section of the transport specification (Seeversion-negotiation).The following diagram illustrates the interaction involved in creating a SASL Security Layer:
  <pre>
  TCP Client                 TCP Server
  =========================================
@@ -1421,12 +839,7 @@ The following diagram illustrates the interaction involved in creating a SASL Se
  < --------  AMQP%d0.1.0.0
  open  -------- >
  < --------  open
- </pre>
-
-SASL is negotiated using framing. A SASL frame has a type code of 0x01.
-Bytes 6 and 7 of the header are ignored. Implementations SHOULD set these to 0x00. The
-extended header is ignored. Implementations SHOULD therefore set DOFF to 0x02.
-
+ </pre>SASL is negotiated using framing. A SASL frame has a type code of 0x01.Bytes 6 and 7 of the header are ignored. Implementations SHOULD set these to 0x00. Theextended header is ignored. Implementations SHOULD therefore set DOFF to 0x02.
  <pre>
  type: 0x01 - SASL frame
  +0       +1       +2       +3
@@ -1451,12 +864,7 @@ extended header is ignored. Implementations SHOULD therefore set DOFF to 0x02.
  +--------------------------+          -'
  &#42;1 SHOULD be set to 0x0000
  &#42;2 Ignored, so DOFF should be set to 0x02
- </pre>
-
-The maximum size of a SASL frame is defined by constants.minMaxFrameSize. There is
-no mechanism within the SASL negotiation to negotiate a different size. The frame body of a
-SASL frame may contain exactly one AMQP type, whose type encoding must have
-sasl-frame. Receipt of an empty frame is an irrecoverable error.
+ </pre>The maximum size of a SASL frame is defined by constants.minMaxFrameSize. There isno mechanism within the SASL negotiation to negotiate a different size. The frame body of aSASL frame may contain exactly one AMQP type, whose type encoding must havesasl-frame. Receipt of an empty frame is an irrecoverable error.
 
 <a name="SaslMechanisms"></a>
 #class: SaslMechanisms
@@ -1467,16 +875,11 @@ sasl-frame. Receipt of an empty frame is an irrecoverable error.
 
 <a name="new_SaslMechanisms"></a>
 ##new SaslMechanisms(options)
-A list of the sasl security mechanisms supported by the sending peer. It is invalid
-for this list to be null or empty. If the sending peer does not require its partner
-to authenticate with it, then it should send a list of one element with its value as
-the SASL mechanism <i>ANONYMOUS</i>. The server mechanisms are ordered in decreasing
-level of preference.
+A list of the sasl security mechanisms supported by the sending peer. It is invalidfor this list to be null or empty. If the sending peer does not require its partnerto authenticate with it, then it should send a list of one element with its value asthe SASL mechanism <i>ANONYMOUS</i>. The server mechanisms are ordered in decreasinglevel of preference.
 
 **Params**
 
-- options  - Either the DescribedType of an incoming SASL Mechanisms frame,
-                 or an array of mechanisms, or a map with a mechanisms key.  
+- options  - Either the DescribedType of an incoming SASL Mechanisms frame,                 or an array of mechanisms, or a map with a mechanisms key.  
 
 <a name="SaslInit"></a>
 #class: SaslInit
@@ -1487,45 +890,7 @@ level of preference.
 
 <a name="new_SaslInit"></a>
 ##new SaslInit(options)
-SASL Init frame, containing the following fields:
-<table border="1">
-    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>
-    <tr><td>mechanism</td><td>symbol</td><td>true</td><td>false</td></tr>
-    <tr><td>&nbsp;</td><td colspan="3">
-The name of the SASL mechanism used for the SASL exchange. If the selected mechanism is
-not supported by the receiving peer, it MUST close the Connection with the
-authentication-failure close-code. Each peer MUST authenticate using the highest-level
-security profile it can handle from the list provided by the partner.
-     </td></tr>
-     <tr><td>initial-response</td><td>binary</td><td>false</td><td>false</td></tr>
-     <tr><td>&nbsp;</td><td colspan="3">
-     <i>security response data</i><br/>
-     <p>
-A block of opaque data passed to the security mechanism. The contents of this data are
-defined by the SASL security mechanism.
-     </p>
-     </td></tr>
-     <tr><td>hostname</td><td>string</td><td>false</td><td>false</td></tr>
-     <tr><td>&nbsp;</td><td colspan="3">
-     <i>the name of the target host</i><br/>
-     <p>
-The DNS name of the host (either fully qualified or relative) to which the sending peer
-is connecting. It is not mandatory to provide the hostname. If no hostname is provided
-the receiving peer should select a default based on its own configuration.
-     </p>
-     <p>
-This field can be used by AMQP proxies to determine the correct back-end service to
-connect the client to, and to determine the domain to validate the client's credentials
-against.
-     </p>
-     <p>
-This field may already have been specified by the server name indication extension as
-described in RFC-4366, if a TLS layer is used, in which case this field SHOULD be null
-or contain the same value. It is undefined what a different value to those already
-specific means.
-     </p>
-     </td></tr>
-</table>
+SASL Init frame, containing the following fields:<table border="1">    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>    <tr><td>mechanism</td><td>symbol</td><td>true</td><td>false</td></tr>    <tr><td>&nbsp;</td><td colspan="3">The name of the SASL mechanism used for the SASL exchange. If the selected mechanism isnot supported by the receiving peer, it MUST close the Connection with theauthentication-failure close-code. Each peer MUST authenticate using the highest-levelsecurity profile it can handle from the list provided by the partner.     </td></tr>     <tr><td>initial-response</td><td>binary</td><td>false</td><td>false</td></tr>     <tr><td>&nbsp;</td><td colspan="3">     <i>security response data</i><br/>     <p>A block of opaque data passed to the security mechanism. The contents of this data aredefined by the SASL security mechanism.     </p>     </td></tr>     <tr><td>hostname</td><td>string</td><td>false</td><td>false</td></tr>     <tr><td>&nbsp;</td><td colspan="3">     <i>the name of the target host</i><br/>     <p>The DNS name of the host (either fully qualified or relative) to which the sending peeris connecting. It is not mandatory to provide the hostname. If no hostname is providedthe receiving peer should select a default based on its own configuration.     </p>     <p>This field can be used by AMQP proxies to determine the correct back-end service toconnect the client to, and to determine the domain to validate the client's credentialsagainst.     </p>     <p>This field may already have been specified by the server name indication extension asdescribed in RFC-4366, if a TLS layer is used, in which case this field SHOULD be nullor contain the same value. It is undefined what a different value to those alreadyspecific means.     </p>     </td></tr></table>
 
 **Params**
 
@@ -1540,16 +905,7 @@ specific means.
 
 <a name="new_SaslChallenge"></a>
 ##new SaslChallenge(options)
-SASL Challenge frame, containing the following field:
-
-<table border="1">
-    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>
-    <tr><td>challenge</td><td>binary</td><td>true</td><td>false</td></tr>
-    <tr><td>&nbsp;</td><td colspan="3">
-Challenge information, a block of opaque binary data passed to the security
-mechanism.
-    </td></tr>
-</table>
+SASL Challenge frame, containing the following field:<table border="1">    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>    <tr><td>challenge</td><td>binary</td><td>true</td><td>false</td></tr>    <tr><td>&nbsp;</td><td colspan="3">Challenge information, a block of opaque binary data passed to the securitymechanism.    </td></tr></table>
 
 **Params**
 
@@ -1564,16 +920,7 @@ mechanism.
 
 <a name="new_SaslResponse"></a>
 ##new SaslResponse(options)
-SASL Response frame, containing the following field:
-
-<table border="1">
-    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>
-    <tr><td>response</td><td>binary</td><td>true</td><td>false</td></tr>
-    <tr><td>&nbsp;</td><td colspan="3">
-A block of opaque data passed to the security mechanism. The contents of this data are
-defined by the SASL security mechanism.
-    </td></tr>
-</table>
+SASL Response frame, containing the following field:<table border="1">    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>    <tr><td>response</td><td>binary</td><td>true</td><td>false</td></tr>    <tr><td>&nbsp;</td><td colspan="3">A block of opaque data passed to the security mechanism. The contents of this data aredefined by the SASL security mechanism.    </td></tr></table>
 
 **Params**
 
@@ -1588,45 +935,7 @@ defined by the SASL security mechanism.
 
 <a name="new_SaslOutcome"></a>
 ##new SaslOutcome(options)
-This frame indicates the outcome of the SASL dialog. Upon successful completion of the
-SASL dialog the Security Layer has been established, and the peers must exchange protocol
-headers to either start a nested Security Layer, or to establish the AMQP Connection.
-
-SASL Outcome frame contains the following fields:
-
-<table border="1">
-    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>
-    <tr><td>code</td><td>sasl-code</td><td>true</td><td>false</td></tr>
-    <tr><td>&nbsp;</td><td colspan="3">
-    <i>indicates the outcome of the sasl dialog</i><br/>
-    </td></tr>
-    <tr><td>additional-data</td><td>binary</td><td>false</td><td>false</td></tr>
-    <tr><td>&nbsp;</td><td colspan="3">
-The additional-data field carries additional data on successful authentication outcome
-as specified by the SASL specification (RFC-4422). If the authentication is
-unsuccessful, this field is not set.
-    </td></tr>
-</table>
-
-SASL Code is a ubyte constrained to the following:
-<table border="1">
-    <tr><th>Byte</th><th>Name</th><th>Details</th></tr>
-    <tr><td>0</td><td>ok</td><td>Connection authentication succeeded.</td></tr>
-    <tr><td>1</td><td>auth</td><td>
-Connection authentication failed due to an unspecified problem with the supplied
-credentials.
-    </td></tr>
-    <tr><td>2</td><td>sys</td><td>
-Connection authentication failed due to a system error.
-    </td></tr>
-    <tr><td>3</td><td>sys-perm</td><td>
-Connection authentication failed due to a system error that is unlikely to be corrected
-without intervention.
-    </td></tr>
-    <tr><td>4</td><td>sys-temp</td><td>
-Connection authentication failed due to a transient system error.
-    </td></tr>
-</table>
+This frame indicates the outcome of the SASL dialog. Upon successful completion of theSASL dialog the Security Layer has been established, and the peers must exchange protocolheaders to either start a nested Security Layer, or to establish the AMQP Connection.SASL Outcome frame contains the following fields:<table border="1">    <tr><th>Name</th><th>Type</th><th>Mandatory</th><th>Multiple?</th></tr>    <tr><td>code</td><td>sasl-code</td><td>true</td><td>false</td></tr>    <tr><td>&nbsp;</td><td colspan="3">    <i>indicates the outcome of the sasl dialog</i><br/>    </td></tr>    <tr><td>additional-data</td><td>binary</td><td>false</td><td>false</td></tr>    <tr><td>&nbsp;</td><td colspan="3">The additional-data field carries additional data on successful authentication outcomeas specified by the SASL specification (RFC-4422). If the authentication isunsuccessful, this field is not set.    </td></tr></table>SASL Code is a ubyte constrained to the following:<table border="1">    <tr><th>Byte</th><th>Name</th><th>Details</th></tr>    <tr><td>0</td><td>ok</td><td>Connection authentication succeeded.</td></tr>    <tr><td>1</td><td>auth</td><td>Connection authentication failed due to an unspecified problem with the suppliedcredentials.    </td></tr>    <tr><td>2</td><td>sys</td><td>Connection authentication failed due to a system error.    </td></tr>    <tr><td>3</td><td>sys-perm</td><td>Connection authentication failed due to a system error that is unlikely to be correctedwithout intervention.    </td></tr>    <tr><td>4</td><td>sys-temp</td><td>Connection authentication failed due to a transient system error.    </td></tr></table>
 
 **Params**
 
@@ -1641,169 +950,7 @@ Connection authentication failed due to a transient system error.
 
 <a name="new_TransferFrame"></a>
 ##new TransferFrame()
-<h2>transfer performative</h2>
-<i>transfer a Message</i>
-<p>
-          The transfer frame is used to send Messages across a Link. Messages may be carried by a
-          single transfer up to the maximum negotiated frame size for the Connection. Larger
-          Messages may be split across several transfer frames.
-        </p>
-<h3>Descriptor</h3>
-<dl>
-<dt>Name</dt>
-<dd>amqp:transfer:list</dd>
-<dt>Code</dt>
-<dd>0x00000000:0x00000014</dd>
-</dl>
-
-<table border="1">
-<tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>handle</td><td>handle</td><td>true</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3">undefined
-<p>Specifies the Link on which the Message is transferred.</p></td></tr>
-<tr><td>delivery-id</td><td>delivery-number</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>alias for delivery-tag</i>
-<p>
-            The delivery-id MUST be supplied on the first transfer of a multi-transfer delivery. On
-            continuation transfers the delivery-id MAY be omitted. It is an error if the delivery-id
-            on a continuation transfer differs from the delivery-id on the first transfer of a
-            delivery.
-          </p></td></tr>
-<tr><td>delivery-tag</td><td>delivery-tag</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3">undefined
-<p>
-            Uniquely identifies the delivery attempt for a given Message on this Link. This field
-            MUST be specified for the first transfer of a multi transfer message and may only be
-            omitted for continuation transfers.
-          </p></td></tr>
-<tr><td>message-format</td><td>message-format</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>indicates the message format</i>
-<p>
-            This field MUST be specified for the first transfer of a multi transfer message and may
-            only be omitted for continuation transfers.
-          </p></td></tr>
-<tr><td>settled</td><td>boolean</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3">undefined
-<p>
-             If not set on the first (or only) transfer for a delivery, then the settled flag MUST
-             be interpreted as being false. For subsequent transfers if the settled flag is left
-             unset then it MUST be interpreted as true if and only if the value of the settled flag
-             on any of the preceding transfers was true; if no preceding transfer was sent with
-             settled being true then the value when unset MUST be taken as false.
-          </p>
-<p>
-             If the negotiated value for snd-settle-mode at attachment is , then this field MUST be true on at least
-             one transfer frame for a delivery (i.e. the delivery must be settled at the Sender at
-             the point the delivery has been completely transferred).
-          </p>
-<p>sender-settle-mode</p>
-<p>
-             If the negotiated value for snd-settle-mode at attachment is , then this field MUST be false (or
-             unset) on every transfer frame for a delivery (unless the delivery is aborted).
-          </p>
-<p>sender-settle-mode</p></td></tr>
-<tr><td>more</td><td>boolean</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>indicates that the Message has more content</i>
-<p>
-            Note that if both the more and aborted fields are set to true, the aborted flag takes
-            precedence. That is a receiver should ignore the value of the more field if the
-            transfer is marked as aborted. A sender SHOULD NOT set the more flag to true if it
-            also sets the aborted flag to true.
-          </p></td></tr>
-<tr><td>rcv-settle-mode</td><td>receiver-settle-mode</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3">undefined
-<p>
-            If , this indicates that the
-            Receiver MUST settle the delivery once it has arrived without waiting for the Sender to
-            settle first.
-          </p>
-<p>receiver-settle-mode</p>
-<p>
-            If , this indicates that the
-            Receiver MUST NOT settle until sending its disposition to the Sender and receiving a
-            settled disposition from the sender.
-          </p>
-<p>receiver-settle-mode</p>
-<p>
-            If not set, this value is defaulted to the value negotiated on link attach.
-          </p>
-<p>
-            If the negotiated link value is ,
-            then it is illegal to set this field to .
-          </p>
-<p>receiver-settle-mode</p>
-<p>
-            If the message is being sent settled by the Sender, the value of this field is ignored.
-          </p>
-<p>
-            The (implicit or explicit) value of this field does not form part of the transfer state,
-            and is not retained if a link is suspended and subsequently resumed.
-          </p></td></tr>
-<tr><td>state</td><td>*</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>the state of the delivery at the sender</i>
-<p>
-            When set this informs the receiver of the state of the delivery at the sender. This is
-            particularly useful when transfers of unsettled deliveries are resumed after a resuming
-            a link. Setting the state on the transfer can be thought of as being equivalent to
-            sending a disposition immediately before the  performative, i.e.
-            it is the state of the delivery (not the transfer) that existed at the point the frame
-            was sent.
-          </p>
-<p>transfer</p>
-<p>
-            Note that if the  performative (or an earlier  performative referring to the delivery) indicates that the delivery
-            has attained a terminal state, then no future  or  sent by the sender can alter that terminal state.
-          </p>
-<p>transfer</p></td></tr>
-<tr><td>resume</td><td>boolean</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>indicates a resumed delivery</i>
-<p>
-            If true, the resume flag indicates that the transfer is being used to reassociate an
-            unsettled delivery from a dissociated link endpoint. See
-             for more details.
-          </p>
-<p>resuming-deliveries</p>
-<p>
-            The receiver MUST ignore resumed deliveries that are not in its local unsettled map. The
-            sender MUST NOT send resumed transfers for deliveries not in its local unsettled map.
-          </p>
-<p>
-            If a resumed delivery spans more than one transfer performative, then the resume flag
-            MUST be set to true on the first transfer of the resumed delivery.  For subsequent
-            transfers for the same delivery the resume flag may be set to true, or may be omitted.
-          </p>
-<p>
-            In the case where the exchange of unsettled maps makes clear that all message data has
-            been successfully transferred to the receiver, and that only the final state (and
-            potentially settlement) at the sender needs to be conveyed, then a resumed delivery may
-            carry no payload and instead act solely as a vehicle for carrying the terminal state of
-            the delivery at the sender.
-           </p></td></tr>
-<tr><td>aborted</td><td>boolean</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>indicates that the Message is aborted</i>
-<p>
-            Aborted Messages should be discarded by the recipient (any payload within the frame
-            carrying the performative MUST be ignored). An aborted Message is implicitly settled.
-          </p></td></tr>
-<tr><td>batchable</td><td>boolean</td><td>false</td><td>false</td></tr>
-<tr><td>&nbsp;</td><td colspan="3"><i>batchable hint</i>
-<p>
-            If true, then the issuer is hinting that there is no need for the peer to urgently
-            communicate updated delivery state. This hint may be used to artificially increase the
-            amount of batching an implementation uses when communicating delivery states, and
-            thereby save bandwidth.
-          </p>
-<p>
-            If the message being delivered is too large to fit within a single frame, then the
-            setting of batchable to true on any of the  performatives for the
-            delivery is equivalent to setting batchable to true for all the
-            performatives for the delivery.
-          </p>
-<p>transfer</p>
-<p>
-            The batchable value does not form part of the transfer state, and is not retained if
-            a link is suspended and subsequently resumed.
-          </p></td></tr>
-</table>
+<h2>transfer performative</h2><i>transfer a Message</i><p>          The transfer frame is used to send Messages across a Link. Messages may be carried by a          single transfer up to the maximum negotiated frame size for the Connection. Larger          Messages may be split across several transfer frames.        </p><h3>Descriptor</h3><dl><dt>Name</dt><dd>amqp:transfer:list</dd><dt>Code</dt><dd>0x00000000:0x00000014</dd></dl><table border="1"><tr><th>Name</th><th>Type</th><th>Mandatory?</th><th>Multiple?</th></tr><tr><td>handle</td><td>handle</td><td>true</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3">undefined<p>Specifies the Link on which the Message is transferred.</p></td></tr><tr><td>delivery-id</td><td>delivery-number</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>alias for delivery-tag</i><p>            The delivery-id MUST be supplied on the first transfer of a multi-transfer delivery. On            continuation transfers the delivery-id MAY be omitted. It is an error if the delivery-id            on a continuation transfer differs from the delivery-id on the first transfer of a            delivery.          </p></td></tr><tr><td>delivery-tag</td><td>delivery-tag</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3">undefined<p>            Uniquely identifies the delivery attempt for a given Message on this Link. This field            MUST be specified for the first transfer of a multi transfer message and may only be            omitted for continuation transfers.          </p></td></tr><tr><td>message-format</td><td>message-format</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>indicates the message format</i><p>            This field MUST be specified for the first transfer of a multi transfer message and may            only be omitted for continuation transfers.          </p></td></tr><tr><td>settled</td><td>boolean</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3">undefined<p>             If not set on the first (or only) transfer for a delivery, then the settled flag MUST             be interpreted as being false. For subsequent transfers if the settled flag is left             unset then it MUST be interpreted as true if and only if the value of the settled flag             on any of the preceding transfers was true; if no preceding transfer was sent with             settled being true then the value when unset MUST be taken as false.          </p><p>             If the negotiated value for snd-settle-mode at attachment is , then this field MUST be true on at least             one transfer frame for a delivery (i.e. the delivery must be settled at the Sender at             the point the delivery has been completely transferred).          </p><p>sender-settle-mode</p><p>             If the negotiated value for snd-settle-mode at attachment is , then this field MUST be false (or             unset) on every transfer frame for a delivery (unless the delivery is aborted).          </p><p>sender-settle-mode</p></td></tr><tr><td>more</td><td>boolean</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>indicates that the Message has more content</i><p>            Note that if both the more and aborted fields are set to true, the aborted flag takes            precedence. That is a receiver should ignore the value of the more field if the            transfer is marked as aborted. A sender SHOULD NOT set the more flag to true if it            also sets the aborted flag to true.          </p></td></tr><tr><td>rcv-settle-mode</td><td>receiver-settle-mode</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3">undefined<p>            If , this indicates that the            Receiver MUST settle the delivery once it has arrived without waiting for the Sender to            settle first.          </p><p>receiver-settle-mode</p><p>            If , this indicates that the            Receiver MUST NOT settle until sending its disposition to the Sender and receiving a            settled disposition from the sender.          </p><p>receiver-settle-mode</p><p>            If not set, this value is defaulted to the value negotiated on link attach.          </p><p>            If the negotiated link value is ,            then it is illegal to set this field to .          </p><p>receiver-settle-mode</p><p>            If the message is being sent settled by the Sender, the value of this field is ignored.          </p><p>            The (implicit or explicit) value of this field does not form part of the transfer state,            and is not retained if a link is suspended and subsequently resumed.          </p></td></tr><tr><td>state</td><td>*</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>the state of the delivery at the sender</i><p>            When set this informs the receiver of the state of the delivery at the sender. This is            particularly useful when transfers of unsettled deliveries are resumed after a resuming            a link. Setting the state on the transfer can be thought of as being equivalent to            sending a disposition immediately before the  performative, i.e.            it is the state of the delivery (not the transfer) that existed at the point the frame            was sent.          </p><p>transfer</p><p>            Note that if the  performative (or an earlier  performative referring to the delivery) indicates that the delivery            has attained a terminal state, then no future  or  sent by the sender can alter that terminal state.          </p><p>transfer</p></td></tr><tr><td>resume</td><td>boolean</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>indicates a resumed delivery</i><p>            If true, the resume flag indicates that the transfer is being used to reassociate an            unsettled delivery from a dissociated link endpoint. See             for more details.          </p><p>resuming-deliveries</p><p>            The receiver MUST ignore resumed deliveries that are not in its local unsettled map. The            sender MUST NOT send resumed transfers for deliveries not in its local unsettled map.          </p><p>            If a resumed delivery spans more than one transfer performative, then the resume flag            MUST be set to true on the first transfer of the resumed delivery.  For subsequent            transfers for the same delivery the resume flag may be set to true, or may be omitted.          </p><p>            In the case where the exchange of unsettled maps makes clear that all message data has            been successfully transferred to the receiver, and that only the final state (and            potentially settlement) at the sender needs to be conveyed, then a resumed delivery may            carry no payload and instead act solely as a vehicle for carrying the terminal state of            the delivery at the sender.           </p></td></tr><tr><td>aborted</td><td>boolean</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>indicates that the Message is aborted</i><p>            Aborted Messages should be discarded by the recipient (any payload within the frame            carrying the performative MUST be ignored). An aborted Message is implicitly settled.          </p></td></tr><tr><td>batchable</td><td>boolean</td><td>false</td><td>false</td></tr><tr><td>&nbsp;</td><td colspan="3"><i>batchable hint</i><p>            If true, then the issuer is hinting that there is no need for the peer to urgently            communicate updated delivery state. This hint may be used to artificially increase the            amount of batching an implementation uses when communicating delivery states, and            thereby save bandwidth.          </p><p>            If the message being delivered is too large to fit within a single frame, then the            setting of batchable to true on any of the  performatives for the            delivery is equivalent to setting batchable to true for all the            performatives for the delivery.          </p><p>transfer</p><p>            The batchable value does not form part of the transfer state, and is not retained if            a link is suspended and subsequently resumed.          </p></td></tr></table>
 
 <a name="Sasl"></a>
 #class: Sasl
@@ -1826,13 +973,7 @@ Currently, only supports SASL-PLAIN
 
 <a name="new_Session"></a>
 ##new Session(conn)
-A Session is a bidirectional sequential conversation between two containers that provides a
-grouping for related links. Sessions serve as the context for link communication. Any number
-of links of any directionality can be <i>attached</i> to a given Session. However, a link
-may be attached to at most one Session at a time.
-
-Session states, from AMQP 1.0 spec:
-
+A Session is a bidirectional sequential conversation between two containers that provides agrouping for related links. Sessions serve as the context for link communication. Any numberof links of any directionality can be <i>attached</i> to a given Session. However, a linkmay be attached to at most one Session at a time.Session states, from AMQP 1.0 spec:
  <dl>
  <dt>UNMAPPED</dt>
  <dd><p>In the UNMAPPED state, the Session endpoint is not mapped to any incoming or outgoing
@@ -1898,12 +1039,7 @@ Session states, from AMQP 1.0 spec:
                             |                        |
                             |                        |
                             +------------------------+
-  </pre>
-
-There is no obligation to retain a Session Endpoint when it is in the UNMAPPED state, i.e.
-the UNMAPPED state is equivalent to a NONEXISTENT state.
-
-Note: This implementation *assumes* it is the client, and thus will always be the one BEGIN-ing a Session.
+  </pre>There is no obligation to retain a Session Endpoint when it is in the UNMAPPED state, i.e.the UNMAPPED state is equivalent to a NONEXISTENT state.Note: This implementation *assumes* it is the client, and thus will always be the one BEGIN-ing a Session.
 
 **Params**
 
@@ -1935,7 +1071,8 @@ Type definitions, encoders, and decoders - used extensively by [Codec](#Codec).
 
 <a name="Types#_listBuilder"></a>
 ##types._listBuilder(val, bufb, codec, [width])
-Encoder for list types, specified in AMQP 1.0 as:
+Encoder for list types, specified in AMQP 1.0 as:
+
  <pre>
                        +----------= count items =----------+
                        |                                   |
@@ -1966,7 +1103,9 @@ Encoder for list types, specified in AMQP 1.0 as:
 **Access**: private  
 <a name="Types#_arrayBuilder"></a>
 ##types._arrayBuilder(val, bufb, codec, [width])
-All array encodings consist of a size followed by a count followed by an element constructorfollowed by <i>count</i> elements of encoded data formatted as required by the elementconstructor:
+All array encodings consist of a size followed by a count followed by an element constructor
+followed by <i>count</i> elements of encoded data formatted as required by the element
+constructor:
  <pre>
                                              +--= count elements =--+
                                              |                      |
@@ -1991,13 +1130,20 @@ All array encodings consist of a size followed by a count followed by an element
 **Access**: private  
 <a name="Types#_mapBuilder"></a>
 ##types._mapBuilder(val, bufb, codec, [width])
-A map is encoded as a compound value where the constituent elements form alternating key value pairs.
+A map is encoded as a compound value where the constituent elements form alternating key value pairs.
+
  <pre>
   item 0   item 1      item n-1    item n
  +-------+-------+----+---------+---------+
  | key 1 | val 1 | .. | key n/2 | val n/2 |
  +-------+-------+----+---------+---------+
- </pre>Map encodings must contain an even number of items (i.e. an equal number of keys andvalues). A map in which there exist two identical key values is invalid. Unless known tobe otherwise, maps must be considered to be ordered - that is the order of the key-valuepairs is semantically important and two maps which are different only in the order inwhich their key-value pairs are encoded are not equal.
+ </pre>
+
+Map encodings must contain an even number of items (i.e. an equal number of keys and
+values). A map in which there exist two identical key values is invalid. Unless known to
+be otherwise, maps must be considered to be ordered - that is the order of the key-value
+pairs is semantically important and two maps which are different only in the order in
+which their key-value pairs are encoded are not equal.
 
 **Params**
 
@@ -2042,8 +1188,7 @@ Encoding for AMQP Arrays - homogeneous typed collections.  Provides the CODE for
 
 <a name="new_DescribedType"></a>
 ##new DescribedType(descriptor, value)
-Described type, as described in the AMQP 1.0 spec as follows:
-
+Described type, as described in the AMQP 1.0 spec as follows:
 <pre>
              constructor                       untyped bytes
                   |                                 |
@@ -2061,9 +1206,7 @@ Described type, as described in the AMQP 1.0 spec as follows:
                  primitive format code
                for the str8-utf8 encoding
 
-</pre>
-
-(Note: this example shows a string-typed descriptor, which should be considered reserved)
+</pre>(Note: this example shows a string-typed descriptor, which should be considered reserved)
 
 **Params**
 
@@ -2226,18 +1369,7 @@ Actual AMQP Message, which as defined by the spec looks like:
  '-------------------------------------------+--------------------------------------------'
                                              |
                                       Annotated Message
- </pre>
-
-The message _may_ contain the sections above, and application data _may_ be repeated, as follows:
-
-* Zero or one [Header](#Header) sections.
-* Zero or one [DeliveryAnnotations](#DeliveryAnnotations) sections.
-* Zero or one [Annotations](#Annotations) sections.
-* Zero or one [Properties](#Properties) sections.
-* Zero or one [ApplicationProperties](#ApplicationProperties) sections.
-* The body consists of either: one or more [Data](#Data) sections, one or more [AMQPSequence](#AMQPSequence) sections,
-     or a single [AMQPValue](#AMQPValue) section.
-* Zero or one [Footer](#Footer) sections.
+ </pre>The message _may_ contain the sections above, and application data _may_ be repeated, as follows:* Zero or one [Header](#Header) sections.* Zero or one [DeliveryAnnotations](#DeliveryAnnotations) sections.* Zero or one [Annotations](#Annotations) sections.* Zero or one [Properties](#Properties) sections.* Zero or one [ApplicationProperties](#ApplicationProperties) sections.* The body consists of either: one or more [Data](#Data) sections, one or more [AMQPSequence](#AMQPSequence) sections,     or a single [AMQPValue](#AMQPValue) section.* Zero or one [Footer](#Footer) sections.
 
 **Params**
 
@@ -2270,7 +1402,8 @@ Convenience method to assert that a given options object contains the required a
 
 <a name="encoder"></a>
 #encoder(val, buf, [codec])
-Encoder methods are used for all examples of that type and are expected to encode to the proper type (e.g. a uint willencode to the fixed-zero-value, the short uint, or the full uint as appropriate).
+Encoder methods are used for all examples of that type and are expected to encode to the proper type (e.g. a uint will
+encode to the fixed-zero-value, the short uint, or the full uint as appropriate).
 
 **Params**
 
@@ -2298,10 +1431,7 @@ Encodes given value into node-amqp-encoder format.
 
 <a name="onUndef"></a>
 #onUndef(arg1, arg2)
-Simple, *light-weight* function for coalescing an argument with a default.
-Differs from _??_ by operating *only* on undefined, and not on null/zero/empty-string/emtpy-array/etc.
-
-Could use _args_ and slice and work for arbitrary length argument list, but that would no longer be simple.
+Simple, *light-weight* function for coalescing an argument with a default.Differs from _??_ by operating *only* on undefined, and not on null/zero/empty-string/emtpy-array/etc.Could use _args_ and slice and work for arbitrary length argument list, but that would no longer be simple.
 
 **Params**
 

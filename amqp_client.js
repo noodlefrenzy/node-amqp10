@@ -513,11 +513,15 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
 AMQPClient.prototype.disconnect = function(cb) {
     debug('Disconnecting');
     if (this._connection) {
+        var self = this;
         this._connection.on(Connection.Disconnected, function() {
-           cb();
+            self._connection = null;
+            cb();
         });
         this._connection.close();
         this._clearConnectionState();
+    } else {
+        cb(); // Already disconnected, just call the callback.
     }
 };
 
