@@ -214,7 +214,8 @@ AMQPClient.prototype.connect = function(url, cb) {
  *                               annotations that might be relevant (e.g. x-opt-partition-key on EventHub).  If node-amqp-encoder'd
  *                               map is given, it will be translated to appropriate internal types.  Simple maps will be converted
  *                               to AMQP Fields type as defined in the spec.
- * @param {function} cb         Callback, called when settled disposition is received from target.  Called with (error, delivery-state).
+ * @param {function} cb         Callback, by default called when settled disposition is received from target, with (error, delivery-state).
+ *                              However, setting the sender callback policy to OnSent can change when this is called to as soon as the packets go out.
  */
 AMQPClient.prototype.send = function(msg, target, annotations, cb) {
 
