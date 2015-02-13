@@ -9,6 +9,7 @@ var EventEmitter    = require('events').EventEmitter,
     Link            = require('./lib/session').Link,
 
     constants       = require('./lib/constants'),
+    exceptions      = require('./lib/exceptions'),
     DescribedType   = require('./lib/types/described_type'),
     Fields          = require('./lib/types/amqp_composites').Fields,
     ForcedType      = require('./lib/types/forced_type'),
@@ -20,7 +21,8 @@ var EventEmitter    = require('events').EventEmitter,
 
     Translator      = require('./lib/adapters/translate_encoder'),
 
-    u               = require('./lib/utilities');
+    u               = require('./lib/utilities'),
+    putils          = require('./lib/policies/policy_utilities');
 
 /**
  * AMQPClient is the top-level class for interacting with node-amqp-1-0.  Instantiate this class, connect, and then send/receive
@@ -64,7 +66,9 @@ function AMQPClient(policy, uri, cb) {
         uri = policy;
         policy = undefined;
     }
-    this.policy = policy || PolicyBase;
+    // Make a protective copy
+    this._originalPolicy = u.deepMerge(policy || PolicyBase);
+    this.policy = u.deepMerge(this._originalPolicy);
     this._connection = null;
     this._session = null;
     this._sendMsgId = 1;
@@ -131,8 +135,7 @@ AMQPClient.policies = {
 AMQPClient.prototype.connect = function(url, cb) {
     if (this._connection) {
         this._connection.close();
-        this._connection = null;
-        this._session = null;
+        this._clearConnectionState();
     }
 
     debug('Connecting to ' + url);
@@ -141,11 +144,11 @@ AMQPClient.prototype.connect = function(url, cb) {
     this._defaultQueue = address.path.substr(1);
     this.policy.connectPolicy.options.hostname = address.host;
     var sasl = address.user ? new Sasl() : null;
-    this._connection = new Connection(this.policy.connectPolicy);
+    this._connection = this._newConnection();
     this._connection.on(Connection.Connected, function (c) {
         debug('Connected');
         self.emit(AMQPClient.ConnectionOpened);
-        self._session = new Session(c);
+        self._session = self._newSession(c);
         self._session.on(Session.Mapped, function (s) {
             debug('Mapped');
             cb(null, self);
@@ -160,7 +163,6 @@ AMQPClient.prototype.connect = function(url, cb) {
             self.emit(AMQPClient.ErrorReceived, e);
         });
         self._session.on(Session.LinkAttached, function (l) {
-            debug('Link ' + l.name + ' attached');
             self.emit(AMQPClient.LinkAttached, l);
         });
         self._session.on(Session.LinkDetached, function (l) {
@@ -215,6 +217,7 @@ AMQPClient.prototype.connect = function(url, cb) {
  * @param {function} cb         Callback, called when settled disposition is received from target.  Called with (error, delivery-state).
  */
 AMQPClient.prototype.send = function(msg, target, annotations, cb) {
+
     var self = this;
     if (cb === undefined) {
         if (annotations === undefined) {
@@ -268,7 +271,15 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
                 cb(err);
             } else {
                 debug('Sending ', msg);
-                self._unsettledSends[_link.sendMessage(message, {deliveryTag: new Buffer(curId.toString())})] = cb;
+                var msgId = _link.sendMessage(message, {deliveryTag: new Buffer(curId.toString())});
+                var cbPolicy = self.policy.senderLinkPolicy.callbackPolicy;
+                if (cbPolicy === putils.SenderCallbackPolicies.OnSettle) {
+                    self._unsettledSends[msgId] = cb;
+                } else if (cbPolicy === putils.SenderCallbackPolicies.OnSent) {
+                    cb(null);
+                } else {
+                    throw exceptions.ArgumentError('Invalid sender callback policy: ' + cbPolicy);
+                }
             }
         }
     };
@@ -281,12 +292,13 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
 
     var attach = function() {
         self._attaching[linkName] = true;
-        self.on(AMQPClient.LinkAttached, function (l) {
+        var onAttached = function (l) {
+            self.removeListener(AMQPClient.LinkAttached, onAttached);
             if (l.name === linkName) {
                 debug('Sender link ' + linkName + ' attached');
                 self._attaching[linkName] = false;
                 self._attached[linkName] = l;
-                while (l.canSend() && self._pendingSends[linkName] && self._pendingSends[linkName].length > 0) {
+                while (self._pendingSends[linkName] && self._pendingSends[linkName].length > 0 && l.canSend()) {
                     var curSend = self._pendingSends[linkName].shift();
                     curSend(null, l);
                 }
@@ -300,7 +312,7 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
                 });
                 l.on(Link.CreditChange, function(_l) {
                     debug('Credit received');
-                    while (_l.canSend() && self._pendingSends[linkName] && self._pendingSends[linkName].length > 0) {
+                    while (self._pendingSends[linkName] && self._pendingSends[linkName].length > 0 && _l.canSend()) {
                         var curSend = self._pendingSends[linkName].shift();
                         curSend(null, _l);
                     }
@@ -310,7 +322,8 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
                     self._attached[linkName] = undefined;
                 });
             }
-        });
+        };
+        self.on(AMQPClient.LinkAttached, onAttached);
         if (self._session) {
             var linkPolicy = u.deepMerge({
                 options: {
@@ -321,7 +334,8 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
             }, self.policy.senderLinkPolicy);
             self._session.attachLink(linkPolicy);
         } else {
-            self.on(AMQPClient.SessionMapped, function() {
+            var onMapped = function() {
+                self.removeListener(AMQPClient.SessionMapped, onMapped);
                 var linkPolicy = u.deepMerge({
                     options: {
                         name: linkName,
@@ -330,7 +344,8 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
                     }
                 }, self.policy.senderLinkPolicy);
                 self._session.attachLink(linkPolicy);
-            });
+            };
+            self.on(AMQPClient.SessionMapped, onMapped);
         }
     };
 
@@ -400,7 +415,6 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
             filter = undefined;
         }
     }
-
     if (filter && filter instanceof Array && filter[0] === 'map') {
         // Convert encoded values
         filter = AMQPClient.adapters.Translator(filter);
@@ -421,7 +435,8 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
     if (this._attaching[linkName] === undefined) this._attaching[linkName] = false;
 
     var attach = function() {
-        self.on(AMQPClient.LinkAttached, function (l) {
+        var onAttached = function (l) {
+            self.removeListener(AMQPClient.LinkAttached, onAttached);
             if (l.name === linkName) {
                 debug('Receiver link ' + linkName + ' attached');
                 self._attaching[linkName] = false;
@@ -451,7 +466,8 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
                     attach();
                 });
             }
-        });
+        };
+        self.on(AMQPClient.LinkAttached, onAttached);
         if (self._session) {
             var linkPolicy = u.deepMerge({
                 options: {
@@ -462,7 +478,8 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
             }, self.policy.receiverLinkPolicy);
             self._session.attachLink(linkPolicy);
         } else {
-            self.on(AMQPClient.SessionMapped, function() {
+            var onMapped = function() {
+                self.removeListener(AMQPClient.SessionMapped, onMapped);
                 var linkPolicy = u.deepMerge({
                     options: {
                         name: linkName,
@@ -471,7 +488,8 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
                     }
                 }, self.policy.receiverLinkPolicy);
                 self._session.attachLink(linkPolicy);
-            });
+            };
+            self.on(AMQPClient.SessionMapped, onMapped);
         }
     };
 
@@ -531,6 +549,17 @@ AMQPClient.prototype._clearConnectionState = function() {
     this._unsettledSends = {};
     this._connection = null;
     this._session = null;
+    // Copy from original to avoid any settings changes "sticking" across connections.
+    this.policy = u.deepMerge(this._originalPolicy);
+};
+
+// Helper methods for mocking in tests.
+AMQPClient.prototype._newConnection = function() {
+    return new Connection(this.policy.connectPolicy);
+};
+
+AMQPClient.prototype._newSession = function(conn) {
+    return new Session(conn);
 };
 
 module.exports = AMQPClient;

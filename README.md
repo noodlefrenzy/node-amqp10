@@ -33,6 +33,8 @@ connect, and then send/receive as necessary.  So a simple example for a local Ac
 Note that the above JSON.stringify/JSON.parse on send/receive can be moved into the encoder/decoder methods on the policy object -
 see the Event Hub policy for an example.
 
+*NOTE*: This is early days - if you have ideas for an alternate API, please feel free to [open an issue](https://github.com/noodlefrenzy/node-amqp-1-0/issues/new) on GitHub.
+
 ## Caveats and Todos ##
 
 I'm trying to manage my remaining work items via Github issues, but they aren't always kept up to date.  If you'd like to contribute,
@@ -40,7 +42,9 @@ feel free to send me an email or pull request.  Below is a high-level list of kn
 
 1. Disposition frames are not dealt with properly, and thus message lifecycles aren't tracked correctly.  Currently we work fine for auto-settled
    workflows, but not for handshake transfers.
-2. We work well for sunny-day scenarios, but don't deal well with re-establishing sessions/links when they're severed.
+2. We work well for sunny-day scenarios and some severed link/connection issues, but not all.
+   I'm building out an AMQPClient-level test suite to allow me to see exactly where we fail here, but that work is ongoing
+    and will likely result in some code restructuring.
 3. There are some AMQP types we don't process - notably GUID, and the Decimal23/64/128 types.  These are unused by the protocol, and no-one seems to
    be using them to convey information in messages, so ignoring them is likely safe.
 
