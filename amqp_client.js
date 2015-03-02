@@ -124,7 +124,8 @@ AMQPClient.policies = {
     'EventHubPolicy': EHPolicy,
     'ServiceBusQueuePolicy': SBQueuePolicy,
     'ServiceBusTopicPolicy': SBTopicPolicy,
-    merge: function(newPolicy, base) { return u.deepMerge(newPolicy, base || PolicyBase); }
+    merge: function(newPolicy, base) { return u.deepMerge(newPolicy, base || PolicyBase); },
+    utils: putils
 };
 
 /**
