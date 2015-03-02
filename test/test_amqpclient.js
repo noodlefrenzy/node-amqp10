@@ -83,6 +83,7 @@ MockLink.prototype._clearState = function() {
 function MakeMockClient(c, s) {
     var client = new AMQPClient();
     client._newConnection = function() {
+        client._clearState();
         c._created++;
         return c;
     };
@@ -196,6 +197,69 @@ describe('AMQPClient', function() {
                 called.begin.should.eql(1);
                 called.attachLink.should.eql(1);
                 called.canSend.should.eql(1);
+                called.sendMessage.should.eql(1);
+                l.messages.length.should.eql(1);
+                l.messages[0].message.should.eql({ my: 'message' });
+                done();
+            });
+        });
+        it('should wait for capacity before sending', function(done) {
+            var c = new MockConnection();
+            var s = new MockSession(c);
+            var l = new MockLink(s, {
+                name: 'queue_TX',
+                isSender: true,
+                capacity: 0
+            });
+            s._addMockLink(l);
+            var client = MakeMockClient(c, s);
+            var addr = 'amqp://localhost/';
+            var queue = 'queue';
+            var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
+            c.on('open-called', function(_c, _addr, _sasl) {
+                _addr.should.eql(u.parseAddress(addr));
+                (_sasl === null).should.be.true;
+                called.open++;
+                _c.emit(Connection.Connected, _c);
+            });
+            s.on('begin-called', function(_s, _policy) {
+                called.begin++;
+                _s.emit(Session.Mapped, _s);
+            });
+            s.on('attachLink-called', function(_s, _policy, _l) {
+                called.attachLink++;
+                client._pendingSends[_l.name].length.should.eql(1);
+                _policy.options.target.should.eql({ address: queue });
+                _policy.options.role.should.eql(constants.linkRole.sender);
+                setTimeout(function() {
+                    _l.capacity = 100;
+                    _l.emit(Link.CreditChange, _l);
+                }, 100);
+                _s.emit(Session.LinkAttached, _l);
+            });
+            l.on('canSend-called', function() {
+                called.canSend++;
+            });
+            l.on('sendMessage-called', function(_l, id, msg, opts) {
+                called.sendMessage++;
+                setTimeout(function() {
+                    s.emit(Session.DispositionReceived, {
+                        settled: true,
+                        state: { },
+                        first: id,
+                        last: null
+                    });
+                }, 50);
+            });
+            client.send({ my: 'message' }, addr + queue, function(err) {
+                (err === null).should.be.true;
+                c._created.should.eql(1);
+                s._created.should.eql(1);
+                l._created.should.eql(1);
+                called.open.should.eql(1);
+                called.begin.should.eql(1);
+                called.attachLink.should.eql(1);
+                called.canSend.should.eql(2);
                 called.sendMessage.should.eql(1);
                 l.messages.length.should.eql(1);
                 l.messages[0].message.should.eql({ my: 'message' });
@@ -357,7 +421,6 @@ describe('AMQPClient', function() {
                 if (called.attachLink === 1) {
                     setTimeout(function() {
                         c.emit(Connection.Disconnected);
-                        client._clearState();
                     }, 100);
                 }
                 _s.emit(Session.LinkAttached, _l);
@@ -389,6 +452,74 @@ describe('AMQPClient', function() {
                 called.attachLink.should.eql(2);
                 called.canSend.should.eql(2);
                 called.sendMessage.should.eql(2);
+                l.messages.length.should.eql(1);
+                done();
+            }, 400);
+        });
+        it('should re-establish connection on disconnect, if send is pending', function(done) {
+            var c = new MockConnection();
+            var s = new MockSession(c);
+            var l = new MockLink(s, {
+                name: 'queue_TX',
+                isSender: true,
+                capacity: 0
+            });
+            s._addMockLink(l);
+            var client = MakeMockClient(c, s);
+            var addr = 'amqp://localhost/';
+            var queue = 'queue';
+            var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
+            c.on('open-called', function(_c, _addr, _sasl) {
+                _addr.should.eql(u.parseAddress(addr));
+                (_sasl === null).should.be.true;
+                called.open++;
+                _c.emit(Connection.Connected, _c);
+            });
+            s.on('begin-called', function(_s, _policy) {
+                called.begin++;
+                _s.emit(Session.Mapped, _s);
+            });
+            s.on('attachLink-called', function(_s, _policy, _l) {
+                called.attachLink++;
+                client._pendingSends[_l.name].length.should.eql(1);
+                _policy.options.target.should.eql({ address: queue });
+                _policy.options.role.should.eql(constants.linkRole.sender);
+                if (called.attachLink === 1) {
+                    setTimeout(function() {
+                        c.emit(Connection.Disconnected);
+                    }, 50);
+                } else {
+                    setTimeout(function() {
+                        _l.capacity = 100;
+                        _l.emit(Link.CreditChange, _l);
+                    }, 100);
+                }
+                _s.emit(Session.LinkAttached, _l);
+            });
+            l.on('canSend-called', function() {
+                called.canSend++;
+            });
+            l.on('sendMessage-called', function(_l, id, msg, opts) {
+                called.sendMessage++;
+                setTimeout(function() {
+                    s.emit(Session.DispositionReceived, {
+                        settled: true,
+                        state: { },
+                        first: id,
+                        last: null
+                    });
+                }, 50);
+            });
+            client.send({my: 'message'}, addr + queue, function () {});
+            setTimeout(function() {
+                c._created.should.eql(2);
+                s._created.should.eql(2);
+                l._created.should.eql(2);
+                called.open.should.eql(2);
+                called.begin.should.eql(2);
+                called.attachLink.should.eql(2);
+                called.canSend.should.eql(3);
+                called.sendMessage.should.eql(1);
                 l.messages.length.should.eql(1);
                 done();
             }, 400);
@@ -525,6 +656,51 @@ describe('AMQPClient', function() {
                 l._created.should.eql(2);
                 called.open.should.eql(1);
                 called.begin.should.eql(1);
+                called.attachLink.should.eql(2);
+                done();
+            }, 400);
+        });
+        it('should re-establish connection on disconnect, automatically', function(done) {
+            var c = new MockConnection();
+            var s = new MockSession(c);
+            var l = new MockLink(s, {
+                name: 'queue_RX',
+                isSender: false,
+                capacity: 100
+            });
+            s._addMockLink(l);
+            var client = MakeMockClient(c, s);
+            var addr = 'amqp://localhost/';
+            var queue = 'queue';
+            var called = { open: 0, begin: 0, attachLink: 0 };
+            c.on('open-called', function(_c, _addr, _sasl) {
+                _addr.should.eql(u.parseAddress(addr));
+                (_sasl === null).should.be.true;
+                called.open++;
+                _c.emit(Connection.Connected, _c);
+            });
+            s.on('begin-called', function(_s, _policy) {
+                called.begin++;
+                _s.emit(Session.Mapped, _s);
+            });
+            s.on('attachLink-called', function(_s, _policy, _l) {
+                called.attachLink++;
+                _policy.options.source.should.eql({ address: queue, filter: undefined });
+                _policy.options.role.should.eql(constants.linkRole.receiver);
+                if (called.attachLink === 1) {
+                    setTimeout(function() {
+                        c.emit(Connection.Disconnected);
+                    }, 100);
+                }
+                _s.emit(Session.LinkAttached, _l);
+            });
+            client.receive(addr + queue, function () {});
+            setTimeout(function() {
+                c._created.should.eql(2);
+                s._created.should.eql(2);
+                l._created.should.eql(2);
+                called.open.should.eql(2);
+                called.begin.should.eql(2);
                 called.attachLink.should.eql(2);
                 done();
             }, 400);

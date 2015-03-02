@@ -70,9 +70,11 @@ function AMQPClient(policy, uri, cb) {
     this._originalPolicy = u.deepMerge(policy || PolicyBase);
     this.policy = u.deepMerge(this._originalPolicy);
     this._connection = null;
+    this._reconnect = null;
     this._session = null;
     this._sendMsgId = 1;
     this._attaching = {};
+    this._reattach = {};
     this._attached = {};
     this._onReceipt = {};
     this._pendingSends = {};
@@ -139,6 +141,7 @@ AMQPClient.prototype.connect = function(url, cb) {
     }
 
     debug('Connecting to ' + url);
+    this._reconnect = this.connect.bind(this, url, function(){});
     var self = this;
     var address = u.parseAddress(url);
     this._defaultQueue = address.path.substr(1);
@@ -195,7 +198,11 @@ AMQPClient.prototype.connect = function(url, cb) {
     this._connection.on(Connection.Disconnected, function() {
         debug('Disconnected');
         self.emit(AMQPClient.ConnectionClosed);
-        self._clearConnectionState();
+        if (self._shouldReconnect()) {
+            self._attemptReconnection();
+        } else {
+            self._clearConnectionState(false);
+        }
     });
     this._connection.on(Connection.ErrorReceived, function (e) {
         debug('Connection error: ', e);
@@ -294,9 +301,9 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
     var attach = function() {
         self._attaching[linkName] = true;
         var onAttached = function (l) {
-            self.removeListener(AMQPClient.LinkAttached, onAttached);
             if (l.name === linkName) {
                 debug('Sender link ' + linkName + ' attached');
+                self.removeListener(AMQPClient.LinkAttached, onAttached);
                 self._attaching[linkName] = false;
                 self._attached[linkName] = l;
                 while (self._pendingSends[linkName] && self._pendingSends[linkName].length > 0 && l.canSend()) {
@@ -318,9 +325,12 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
                         curSend(null, _l);
                     }
                 });
-                l.on(Link.Detached, function() {
-                    debug('Link detached');
+                l.on(Link.Detached, function(details) {
+                    debug('Link detached: ' + (details ? details.error : 'No details'));
                     self._attached[linkName] = undefined;
+                    if (self._pendingSends[linkName].length > 0) {
+                        attach();
+                    }
                 });
             }
         };
@@ -349,6 +359,8 @@ AMQPClient.prototype.send = function(msg, target, annotations, cb) {
             self.on(AMQPClient.SessionMapped, onMapped);
         }
     };
+
+    this._reattach[linkName] = attach;
 
     // If we're given a full address, ensure we're connected first.
     if (rootUri) {
@@ -435,11 +447,14 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
     if (this._attached[linkName] === undefined) this._attached[linkName] = null;
     if (this._attaching[linkName] === undefined) this._attaching[linkName] = false;
 
+    this._onReceipt[linkName].push(cb);
+    if (this._attaching[linkName] || this._attached[linkName]) return;
+
     var attach = function() {
         var onAttached = function (l) {
-            self.removeListener(AMQPClient.LinkAttached, onAttached);
             if (l.name === linkName) {
                 debug('Receiver link ' + linkName + ' attached');
+                self.removeListener(AMQPClient.LinkAttached, onAttached);
                 self._attaching[linkName] = false;
                 self._attached[linkName] = l;
                 l.on(Link.ErrorReceived, function (err) {
@@ -461,8 +476,8 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
                         }
                     }
                 });
-                l.on(Link.Detached, function() {
-                    debug('Link detached');
+                l.on(Link.Detached, function(details) {
+                    debug('Link detached: ' + (details ? details.error : 'No details'));
                     self._attached[linkName] = undefined;
                     attach();
                 });
@@ -494,8 +509,7 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
         }
     };
 
-    this._onReceipt[linkName].push(cb);
-    if (this._attaching[linkName] || this._attached[linkName]) return;
+    this._reattach[linkName] = attach;
 
     // If we're given a full address, ensure we're connected first.
     if (rootUri) {
@@ -509,17 +523,14 @@ AMQPClient.prototype.receive = function(source, filter, cb) {
                         attach();
                     }
                 });
-                return;
             } else {
                 // We must've dropped our link, but connection is still active.  Try and re-establish.
                 attach();
-                return;
             }
         }
     } else {
         if (!this._attached[linkName]) {
             attach();
-            return;
         }
     }
 };
@@ -533,6 +544,7 @@ AMQPClient.prototype.disconnect = function(cb) {
     debug('Disconnecting');
     if (this._connection) {
         var self = this;
+        this._preventReconnect();
         this._connection.on(Connection.Disconnected, function() {
             self._connection = null;
             cb();
@@ -544,7 +556,7 @@ AMQPClient.prototype.disconnect = function(cb) {
     }
 };
 
-AMQPClient.prototype._clearConnectionState = function() {
+AMQPClient.prototype._clearConnectionState = function(saveReconnectDetails) {
     this._attached = {};
     this._attaching = {};
     this._unsettledSends = {};
@@ -552,6 +564,13 @@ AMQPClient.prototype._clearConnectionState = function() {
     this._session = null;
     // Copy from original to avoid any settings changes "sticking" across connections.
     this.policy = u.deepMerge(this._originalPolicy);
+
+    if (!saveReconnectDetails) {
+        this._pendingSends = {};
+        this._onReceipt = {};
+        this._reattach = {};
+        this._reconnect = null;
+    }
 };
 
 // Helper methods for mocking in tests.
@@ -561,6 +580,37 @@ AMQPClient.prototype._newConnection = function() {
 
 AMQPClient.prototype._newSession = function(conn) {
     return new Session(conn);
+};
+
+AMQPClient.prototype._preventReconnect = function() {
+    this._reconnect = null;
+    this._reattach = {};
+    this._pendingSends = {};
+    this._onReceipt = {};
+};
+
+AMQPClient.prototype._shouldReconnect = function() {
+    if (!this._connection || !this._reconnect) return false;
+    if (Object.keys(this._onReceipt).length > 0) return true;
+
+    var pendingSends = 0;
+    for (var k in this._pendingSends) pendingSends += this._pendingSends[k].length;
+    return pendingSends > 0;
+};
+
+AMQPClient.prototype._attemptReconnection = function() {
+    this._clearConnectionState(true);
+    var self = this;
+    var onReconnect = function() {
+        debug('Reconnected and remapped, attempting to re-attach links.');
+        self.removeListener(AMQPClient.SessionMapped, onReconnect);
+        for (var ln in self._reattach) {
+            debug('Reattaching ' + ln);
+            self._reattach[ln]();
+        }
+    };
+    self.on(AMQPClient.SessionMapped, onReconnect);
+    self._reconnect();
 };
 
 module.exports = AMQPClient;
