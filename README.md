@@ -1,10 +1,9 @@
 node-amqp-1-0
 =============
 
-[![Build Status](https://secure.travis-ci.org/noodlefrenzy/node-amqp-1-0.png?branch=master)](https://travis-ci.org/noodlefrenzy/node-amqp-1-0)
-[![Dependency Status](https://david-dm.org/noodlefrenzy/node-amqp-1-0.png)](https://david-dm.org/noodlefrenzy/node-amqp-1-0)
+[![Build Status](https://secure.travis-ci.org/noodlefrenzy/node-amqp-1-0.png?branch=master)](https://travis-ci.org/noodlefrenzy/node-amqp-1-0)[![Dependency Status](https://david-dm.org/noodlefrenzy/node-amqp-1-0.png)](https://david-dm.org/noodlefrenzy/node-amqp-1-0)[![Test Coverage](https://codeclimate.com/github/mbroadst/qamqp/badges/coverage.svg)](https://codeclimate.com/github/mbroadst/qamqp)
 
-AMQP 1.0-compliant Node.js client.  Since AMQP 1.0 is such a large departure from 0.9.1, 
+AMQP 1.0-compliant Node.js client.  Since AMQP 1.0 is such a large departure from 0.9.1,
 I've started a new project rather than fork from [node-amqp](https://github.com/postwait/node-amqp) or [amqp.node](https://github.com/squaremo/amqp.node).
 Both node-amqp and amqp.node are great 0.9.1 clients and I recommend them, but neither is pursuing a 1.0 implementation.  If I can find an
 easy way to integrate this code back into them, I'll definitely be submitting a PR.

@@ -7,8 +7,7 @@ jshint:
 fixjsstyle:
 	fixjsstyle -r lib --strict --jslint_error=all
 
-cover:
-	rm -rf coverage \
+coverage:
 	./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha --report lcovonly -- -t 10000 --ui tdd $(TESTS); \
 
 test:
@@ -18,4 +17,4 @@ test:
 		./node_modules/mocha/bin/mocha --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) $(TESTS); \
 	fi
 
-.PHONY: test jshint cover fixjsstyle
+.PHONY: test jshint fixjsstyle coverage
