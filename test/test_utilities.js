@@ -5,7 +5,7 @@ var debug       = require('debug')('amqp10-test_utilities'),
     u           = require('../lib/utilities'),
     DescribedType   = require('../lib/types/described_type'),
     Fields      = require('../lib/types/amqp_composites').Fields,
-    Symbol      = require('../lib/types/symbol'),
+    AMQPSymbol  = require('../lib/types/amqp_symbol'),
     ST          = require('../lib/types/source_target'),
     Source      = ST.Source,
     Target      = ST.Target,
@@ -49,25 +49,25 @@ describe('Utilities', function() {
 
     describe('#coerce()', function() {
         it('should coerce strings into symbols', function() {
-            var result = u.coerce('en-US', Symbol);
-            result.should.be.instanceof(Symbol);
+            var result = u.coerce('en-US', AMQPSymbol);
+            result.should.be.instanceof(AMQPSymbol);
         });
 
         it('should ignore if of same type', function() {
-            var result = u.coerce(new Symbol('en-US'), Symbol);
-            result.should.be.instanceof(Symbol);
+            var result = u.coerce(new AMQPSymbol('en-US'), AMQPSymbol);
+            result.should.be.instanceof(AMQPSymbol);
             result.contents.should.be.type('string');
         });
 
         it('should coerce array of values', function() {
-            var result = u.coerce(['a', 'b', 'c'], Symbol);
+            var result = u.coerce(['a', 'b', 'c'], AMQPSymbol);
             result.should.be.instanceof(Array);
             result.length.should.eql(3);
-            result[0].should.be.instanceof(Symbol);
+            result[0].should.be.instanceof(AMQPSymbol);
         });
 
         it('should pass through nulls', function() {
-            var result = u.coerce(null, Symbol);
+            var result = u.coerce(null, AMQPSymbol);
             (result === null).should.be.true;
         });
     });
@@ -89,19 +89,19 @@ describe('Utilities', function() {
 
         // @todo Fix deepMerge to preserve object __proto__ identity.
         it('should work for nested with custom types', function() {
-            var nested = { foo: { bar: new Symbol('s1') } };
-            var defaults = { foo: { baz: new Symbol('s2') }, bat: new Symbol('s3') };
+            var nested = { foo: { bar: new AMQPSymbol('s1') } };
+            var defaults = { foo: { baz: new AMQPSymbol('s2') }, bat: new AMQPSymbol('s3') };
             var merged = u.deepMerge(nested, defaults);
-            merged.bat.should.be.instanceof(Symbol);
-            merged.foo.bar.should.be.instanceof(Symbol);
-            merged.foo.baz.should.be.instanceof(Symbol);
+            merged.bat.should.be.instanceof(AMQPSymbol);
+            merged.foo.bar.should.be.instanceof(AMQPSymbol);
+            merged.foo.baz.should.be.instanceof(AMQPSymbol);
         });
 
         it('should work for described types', function() {
-            var dt = new DescribedType(new Symbol('keyname'), 'value string');
+            var dt = new DescribedType(new AMQPSymbol('keyname'), 'value string');
             var merged = u.deepMerge({ options: dt });
             merged.options.should.be.instanceof(DescribedType);
-            merged.options.descriptor.should.be.instanceof(Symbol);
+            merged.options.descriptor.should.be.instanceof(AMQPSymbol);
             merged.options.descriptor.contents.should.eql('keyname');
             merged.options.value.should.eql('value string');
         });
@@ -114,7 +114,7 @@ describe('Utilities', function() {
                     address: 'recv',
                     filter: new Fields({
                         'apache.org:selector-filter:string' :
-                            new DescribedType(new Symbol('apache.org:selector-filter:string'),
+                            new DescribedType(new AMQPSymbol('apache.org:selector-filter:string'),
                                 "amqp.annotation.x-opt-offset > '" + 1000 + "'")
                     })
                 }),
