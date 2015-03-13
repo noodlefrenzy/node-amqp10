@@ -7,7 +7,7 @@ var assert      = require('assert'),
     types       = require('../lib/types'),
     codec       = require('../lib/codec'),
 
-    Symbol      = require('../lib/types/symbol'),
+    AMQPSymbol  = require('../lib/types/amqp_symbol'),
 
     tu          = require('./testing_utils');
 
@@ -141,10 +141,10 @@ describe('Types', function() {
             var toTest = [
                 [ 0xa1, buf([3, builder.prototype.appendString, 'foo' ]), 'foo' ],
                 [ 0xb1, buf([builder.prototype.appendUInt32BE, 3, builder.prototype.appendString, 'foo' ]), 'foo' ],
-                [ 0xa3, buf([3, builder.prototype.appendString, 'foo' ]), new Symbol('foo') ],
-                [ 0xb3, buf([builder.prototype.appendUInt32BE, 3, builder.prototype.appendString, 'foo' ]), new Symbol('foo') ],
+                [ 0xa3, buf([3, builder.prototype.appendString, 'foo' ]), new AMQPSymbol('foo') ],
+                [ 0xb3, buf([builder.prototype.appendUInt32BE, 3, builder.prototype.appendString, 'foo' ]), new AMQPSymbol('foo') ],
                 [ 0xa1, buf([0]), ''], // Empty string
-                [ 0xa3, buf([0]), new Symbol('')], // Empty symbol
+                [ 0xa3, buf([0]), new AMQPSymbol('')], // Empty symbol
             ];
 
             assertDecoders(toTest);
