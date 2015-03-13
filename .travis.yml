@@ -12,8 +12,5 @@ branches:
   except:
     - gh-pages
 
-before_script:
-  - npm install -g grunt-cli
-
 script:
-  - grunt jshint test
+  - make test
