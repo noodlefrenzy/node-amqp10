@@ -8,7 +8,7 @@ var debug       = require('debug')('amqp10-test_sasl'),
 
     MockServer  = require('./mock_amqp'),
     AMQPError   = require('../lib/types/amqp_error'),
-    Symbol      = require('../lib/types/symbol'),
+    AMQPSymbol  = require('../lib/types/amqp_symbol'),
     Source      = require('../lib/types/source_target').Source,
     Target      = require('../lib/types/source_target').Target,
     M           = require('../lib/types/message'),
@@ -29,7 +29,7 @@ PolicyBase.connectPolicy.options.containerId = 'test';
 
 function initBuf() {
     var init = new SaslFrames.SaslInit({
-        mechanism: new Symbol('PLAIN'),
+        mechanism: new AMQPSymbol('PLAIN'),
         initialResponse: tu.newBuf([0, builder.prototype.appendString, 'user', 0, builder.prototype.appendString, 'pass'])
     });
     return init.outgoing();

@@ -9,7 +9,7 @@ var Int64       = require('node-int64'),
     AMQPError   = require('../lib/types/amqp_error'),
     DescribedType = require('../lib/types/described_type'),
     ForcedType  = require('../lib/types/forced_type'),
-    Symbol      = require('../lib/types/symbol'),
+    AMQPSymbol  = require('../lib/types/amqp_symbol'),
 
     tu          = require('./testing_utils');
 
@@ -115,7 +115,7 @@ describe('Codec', function() {
         it('should decode forced-type values', function() {
             var buffer = newBuf([0x03, builder.prototype.appendString, 'URL']);
             var actual = codec.decode(buffer, 0, 0xA3);
-            actual[0].should.be.instanceof(Symbol);
+            actual[0].should.be.instanceof(AMQPSymbol);
             actual[0].contents.should.eql('URL');
             actual[1].should.eql(4); // Count + contents
         });
@@ -133,7 +133,7 @@ describe('Codec', function() {
                 0x40]);
             console.log('Composite type: ' + buffer.toString('hex'));
             var actual = codec.decode(newCBuf(buffer));
-            actual[0].should.eql(new DescribedType(new Symbol('example:book:list'),
+            actual[0].should.eql(new DescribedType(new AMQPSymbol('example:book:list'),
                 [
                     'AMQP for & by Dummies',
                     [ 'Rob J. Godfrey', 'Rafael H. Schloming'],
@@ -175,7 +175,7 @@ describe('Codec', function() {
         });
         it('should encode symbols', function() {
             var bufb = new builder();
-            codec.encode(new Symbol('FOO'), bufb);
+            codec.encode(new AMQPSymbol('FOO'), bufb);
             tu.shouldBufEql([0xA3, 0x03, 0x46, 0x4F, 0x4F], bufb);
         });
         it('should encode buffers', function() {
@@ -294,7 +294,7 @@ describe('Codec', function() {
                 builder.prototype.appendString, 'Rafael H. Schloming',
                 0x40]);
             var bufb = new builder();
-            codec.encode(new DescribedType(new Symbol('example:book:list'),
+            codec.encode(new DescribedType(new AMQPSymbol('example:book:list'),
                 [
                     'AMQP for & by Dummies',
                     new AMQPArray([ 'Rob J. Godfrey', 'Rafael H. Schloming'], 0xA1),
@@ -309,8 +309,8 @@ describe('Codec', function() {
                 maxFrameSize: new ForcedType('uint', 512), /* uint */
                 channelMax: new ForcedType('ushort', 10), /* ushort */
                 idleTimeout: new ForcedType('uint', 1000), /* milliseconds */
-                outgoingLocales: new Symbol('en-US'), /* ietf-language-tag (symbol) */
-                incomingLocales: new Symbol('en-US'), /* ietf-language-tag (symbol) */
+                outgoingLocales: new AMQPSymbol('en-US'), /* ietf-language-tag (symbol) */
+                incomingLocales: new AMQPSymbol('en-US'), /* ietf-language-tag (symbol) */
                 offeredCapabilities: null, /* symbol */
                 desiredCapabilities: null, /* symbol */
                 properties: {}, /* fields (map) */
