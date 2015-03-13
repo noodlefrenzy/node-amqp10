@@ -18,16 +18,13 @@
   },
   "devDependencies": {
     "bluebird": "^2.8.2",
-    "grunt": "^0.4.5",
-    "grunt-contrib-clean": "^0.6.0",
-    "grunt-contrib-jshint": "^0.10.0",
-    "grunt-env": "^0.4.2",
-    "grunt-istanbul": "^0.3.0",
-    "grunt-jsdoc-to-markdown": "^0.4.2",
-    "grunt-simple-mocha": "^0.4.0",
     "mocha": "^1.21.4",
     "should": "^4.0.4",
-    "xml2js": "^0.4.4"
+    "xml2js": "^0.4.4",
+    "mocha": "^2.1.0",
+    "chai": "^2.0.0",
+    "jshint": "^2.6.0",
+    "istanbul": "^0.3.6"
   },
   "scripts": {},
   "author": {
