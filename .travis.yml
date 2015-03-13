@@ -6,10 +6,6 @@ node_js:
 
 sudo: false
 
-addons:
-  code_climate:
-    repo_token: b33b8273d40cd973eaa72e274445544847dc4ed74447118765176eae6dd722cb
-
 cache:
   directories:
     - node_modules
@@ -18,8 +14,11 @@ branches:
   except:
     - gh-pages
 
+before_script:
+  - npm install -g codeclimate-test-reporter
+
 script:
   - make coverage
 
 after_script:
-  - cat coverage/lcov.info | codeclimate
+  - make codeclimate-send
