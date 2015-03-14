@@ -1,6 +1,6 @@
 'use strict';
 
-var cbuf = require('cbarrick-circular-buffer'),
+var BufferList = require('bl'),
     debug = require('debug')('amqp10-MockServer'),
     net = require('net'),
     StateMachine = require('stately.js'),
@@ -13,7 +13,7 @@ var MockServer = function(port) {
   this.server = null;
   this.conn = null;
   this.port = port || 4321;
-  this.data = new cbuf({ size: 1024, encoding: 'buffer' });
+  this.buffer = new BufferList();
   this.requestsExpected = [];
   this.requestIdx = 0;
   this.responsesToSend = [];
@@ -46,7 +46,7 @@ MockServer.prototype.setup = function(client) {
       self._sendNext();
     }
     c.on('end', function() { debug('Connection terminated'); });
-    c.on('data', function(d) { self.data.write(d); self._testData(); });
+    c.on('data', function(d) { self.buffer.append(d); self._testData(); });
   };
   self.server = net.createServer(connectionHandler);
   self.server.on('error', function(err) {
@@ -108,9 +108,11 @@ MockServer.prototype._sendUntil = function(toSend) {
 MockServer.prototype._testData = function() {
   this.requestsExpected.length.should.be.greaterThan(0, 'More data received than expected');
   var expected = this.requestsExpected[0];
-  if (this.data.length >= expected.length) {
+  if (this.buffer.length >= expected.length) {
     expected = this.requestsExpected[this.requestIdx++];
-    var actual = this.data.read(expected.length);
+    var actual = this.buffer.slice(0, expected.length);
+    this.buffer.consume(expected.length);
+
     debug('Receiving ' + actual.toString('hex'));
     actual.toString('hex').should.eql(expected.toString('hex'), 'Req ' + (this.requestIdx - 1));
     this._sendNext();

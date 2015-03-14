@@ -9,7 +9,7 @@
   "dependencies": {
     "buffer-builder": "^0.2.0",
     "butils": "^0.1.0",
-    "cbarrick-circular-buffer": "^1.2.2",
+    "bl": "^0.9.4",
     "debug": "^2.0.0",
     "node-amqp-encoder": "^0.0.2",
     "node-int64": "^0.3.2",

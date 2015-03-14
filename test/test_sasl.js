@@ -32,7 +32,7 @@ PolicyBase.connectPolicy.options.containerId = 'test';
 function initBuf() {
   var init = new SaslFrames.SaslInit({
     mechanism: new AMQPSymbol('PLAIN'),
-    initialResponse: tu.newBuf([0, builder.prototype.appendString, 'user', 0, builder.prototype.appendString, 'pass'])
+    initialResponse: tu.buildBuffer([0, builder.prototype.appendString, 'user', 0, builder.prototype.appendString, 'pass'])
   });
   return init.outgoing();
 }
