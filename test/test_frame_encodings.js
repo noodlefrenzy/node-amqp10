@@ -32,7 +32,7 @@ describe('OpenFrame', function() {
     it('should encode performative correctly', function() {
       var open = new OpenFrame({ containerId: 'test', hostname: 'localhost' });
       var actual = open.outgoing();
-      var expected = tu.newBuf([
+      var expected = tu.buildBuffer([
         0x00, 0x00, 0x00, 0x46,
         0x02, 0x00, 0x00, 0x00,
         0x00,
@@ -59,7 +59,7 @@ describe('BeginFrame', function() {
       var begin = new BeginFrame({ nextOutgoingId: 1, incomingWindow: 100, outgoingWindow: 100 });
       begin.channel = 1;
       var actual = begin.outgoing();
-      var expected = tu.newBuf([
+      var expected = tu.buildBuffer([
         0x00, 0x00, 0x00, 0x26,
         0x02, 0x00, 0x00, 0x01,
         0x00,
@@ -95,7 +95,7 @@ describe('AttachFrame', function() {
       var listSize = 1 + 6 + 2 + 1 + 2 + 2 + 10 + 2 + sourceSize + 10 + 2 + targetSize + 3 + 1 + 2 + 1 + 1 + 1 + 3;
       var listCount = 14;
       var frameSize = 8 + 1 + 9 + 2 + listSize;
-      var expected = tu.newBuf([
+      var expected = tu.buildBuffer([
         0x00, 0x00, 0x00, frameSize,
         0x02, 0x00, 0x00, 0x01,
         0x00,
@@ -161,7 +161,7 @@ describe('FlowFrame', function() {
       var actual = flow.outgoing();
       var listSize = 1 + 2 + 2 + 2 + 2 + 2 + 2 + 2 + 1 + 1 + 1 + 3;
       var frameSize = 8 + 1 + 9 + 2 + listSize;
-      var expected = tu.newBuf([
+      var expected = tu.buildBuffer([
         0x00, 0x00, 0x00, frameSize,
         0x02, 0x00, 0x00, 0x01,
         0x00,
@@ -191,7 +191,7 @@ describe('TransferFrame', function() {
       var transfer = new TransferFrame({
         handle: 1,
         deliveryId: 1,
-        deliveryTag: tu.newBuf([1]),
+        deliveryTag: tu.buildBuffer([1]),
         messageFormat: 20000,
         settled: true,
         receiverSettleMode: constants.receiverSettleMode.autoSettle
@@ -203,7 +203,7 @@ describe('TransferFrame', function() {
       var payloadSize = 12;
       var listSize = 1 + 2 + 2 + 3 + 5 + 1 + 1 + 2 + 1 + 1 + 1 + 1;
       var frameSize = 8 + 1 + 9 + 2 + listSize + payloadSize;
-      var expected = tu.newBuf([
+      var expected = tu.buildBuffer([
         0x00, 0x00, 0x00, frameSize,
         0x02, 0x00, 0x00, 0x01,
         0x00,
@@ -235,7 +235,7 @@ describe('SaslFrames', function() {
         var mechanisms = new Sasl.SaslMechanisms();
         var actual = mechanisms.outgoing();
         var frameSize = 8 + 1 + 9 + 3 + 2 + 'ANONYMOUS'.length;
-        var expected = tu.newBuf([
+        var expected = tu.buildBuffer([
           0x00, 0x00, 0x00, frameSize,
           0x02, 0x01, 0x00, 0x00,
           0x00,
@@ -255,7 +255,7 @@ describe('HeartbeatFrame', function() {
     it('should encode correctly', function() {
       var heartbeat = new HeartbeatFrame();
       var actual = heartbeat.outgoing();
-      var expected = tu.newBuf([0, 0, 0, 8, 2, 0, 0, 0]);
+      var expected = tu.buildBuffer([0, 0, 0, 8, 2, 0, 0, 0]);
       tu.shouldBufEql(expected, actual);
     });
   });

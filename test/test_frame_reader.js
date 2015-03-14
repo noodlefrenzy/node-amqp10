@@ -4,7 +4,6 @@ var Int64 = require('node-int64'),
     should = require('should'),
     debug = require('debug')('amqp10-test-FrameReader'),
     builder = require('buffer-builder'),
-    CBuffer = require('cbarrick-circular-buffer'),
 
     constants = require('../lib/constants'),
     codec = require('../lib/codec'),
@@ -29,7 +28,7 @@ describe('FrameReader', function() {
   describe('#read()', function() {
 
     it('should read open frame from ActiveMQ', function() {
-      var cbuf = tu.newCBuf([0x00, 0x00, 0x00, 0x17,
+      var buffer = tu.newBuffer([0x00, 0x00, 0x00, 0x17,
         0x02, 0x00, 0x00, 0x00,
         0x00,
         0x53, 0x10,
@@ -38,7 +37,8 @@ describe('FrameReader', function() {
         0xa1, 0x00,
         0x70, 0x00, 0x10, 0x00, 0x00
       ]);
-      var newOpen = reader.read(cbuf);
+
+      var newOpen = reader.read(buffer);
       (newOpen === undefined).should.be.false;
       newOpen.should.be.instanceof(OpenFrame);
       newOpen.maxFrameSize.should.eql(0x00100000);
@@ -47,7 +47,7 @@ describe('FrameReader', function() {
     it('should read close frame with error', function() {
       var sizeOfError = (4 + 2 + 19 + 2 + 4 + 3);
       var sizeOfCloseFrameList = (4 + 3 + 1 + 4 + sizeOfError);
-      var cbuf = tu.newCBuf([0x00, 0x00, 0x00, (8 + 3 + 1 + 4 + sizeOfCloseFrameList),
+      var buffer = tu.newBuffer([0x00, 0x00, 0x00, (8 + 3 + 1 + 4 + sizeOfCloseFrameList),
                 0x02, 0x00, 0x00, 0x00,
                 0x00, 0x53, 0x18, // Close frame is list of error
                 0xD0, builder.prototype.appendUInt32BE, sizeOfCloseFrameList, builder.prototype.appendUInt32BE, 1,
@@ -57,19 +57,19 @@ describe('FrameReader', function() {
                 0xA1, 4, builder.prototype.appendString, 'test',
                 0xC1, 1, 0
           ]);
-      var newClose = reader.read(cbuf);
+      var newClose = reader.read(buffer);
       (newClose === undefined).should.be.false;
       newClose.should.be.instanceof(CloseFrame);
       newClose.error.should.be.instanceof(AMQPError);
     });
 
     it('should read close frame from ActiveMQ', function() {
-      var cbuf = tu.newCBuf([0x00, 0x00, 0x00, 0x0c,
+      var buffer = tu.newBuffer([0x00, 0x00, 0x00, 0x0c,
         0x02, 0x00, 0x00, 0x00,
         0x00,
         0x53, 0x18, 0x45
       ]);
-      var newClose = reader.read(cbuf);
+      var newClose = reader.read(buffer);
       (newClose === undefined).should.be.false;
       newClose.should.be.instanceof(CloseFrame);
       (newClose.error === undefined).should.be.true;
@@ -77,7 +77,7 @@ describe('FrameReader', function() {
 
     it('should read begin frame', function() {
       var frameSize = (1 + 3 + 2 + 2 + 2 + 2);
-      var cbuf = tu.newCBuf([0x00, 0x00, 0x00, (8 + 3 + 2 + frameSize),
+      var buffer = tu.newBuffer([0x00, 0x00, 0x00, (8 + 3 + 2 + frameSize),
                 0x02, 0x00, 0x00, 0x05,
                 0x00, 0x53, 0x11, // Begin
                 0xC0, frameSize, 5, // List
@@ -87,7 +87,7 @@ describe('FrameReader', function() {
                 0x52, 11,
                 0x52, 100
           ]);
-      var newBegin = reader.read(cbuf);
+      var newBegin = reader.read(buffer);
       (newBegin === undefined).should.be.false;
       newBegin.should.be.instanceof(BeginFrame);
       newBegin.channel.should.eql(5);
@@ -99,7 +99,7 @@ describe('FrameReader', function() {
     });
 
     it('should read attach frame from ActiveMQ', function() {
-      var cbuf = tu.newCBuf([
+      var buffer = tu.newBuffer([
         0x00, 0x00, 0x00, 0x1e,
         0x02, 0x00, 0x00, 0x00,
         0x00, 0x53, 0x12,
@@ -110,7 +110,7 @@ describe('FrameReader', function() {
         0x50, 0x00,
         0x00, 0x53, 0x28, 0x45
       ]);
-      var newAttach = reader.read(cbuf);
+      var newAttach = reader.read(buffer);
       newAttach.should.be.instanceof(AttachFrame);
       newAttach.channel.should.eql(0);
       newAttach.name.should.eql('test');
@@ -126,7 +126,7 @@ describe('FrameReader', function() {
       var txFrameSize = 8 + 3 + 2 + listSize + payloadSize;
       var channel = 1;
       var handle = 1;
-      var cbuf = tu.newCBuf([
+      var buffer = tu.newBuffer([
         0x00, 0x00, 0x00, txFrameSize,
         0x02, 0x00, 0x00, channel,
         0x00, 0x53, 0x14,
@@ -146,7 +146,7 @@ describe('FrameReader', function() {
         0x00, 0x53, 0x77,
         0x52, 10
       ]);
-      var newTransfer = reader.read(cbuf);
+      var newTransfer = reader.read(buffer);
       newTransfer.should.be.instanceof(TransferFrame);
       newTransfer.channel.should.eql(channel);
       newTransfer.handle.should.eql(handle);
@@ -156,19 +156,19 @@ describe('FrameReader', function() {
     });
 
     it('should return undefined on incomplete buffer', function() {
-      var cbuf = tu.newCBuf([0x00, 0x00, 0x00, 0x17,
+      var buffer = tu.newBuffer([0x00, 0x00, 0x00, 0x17,
         0x02, 0x00, 0x00, 0x00,
         0x00,
         0x53, 0x10
       ]);
-      var newOpen = reader.read(cbuf);
+      var newOpen = reader.read(buffer);
       (newOpen === undefined).should.be.true;
     });
 
     it('should read SASL Mechanisms frame', function() {
       var arraySize = 1 + 1 + 6 + 5;
       var frameSize = 8 + 1 + 9 + 2 + 3 + arraySize;
-      var cbuf = tu.newCBuf([
+      var buffer = tu.newBuffer([
         0x00, 0x00, 0x00, frameSize,
         0x02, 0x01, 0x00, 0x00,
         0x00,
@@ -180,7 +180,7 @@ describe('FrameReader', function() {
         5, builder.prototype.appendString, 'PLAIN',
         4, builder.prototype.appendString, 'CRAP'
       ]);
-      var newMechanisms = reader.read(cbuf);
+      var newMechanisms = reader.read(buffer);
       newMechanisms.should.be.instanceof(Sasl.SaslMechanisms);
       newMechanisms.mechanisms.length.should.eql(2);
       newMechanisms.mechanisms[0].should.eql('PLAIN');

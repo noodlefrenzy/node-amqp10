@@ -13,7 +13,7 @@ var assert = require('assert'),
 
     tu = require('./testing_utils');
 
-var buf = tu.newBuf;
+var buf = tu.buildBuffer;
 
 function assertEncoders(tests, maxSize) {
   for (var idx in tests) {

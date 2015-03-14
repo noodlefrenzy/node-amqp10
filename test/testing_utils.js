@@ -1,10 +1,10 @@
 'use strict';
 
 var builder = require('buffer-builder'),
-    CBuffer = require('cbarrick-circular-buffer'),
+    BufferList = require('bl'),
     should = require('should');
 
-function newBuf(contents) {
+function buildBuffer(contents) {
   var bufb = new builder();
   for (var idx = 0; idx < contents.length; idx++) {
     var cur = contents[idx];
@@ -17,16 +17,15 @@ function newBuf(contents) {
   return bufb.get();
 }
 
-module.exports.newBuf = newBuf;
+module.exports.buildBuffer = buildBuffer;
 
-function newCBuf(contents) {
-  var buf = newBuf(contents);
-  var cbuf = new CBuffer({ size: buf.length, encoding: 'buffer' });
-  cbuf.write(buf);
-  return cbuf;
+function newBuffer(contents) {
+  var buffer = new BufferList();
+  buffer.append(buildBuffer(contents));
+  return buffer;
 }
 
-module.exports.newCBuf = newCBuf;
+module.exports.newBuffer = newBuffer;
 
 function shouldBufEql(expected, actual, msg) {
   msg = msg ? msg + ': ' : '';
@@ -34,7 +33,7 @@ function shouldBufEql(expected, actual, msg) {
     actual = actual.get();
   }
   if (expected instanceof Array) {
-    expected = newBuf(expected);
+    expected = buildBuffer(expected);
   }
 
   var expectedStr = expected.toString('hex');

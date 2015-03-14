@@ -60,7 +60,7 @@ describe('Connection', function() {
                 session.on(Session.LinkAttached, function(link) {
                     var msg = new M.Message();
                     msg.body.push('test message');
-                    session.sendMessage(link, msg, { deliveryId: 1, deliveryTag: tu.newBuf([1]) });
+                    session.sendMessage(link, msg, { deliveryId: 1, deliveryTag: tu.buildBuffer([1]) });
                     setTimeout(function() {
                         session.detachLink(link);
                     }, 500);
