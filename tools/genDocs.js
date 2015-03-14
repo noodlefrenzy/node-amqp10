@@ -1,3 +1,5 @@
+'use strict';
+
 var     xml2js      = require('xml2js'),
         fs          = require('fs');
 
@@ -15,7 +17,6 @@ function collapseDoc(prefix, docHead) {
                         if (curP._) {
                             doc += '\n<p>' + curP._ + '</p>';
                         }
-                        debugger;
                         if (curP.xref && curP.xref[0] && curP.xref[0].$ && curP.xref[0].$.name) {
                             doc += '\n<p>' + curP.xref[0].$.name + '</p>';
                         }
@@ -55,13 +56,13 @@ function generatePerformatives() {
     parser.parseString(transportXml, function (err, res) {
         var sections = res.amqp.section;
         for (var idx=0; idx < sections.length; ++idx) {
-            if (sections[idx]['$'].name === 'performatives') {
+            if (sections[idx].$.name === 'performatives') {
                 var performatives = sections[idx].type;
                 fs.writeFileSync('./resources/transport.json', JSON.stringify(performatives, null, ' '));
                 for (var pidx in performatives) {
                     var performative = performatives[pidx];
-                    var name = performative['$'].name;
-                    var desc = collapseDoc(performative['$'].label, performative.doc);
+                    var name = performative.$.name;
+                    var desc = collapseDoc(performative.$.label, performative.doc);
                     var descriptor = buildDescriptor(performative.descriptor);
                     var fullDoc = '<h2>' + name + ' performative</h2>\n' + desc + '\n' + descriptor;
                     if (performative.field) {
