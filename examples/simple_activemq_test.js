@@ -1,5 +1,5 @@
-var bluebird     = require('bluebird');
-    AMQPClient  = require('./amqp_client');
+var bluebird    = require('bluebird'),
+    AMQPClient  = require('../lib/amqp_client');
 
 bluebird.promisifyAll(AMQPClient.prototype);
 

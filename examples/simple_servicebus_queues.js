@@ -1,4 +1,4 @@
-var AMQPClient  = require('./amqp_client');
+var AMQPClient  = require('../lib/amqp_client');
 
 function argCheck(settings, options) {
     var missing = [];

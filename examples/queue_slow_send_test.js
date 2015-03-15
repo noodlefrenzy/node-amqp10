@@ -1,6 +1,6 @@
-var AMQPClient  = require('./amqp_client');
+var AMQPClient  = require('../lib/amqp_client');
 
-var exceptions  = require('./lib/exceptions');
+var exceptions  = require('../lib/exceptions');
 
 var msgVal = Math.floor(Math.random() * 10000);
 

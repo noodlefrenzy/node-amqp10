@@ -5,7 +5,7 @@ var debug = require('debug')('amqp10-test_amqpclient'),
     util = require('util'),
     EventEmitter = require('events').EventEmitter,
 
-    AMQPClient = require('../amqp_client'),
+    AMQPClient = require('../lib/amqp_client'),
     constants = require('../lib/constants'),
     Connection = require('../lib/connection'),
     Session = require('../lib/session').Session,
