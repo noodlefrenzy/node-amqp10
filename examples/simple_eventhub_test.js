@@ -1,4 +1,4 @@
-var AMQPClient  = require('./amqp_client');
+var AMQPClient  = require('../lib/amqp_client');
 
 var filterOffset; // example filter offset value might be: 43350;
 var filter;

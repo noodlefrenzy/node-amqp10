@@ -1,6 +1,6 @@
-var AMQPClient  = require('./amqp_client');
+var AMQPClient  = require('../lib/amqp_client');
 
-var exceptions  = require('./lib/exceptions');
+var exceptions  = require('../lib/exceptions');
 
 if (process.argv.length < 3) {
     console.warn('Usage: node '+process.argv[1]+' <settings json file>');
