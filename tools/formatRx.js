@@ -111,6 +111,9 @@ function x(hexstr, consumed, result, indent) {
         var parsedColl = x(val, 0, '', indent + 2);
         result += s(indent) + prefix + ' ' + len + ' ' + nent + '\n' + parsedColl.result;
         break;
+      default:
+        console.log('Error: Unexpected prefix ' + prefix);
+        break;
     }
   }
   return x(hexstr, consumed, result, indent);
