@@ -2,6 +2,7 @@
 
 var debug = require('debug')('amqp10-test_utilities'),
     should = require('should'),
+    _ = require('lodash'),
 
     constants = require('../lib/constants'),
     u = require('../lib/utilities'),
@@ -78,14 +79,20 @@ describe('Utilities', function() {
     it('should work for flat', function() {
       var flat = { foo: 1, bar: 2 };
       var defaults = { bar: 3, baz: 4 };
-      var merged = u.deepMerge(flat, defaults);
+
+      // var merged = u.deepMerge(flat, defaults);
+      var merged = _.defaults(flat, defaults);
+
       merged.should.eql({ foo: 1, bar: 2, baz: 4 });
     });
 
     it('should work for nested', function() {
       var nested = { foo: { bar: 1, baz: 2 }, bat: 3 };
       var defaults = { foo: { zoop: 1 }, dubin: { a: 1 } };
-      var merged = u.deepMerge(nested, defaults);
+
+      // var merged = u.deepMerge(nested, defaults);
+      var merged = _.merge(nested, defaults);
+
       merged.should.eql({ foo: { bar: 1, baz: 2, zoop: 1 }, bat: 3, dubin: { a: 1 }});
     });
 
@@ -93,7 +100,10 @@ describe('Utilities', function() {
     it('should work for nested with custom types', function() {
       var nested = { foo: { bar: new AMQPSymbol('s1') } };
       var defaults = { foo: { baz: new AMQPSymbol('s2') }, bat: new AMQPSymbol('s3') };
-      var merged = u.deepMerge(nested, defaults);
+
+      // var merged = u.deepMerge(nested, defaults);
+      var merged = _.merge(nested, defaults);
+
       merged.bat.should.be.instanceof(AMQPSymbol);
       merged.foo.bar.should.be.instanceof(AMQPSymbol);
       merged.foo.baz.should.be.instanceof(AMQPSymbol);
@@ -101,7 +111,10 @@ describe('Utilities', function() {
 
     it('should work for described types', function() {
       var dt = new DescribedType(new AMQPSymbol('keyname'), 'value string');
-      var merged = u.deepMerge({ options: dt });
+
+      // var merged = u.deepMerge({ options: dt });
+      var merged = _.clone({ options: dt });
+
       merged.options.should.be.instanceof(DescribedType);
       merged.options.descriptor.should.be.instanceof(AMQPSymbol);
       merged.options.descriptor.contents.should.eql('keyname');
@@ -128,7 +141,11 @@ describe('Utilities', function() {
                     maxMessageSize: 10000,
                     initialDeliveryCount: 1
       }};
-      var merged = u.deepMerge(input);
+
+
+      // var merged = u.deepMerge(input);
+      var merged = _.clone(input);
+
       merged.should.eql(input);
     });
 
@@ -136,7 +153,10 @@ describe('Utilities', function() {
       var last = { a: 1, b: 1, c: 1 };
       var middle = { b: 2, c: 2 };
       var first = { c: 3 };
-      var merged = u.deepMerge(first, middle, last);
+
+      // var merged = u.deepMerge(first, middle, last);
+      var merged = _.defaults(first, _.defaults(middle, last));
+
       merged.should.eql({ a: 1, b: 2, c: 3 });
     });
   });
