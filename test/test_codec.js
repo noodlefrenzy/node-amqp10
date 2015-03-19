@@ -131,7 +131,6 @@ describe('Codec', function() {
         0x13,
         builder.prototype.appendString, 'Rafael H. Schloming',
         0x40]);
-      console.log('Composite type: ' + buffer.toString('hex'));
       var actual = codec.decode(newBuffer(buffer));
       actual[0].should.eql(new DescribedType(new AMQPSymbol('example:book:list'),
           [
