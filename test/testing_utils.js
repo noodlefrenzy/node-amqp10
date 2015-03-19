@@ -2,7 +2,8 @@
 
 var builder = require('buffer-builder'),
     BufferList = require('bl'),
-    should = require('should');
+    should = require('should'),
+    _ = require('lodash');
 
 function buildBuffer(contents) {
   var bufb = new builder();
@@ -52,3 +53,15 @@ function shouldBufEql(expected, actual, msg) {
 }
 
 module.exports.shouldBufEql = shouldBufEql;
+
+module.exports.assertTransitions = function(expectedTransitions, callback) {
+  var actualTransitions = [];
+  return function(evt, oldState, newState) {
+    if (!actualTransitions.length) actualTransitions.push(oldState);
+    actualTransitions.push(newState);
+
+    if (_.isEqual(actualTransitions, expectedTransitions)) {
+      callback();
+    }
+  };
+};
