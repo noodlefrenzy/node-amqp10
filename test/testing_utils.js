@@ -2,7 +2,10 @@
 
 var builder = require('buffer-builder'),
     BufferList = require('bl'),
-    should = require('should');
+    should = require('should'),
+    _ = require('lodash');
+
+    var util = require('util');
 
 function buildBuffer(contents) {
   var bufb = new builder();
@@ -52,3 +55,17 @@ function shouldBufEql(expected, actual, msg) {
 }
 
 module.exports.shouldBufEql = shouldBufEql;
+
+module.exports.assertTransitions = function(expectedTransitions, callback) {
+  var actualTransitions = [];
+  return function(event, oldState, newState) {
+    if (_.isEmpty(actualTransitions)) actualTransitions.push(oldState);
+    actualTransitions.push(newState);
+
+    if (_.isEqual(actualTransitions, expectedTransitions)) {
+      callback(actualTransitions);
+    }
+
+    // @todo: should we display incorrect states?
+  };
+};

@@ -58,14 +58,6 @@ function closeBuf(err) {
 }
 
 describe('Sasl', function() {
-  var assertTransitions = function(actual, expected) {
-    actual.length.should.eql(expected.length - 1, 'Wrong number of state transitions: Actual ' + JSON.stringify(actual) + ' vs. Expected ' + JSON.stringify(expected));
-    for (var idx = 0; idx < expected.length - 1; ++idx) {
-      var curTransition = expected[idx] + '=>' + expected[idx + 1];
-      actual[idx].should.eql(curTransition, 'Wrong transition at step ' + idx);
-    }
-  };
-
   describe('Connection.open()', function() {
     var server = null;
 
@@ -79,22 +71,31 @@ describe('Sasl', function() {
 
     it('should go through sasl negotiation and then open/close cycle as asked', function(done) {
       server = new MockServer();
-      server.setSequence(
-          [constants.saslVersion, initBuf(), constants.amqpVersion, openBuf(), closeBuf()],
-          [constants.saslVersion, [true, mechanismsBuf()], outcomeBuf(), constants.amqpVersion, openBuf(), [true, closeBuf(new AMQPError(AMQPError.ConnectionForced, 'test'))]]);
-      var conn = new Connection(PolicyBase.connectPolicy);
-      server.setup(conn);
-      var transitions = [];
-      var recordTransitions = function(evt, oldS, newS) {
-        transitions.push(oldS + '=>' + newS);
-      };
-      conn.connSM.bind(recordTransitions);
-      conn.open({protocol: 'amqp', host: 'localhost', port: server.port, user: 'user', pass: 'pass'}, new Sasl());
-      server.assertSequence(function() {
-        conn.close();
-        assertTransitions(transitions, ['DISCONNECTED', 'START', 'IN_SASL', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'OPENED', 'CLOSE_RCVD', 'DISCONNECTED']);
-        done();
-      });
+      server.setSequence([
+        constants.saslVersion,
+        initBuf(),
+        constants.amqpVersion,
+        openBuf(),
+        closeBuf()
+      ], [
+        constants.saslVersion,
+        [ true, mechanismsBuf() ],
+        outcomeBuf(),
+        constants.amqpVersion,
+        openBuf(),
+        [ true, closeBuf(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
+      ]);
+
+      var connection = new Connection(PolicyBase.connectPolicy);
+      server.setup(connection);
+
+      var expected = [
+        'DISCONNECTED', 'START', 'IN_SASL', 'HDR_SENT', 'HDR_EXCH',
+        'OPEN_SENT', 'OPENED', 'CLOSE_RCVD', 'DISCONNECTED'
+      ];
+
+      connection.connSM.bind(tu.assertTransitions(expected, function() { done(); }));
+      connection.open({protocol: 'amqp',host: 'localhost', port: server.port, user: 'user', pass: 'pass'}, new Sasl());
     });
   });
 });

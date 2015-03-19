@@ -6,6 +6,8 @@ var debug = require('debug')('amqp10-test_connection'),
 
     constants = require('../lib/constants'),
     u = require('../lib/utilities'),
+    tu = require('./testing_utils'),
+    _ = require('lodash'),
 
     PolicyBase = require('../lib/policies/policy_base'),
 
@@ -73,14 +75,6 @@ function closeBuf(err) {
 }
 
 describe('Session', function() {
-  var assertTransitions = function(actual, expected) {
-    actual.length.should.eql(expected.length - 1, 'Wrong number of state transitions: Actual ' + JSON.stringify(actual) + ' vs. Expected ' + JSON.stringify(expected));
-    for (var idx = 0; idx < expected.length - 1; ++idx) {
-      var curTransition = expected[idx] + '=>' + expected[idx + 1];
-      actual[idx].should.eql(curTransition, 'Wrong transition at step ' + idx);
-    }
-  };
-
   describe('#begin()', function() {
     var server = null;
 
@@ -94,87 +88,157 @@ describe('Session', function() {
 
     it('should go through begin/end cycle as asked', function(done) {
       server = new MockServer();
-      server.setSequence([constants.amqpVersion, openBuf(), beginBuf(null, 1), endBuf(null, 1), closeBuf()],
-          [constants.amqpVersion, openBuf(), beginBuf({ remoteChannel: 1 }, 5), [true, endBuf(new AMQPError(AMQPError.ConnectionForced, 'test'), 5)], [true, closeBuf()]]);
-      var conn = new Connection(PolicyBase.connectPolicy);
-      server.setup(conn);
-      var transitions = [];
-      var sessionTransitions = [];
-      var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS + '=>' + newS); };
-      var recordSessionTransitions = function(evt, oldS, newS) { sessionTransitions.push(oldS + '=>' + newS); };
-      conn.connSM.bind(recordTransitions);
-      conn.on(Connection.Connected, function() {
-        var session = new Session(conn);
-        session.sessionSM.bind(recordSessionTransitions);
+      server.setSequence([
+        constants.amqpVersion,
+        openBuf(),
+        beginBuf(null, 1),
+        endBuf(null, 1),
+        closeBuf()
+      ], [
+        constants.amqpVersion,
+        openBuf(),
+        beginBuf({ remoteChannel: 1 }, 5),
+        [ true, endBuf(new AMQPError(AMQPError.ConnectionForced, 'test'), 5) ],
+        [ true, closeBuf() ]
+      ]);
+
+      var connection = new Connection(PolicyBase.connectPolicy);
+      server.setup(connection);
+
+      var expected = {
+        connection: [
+          'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH','OPEN_SENT', 'OPENED',
+          'CLOSE_RCVD', 'DISCONNECTED'
+        ],
+        session: ['UNMAPPED', 'BEGIN_SENT', 'MAPPED', 'END_RCVD', 'UNMAPPED']
+      };
+
+      var actual = {};
+      var assertMultipleTransitions = function(name, transitions) {
+        actual[name] = transitions;
+        if (_.isEqual(actual, expected))
+          done();
+      };
+
+      connection.connSM.bind(tu.assertTransitions(expected.connection, function(transitions) {
+        assertMultipleTransitions('connection', transitions);
+      }));
+
+      connection.on(Connection.Connected, function() {
+        var session = new Session(connection);
+        session.sessionSM.bind(tu.assertTransitions(expected.session, function(transitions) {
+          assertMultipleTransitions('session', transitions);
+        }));
+
         session.begin(PolicyBase.sessionPolicy);
       });
-      conn.open({ protocol: 'amqp', host: 'localhost', port: server.port });
-      server.assertSequence(function() {
-        conn.close();
-        assertTransitions(transitions, ['DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'OPENED', 'CLOSE_RCVD', 'DISCONNECTED']);
-        assertTransitions(sessionTransitions, ['UNMAPPED', 'BEGIN_SENT', 'MAPPED', 'END_RCVD', 'UNMAPPED']);
-        done();
-      });
+
+      connection.open({ protocol: 'amqp', host: 'localhost', port: server.port });
     });
 
     it('should emit events', function(done) {
       server = new MockServer();
-      server.setSequence([constants.amqpVersion, openBuf(), beginBuf({}, 1), endBuf(null, 1), closeBuf()],
-          [constants.amqpVersion, openBuf(), beginBuf({ remoteChannel: 1 }, 5), [true, endBuf(new AMQPError(AMQPError.ConnectionForced, 'test'), 5)], [true, closeBuf()]]);
-      var conn = new Connection(PolicyBase.connectPolicy);
-      server.setup(conn);
+      server.setSequence([
+        constants.amqpVersion,
+        openBuf(),
+        beginBuf({}, 1),
+        endBuf(null, 1),
+        closeBuf()
+      ], [
+        constants.amqpVersion,
+        openBuf(),
+        beginBuf({ remoteChannel: 1 }, 5),
+        [ true, endBuf(new AMQPError(AMQPError.ConnectionForced, 'test'), 5) ],
+        [ true, closeBuf() ]
+      ]);
+
+      var connection = new Connection(PolicyBase.connectPolicy);
+      server.setup(connection);
+
       var events = [];
-      conn.on(Connection.Connected, function() {
-        var session = new Session(conn);
+      connection.on(Connection.Connected, function() {
+        var session = new Session(connection);
         session.on(Session.Mapped, function() { events.push(Session.Mapped); });
         session.on(Session.ErrorReceived, function(err) { events.push([Session.ErrorReceived, err]); });
         session.on(Session.Unmapped, function() { events.push(Session.Unmapped); });
         session.begin(PolicyBase.sessionPolicy);
       });
-      conn.open({ protocol: 'amqp', host: 'localhost', port: server.port });
-      server.assertSequence(function() {
-        conn.close();
+
+      var expected = [
+        'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'OPENED',
+        'CLOSE_RCVD', 'DISCONNECTED'
+      ];
+
+      connection.connSM.bind(tu.assertTransitions(expected, function() {
         events.length.should.eql(3, JSON.stringify(events));
         events[0].should.eql(Session.Mapped);
         events[1][0].should.eql(Session.ErrorReceived);
         events[2].should.eql(Session.Unmapped);
         done();
-      });
+      }));
+
+      connection.open({ protocol: 'amqp', host: 'localhost', port: server.port });
     });
 
     it('should create link', function(done) {
       server = new MockServer();
-      server.setSequence([constants.amqpVersion, openBuf(), beginBuf({}, 1), attachBuf({ handle: 0, role: constants.linkRole.sender }, 1), detachBuf({ handle: 0}, 1), endBuf(null, 1), closeBuf()],
-          [constants.amqpVersion, openBuf(), beginBuf({ remoteChannel: 1 }, 5), attachBuf({ handle: 3, role: constants.linkRole.receiver }, 5),
-           [true, detachBuf({ handle: 3, error: new AMQPError(AMQPError.LinkDetachForced, 'test') }, 5)],
-           [true, endBuf(new AMQPError(AMQPError.ConnectionForced, 'test'), 5)], [true, closeBuf()]]);
-      var conn = new Connection(PolicyBase.connectPolicy);
-      server.setup(conn);
-      var transitions = [];
-      var sessionTransitions = [];
-      var linkTransitions = [];
-      var recordTransitions = function(evt, oldS, newS) { transitions.push(oldS + '=>' + newS); };
-      var recordSessionTransitions = function(evt, oldS, newS) { sessionTransitions.push(oldS + '=>' + newS); };
-      var recordLinkTransitions = function(evt, oldS, newS) { linkTransitions.push(oldS + '=>' + newS); };
-      conn.connSM.bind(recordTransitions);
-      conn.on(Connection.Connected, function() {
-        var session = new Session(conn);
-        session.sessionSM.bind(recordSessionTransitions);
+      server.setSequence([
+        constants.amqpVersion,
+        openBuf(),
+        beginBuf({}, 1),
+        attachBuf({ handle: 0, role: constants.linkRole.sender }, 1),
+        detachBuf({ handle: 0}, 1), endBuf(null, 1), closeBuf()
+      ], [
+        constants.amqpVersion,
+        openBuf(),
+        beginBuf({ remoteChannel: 1 }, 5),
+        attachBuf({ handle: 3, role: constants.linkRole.receiver }, 5),
+        [ true, detachBuf({ handle: 3, error: new AMQPError(AMQPError.LinkDetachForced, 'test') }, 5) ],
+        [ true, endBuf(new AMQPError(AMQPError.ConnectionForced, 'test'), 5) ],
+        [ true, closeBuf() ]
+      ]);
+
+      var connection = new Connection(PolicyBase.connectPolicy);
+      server.setup(connection);
+
+      var expected = {
+        connection: [
+          'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT',
+          'OPENED', 'CLOSE_RCVD', 'DISCONNECTED'
+        ],
+        session: ['UNMAPPED', 'BEGIN_SENT', 'MAPPED', 'END_RCVD', 'UNMAPPED'],
+        link: ['ATTACHING', 'ATTACHED', 'DETACHING', 'DETACHED']
+      };
+
+      var actual = {};
+      var assertMultipleTransitions = function(name, transitions) {
+        actual[name] = transitions;
+        if (_.isEqual(expected, actual))
+          done();
+      };
+
+      connection.connSM.bind(tu.assertTransitions(expected.connection, function(transitions) {
+        assertMultipleTransitions('connection', transitions);
+      }));
+
+      connection.on(Connection.Connected, function() {
+        var session = new Session(connection);
+        session.sessionSM.bind(tu.assertTransitions(expected.session, function(transitions) {
+          assertMultipleTransitions('session', transitions);
+        }));
+
         session.on(Session.Mapped, function() {
           var opts = u.deepMerge({ options: { name: 'test', source: src(), target: tgt() } }, PolicyBase.senderLinkPolicy);
           var link = session.attachLink(opts);
-          link.linkSM.bind(recordLinkTransitions);
+          link.linkSM.bind(tu.assertTransitions(expected.link, function(transitions) {
+            assertMultipleTransitions('link', transitions);
+          }));
         });
+
         session.begin(PolicyBase.sessionPolicy);
       });
-      conn.open({ protocol: 'amqp', host: 'localhost', port: server.port });
-      server.assertSequence(function() {
-        conn.close();
-        assertTransitions(transitions, ['DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'OPENED', 'CLOSE_RCVD', 'DISCONNECTED']);
-        assertTransitions(sessionTransitions, ['UNMAPPED', 'BEGIN_SENT', 'MAPPED', 'END_RCVD', 'UNMAPPED']);
-        assertTransitions(linkTransitions, ['ATTACHING', 'ATTACHED', 'DETACHING', 'DETACHED']);
-        done();
-      });
+
+      connection.open({ protocol: 'amqp', host: 'localhost', port: server.port });
     });
   });
 });
