@@ -130,7 +130,7 @@
 **Members**
 
 * [payload](#payload)
- 
+
 <a name="AMQPClient"></a>
 #class: AMQPClient
 **Members**
@@ -147,7 +147,7 @@
 
 <a name="new_AMQPClient"></a>
 ##new AMQPClient([policy], [uri], [cb])
-AMQPClient is the top-level class for interacting with node-amqp-1-0.  Instantiate this class, connect, and then send/receive
+AMQPClient is the top-level class for interacting with node-amqp10.  Instantiate this class, connect, and then send/receive
 as needed and behind the scenes it will do the appropriate work to setup and teardown connections, sessions, and links and manage flow.
 The code does its best to avoid exposing AMQP-specific types and attempts to convert them where possible, but on the off-chance you
 need to speak AMQP-specific (e.g. to set a filter to a described-type), you can use node-amqp-encoder and the
@@ -161,7 +161,7 @@ This does a deep-merge, allowing you to only replace values you need.  For insta
 you could just use
 
  <pre>
- var AMQPClient = require('node-amqp-1-0');
+ var AMQPClient = require('amqp10');
  var client = new AMQPClient(AMQPClient.policies.merge({
                   senderLinkPolicy: {
                     options: { senderSettleMode: AMQPClient.constants.senderSettleMode.settled } } });
@@ -179,9 +179,9 @@ instantiation to sending messages.
 
 **Params**
 
-- \[policy\] `PolicyBase` - Policy to use for connection, sessions, links, etc.  Defaults to PolicyBase.  
-- \[uri\] `string` - If provided, must provide cb.  Will attempt connection, set default queue.  
-- \[cb\] `function` - If provided, must provide uri.  Will attempt connection and call cb when established/failed.  
+- \[policy\] `PolicyBase` - Policy to use for connection, sessions, links, etc.  Defaults to PolicyBase.
+- \[uri\] `string` - If provided, must provide cb.  Will attempt connection, set default queue.
+- \[cb\] `function` - If provided, must provide uri.  Will attempt connection and call cb when established/failed.
 
 <a name="AMQPClient.constants"></a>
 ##AMQPClient.constants
@@ -206,8 +206,8 @@ amqp://my-activemq-host/my-queue-name would set the default queue to my-queue-na
 
 **Params**
 
-- url `string` - URI to connect to - right now only supports <code>amqp|amqps</code> as protocol.  
-- cb `function` - Callback to call on success - called with (error, self).  
+- url `string` - URI to connect to - right now only supports <code>amqp|amqps</code> as protocol.
+- cb `function` - Callback to call on success - called with (error, self).
 
 <a name="AMQPClient#send"></a>
 ##amqpClient.send(msg, [target], [annotations], cb)
@@ -215,14 +215,14 @@ Sends the given message, with the given annotations, to the given target.
 
 **Params**
 
-- msg `*` - Message to send.  Will be encoded using sender link policy's encoder.  
-- \[target\] `string` - Target to send to.  If not set, will use default queue from uri used to connect.  
+- msg `*` - Message to send.  Will be encoded using sender link policy's encoder.
+- \[target\] `string` - Target to send to.  If not set, will use default queue from uri used to connect.
 - \[annotations\] `*` - Annotations for the message, if any.  See AMQP spec for details, and server for specific
                               annotations that might be relevant (e.g. x-opt-partition-key on EventHub).  If node-amqp-encoder'd
                               map is given, it will be translated to appropriate internal types.  Simple maps will be converted
-                              to AMQP Fields type as defined in the spec.  
+                              to AMQP Fields type as defined in the spec.
 - cb `function` - Callback, by default called when settled disposition is received from target, with (error, delivery-state).
-                             However, setting the sender callback policy to OnSent can change when this is called to as soon as the packets go out.  
+                             However, setting the sender callback policy to OnSent can change when this is called to as soon as the packets go out.
 
 <a name="AMQPClient#receive"></a>
 ##amqpClient.receive([source], [filter], cb)
@@ -232,11 +232,11 @@ decoder method.
 
 **Params**
 
-- \[source\] `string` - Source of the link to connect to.  If not provided will use default queue from connection uri.  
+- \[source\] `string` - Source of the link to connect to.  If not provided will use default queue from connection uri.
 - \[filter\] `*` - Filter used in connecting to the source.  See AMQP spec for details, and your server's documentation
                               for possible values.  node-amqp-encoder'd maps will be translated, and simple maps will be converted
-                              to AMQP Fields type as defined in the spec.  
-- cb `function` - Callback to invoke on every receipt.  Called with (error, payload, annotations).  
+                              to AMQP Fields type as defined in the spec.
+- cb `function` - Callback to invoke on every receipt.  Called with (error, payload, annotations).
 
 <a name="AMQPClient#disconnect"></a>
 ##amqpClient.disconnect(cb)
@@ -244,7 +244,7 @@ Disconnect tears down any existing connection with appropriate Close performativ
 
 **Params**
 
-- cb `function` - Called when connection is completely disconnected.  
+- cb `function` - Called when connection is completely disconnected.
 
 <a name="Codec"></a>
 #class: Codec
@@ -262,37 +262,46 @@ Build a codec.
 
 <a name="Codec#_readFullValue"></a>
 ##codec._readFullValue(buf, [offset], [doNotConsume], [forcedCode])
-Reads a full value's worth of bytes from a circular or regular buffer, or returns undefined if not enough bytes are there.Note that for Buffers, the returned Buffer will be a slice (so backed by the original storage)!
+Reads a full value's worth of bytes from a circular or regular buffer, or returns undefined if not enough bytes are there.
+Note that for Buffers, the returned Buffer will be a slice (so backed by the original storage)!
 
 **Params**
 
-- buf `Buffer` | `CBuffer` - Buffer or circular buffer to read from.  If a Buffer is given, it is assumed to be full.  
-- \[offset=0\] `integer` - Offset - only valid for Buffer, not CBuffer.  
-- \[doNotConsume=false\] `boolean` - If set to true, will peek bytes instead of reading them - useful for leaving                                         circular buffer in original state for described values that are not yet complete.  
-- \[forcedCode\] `Number` - If given, first byte is not assumed to be code and given code will be used - useful for arrays.  
+- buf `Buffer` | `CBuffer` - Buffer or circular buffer to read from.  If a Buffer is given, it is assumed to be full.
+- \[offset=0\] `integer` - Offset - only valid for Buffer, not CBuffer.
+- \[doNotConsume=false\] `boolean` - If set to true, will peek bytes instead of reading them - useful for leaving
+                                         circular buffer in original state for described values that are not yet complete.
+- \[forcedCode\] `Number` - If given, first byte is not assumed to be code and given code will be used - useful for arrays.
 
-**Returns**: `Array` - Buffer of full value + number of bytes read.                                         For described types, will return [ [ descriptor-buffer, value-buffer ], total-bytes ].  
-**Access**: private  
+**Returns**: `Array` - Buffer of full value + number of bytes read.
+                                         For described types, will return [ [ descriptor-buffer, value-buffer ], total-bytes ].
+**Access**: private
 <a name="Codec#decode"></a>
 ##codec.decode(buf, [offset], [forcedCode])
 Decode a single entity from a buffer (starting at offset 0).  Only simple values currently supported.
 
 **Params**
 
-- buf `Buffer` | `CBuffer` - The buffer/circular buffer to decode.  Will decode a single value per call.  
-- \[offset=0\] `Number` - The offset to read from (only used for Buffers).  
-- \[forcedCode\] `Number` - If given, will not consume first byte for code and will instead use this as the code. Useful for arrays.  
+- buf `Buffer` | `CBuffer` - The buffer/circular buffer to decode.  Will decode a single value per call.
+- \[offset=0\] `Number` - The offset to read from (only used for Buffers).
+- \[forcedCode\] `Number` - If given, will not consume first byte for code and will instead use this as the code. Useful for arrays.
 
-**Returns**: `Array` - Single decoded value + number of bytes consumed.  
+**Returns**: `Array` - Single decoded value + number of bytes consumed.
 <a name="Codec#encode"></a>
 ##codec.encode(val, buf, [forceType])
-Encode the given value as an AMQP 1.0 bitstring.We do a best-effort to determine type.  Objects will be encoded as <code>maps</code>, unless:+ They are DescribedTypes, in which case they will be encoded as such.+ They contain an encodeOrdering array, in which case they will be encoded as a <code>list</code> of their values  in the specified order.+ They are Int64s, in which case they will be encoded as <code>longs</code>.
+Encode the given value as an AMQP 1.0 bitstring.
+
+We do a best-effort to determine type.  Objects will be encoded as <code>maps</code>, unless:
++ They are DescribedTypes, in which case they will be encoded as such.
++ They contain an encodeOrdering array, in which case they will be encoded as a <code>list</code> of their values
+  in the specified order.
++ They are Int64s, in which case they will be encoded as <code>longs</code>.
 
 **Params**
 
-- val  - Value to encode.  
-- buf `builder` - buffer-builder to write into.  
-- \[forceType\] `string` - If set, forces the encoder for the given type.  
+- val  - Value to encode.
+- buf `builder` - buffer-builder to write into.
+- \[forceType\] `string` - If set, forces the encoder for the given type.
 
 <a name="Connection"></a>
 #class: Connection
@@ -304,7 +313,8 @@ Encode the given value as an AMQP 1.0 bitstring.We do a best-effort to determi
 
 <a name="new_Connection"></a>
 ##new Connection(connectPolicy)
-Connection states, from AMQP 1.0 spec:
+Connection states, from AMQP 1.0 spec:
+
  <dl>
  <dt>START</dt>
  <dd><p>In this state a Connection exists, but nothing has been sent or received. This is the
@@ -371,7 +381,10 @@ Connection states, from AMQP 1.0 spec:
  <dt>END</dt>
  <dd><p>In this state it is illegal for either endpoint to write anything more onto the
  Connection. The Connection may be safely closed and discarded.</p></dd>
- </dl>Connection negotiation state diagram from AMQP 1.0 spec:
+ </dl>
+
+Connection negotiation state diagram from AMQP 1.0 spec:
+
  <pre>
               R:HDR +=======+ S:HDR             R:HDR[!=S:HDR]
            +--------| START |-----+    +--------------------------------+
@@ -410,11 +423,17 @@ Connection states, from AMQP 1.0 spec:
  |    S:HDR[!=R:HDR]    |                R:HDR[!=S:HDR]                 |
  +----------------------+-----------------------------------------------+
 
- </pre>R:<b>CTRL</b> = Received <b>CTRL</b>S:<b>CTRL</b> = Sent <b>CTRL</b>Also could be DISCARDING if an error condition triggered the CLOSE
+ </pre>
+
+R:<b>CTRL</b> = Received <b>CTRL</b>
+
+S:<b>CTRL</b> = Sent <b>CTRL</b>
+
+Also could be DISCARDING if an error condition triggered the CLOSE
 
 **Params**
 
-- connectPolicy  - ConnectPolicy from a PolicyBase implementation  
+- connectPolicy  - ConnectPolicy from a PolicyBase implementation
 
 <a name="Connection#open"></a>
 ##connection.open(address, sasl)
@@ -422,8 +441,8 @@ Open a connection to the given (parsed) address (@see [AMQPClient](#AMQPClient))
 
 **Params**
 
-- address  - Contains at least protocol, host and port, may contain user/pass, path.  
-- sasl  - If given, contains a "negotiate" method that, given address and a callback, will run through SASL negotiations.  
+- address  - Contains at least protocol, host and port, may contain user/pass, path.
+- sasl  - If given, contains a "negotiate" method that, given address and a callback, will run through SASL negotiations.
 
 <a name="MalformedHeaderError"></a>
 #class: MalformedHeaderError
@@ -438,7 +457,7 @@ AMQP Header is malformed.
 
 **Params**
 
-- msg   
+- msg
 
 <a name="NotImplementedError"></a>
 #class: NotImplementedError
@@ -453,7 +472,7 @@ Method or feature is not yet implemented.
 
 **Params**
 
-- msg   
+- msg
 
 <a name="MalformedPayloadError"></a>
 #class: MalformedPayloadError
@@ -468,7 +487,7 @@ Payload is malformed or cannot be parsed.
 
 **Params**
 
-- msg   
+- msg
 
 <a name="EncodingError"></a>
 #class: EncodingError
@@ -483,7 +502,7 @@ Given object cannot be encoded successfully.
 
 **Params**
 
-- msg   
+- msg
 
 <a name="OverCapacityError"></a>
 #class: OverCapacityError
@@ -498,7 +517,7 @@ Violation of AMQP flow control.
 
 **Params**
 
-- msg   
+- msg
 
 <a name="AuthenticationError"></a>
 #class: AuthenticationError
@@ -513,7 +532,7 @@ Authentication failure.
 
 **Params**
 
-- msg   
+- msg
 
 <a name="ArgumentError"></a>
 #class: ArgumentError
@@ -528,7 +547,7 @@ Argument missing or incorrectly defined.
 
 **Params**
 
-- arg   
+- arg
 
 <a name="InvalidStateError"></a>
 #class: InvalidStateError
@@ -543,7 +562,7 @@ Invalid state.
 
 **Params**
 
-- msg   
+- msg
 
 <a name="AttachFrame"></a>
 #class: AttachFrame
@@ -1122,14 +1141,14 @@ Frames look like:
 Populate the internal buffer with contents built based on the options.  SIZE and DOFF will be inferred
 based on the options given.
 
-**Access**: private  
+**Access**: private
 <a name="Frame#readPerformative"></a>
 ##frame.readPerformative(describedType)
 Used to populate the frame performative from a DescribedType pulled off the wire.
 
 **Params**
 
-- describedType <code>[DescribedType](#DescribedType)</code> - Details of the frame performative, should populate internal values.  
+- describedType <code>[DescribedType](#DescribedType)</code> - Details of the frame performative, should populate internal values.
 
 <a name="AMQPFrame"></a>
 #class: AMQPFrame
@@ -1180,13 +1199,13 @@ Children should implement this method to translate their internal (friendly) rep
 representation expected on the wire (a DescribedType(Descriptor, ...) with either a List of values
 (ForcedType'd as necessary) or an object containing an encodeOrdering[] array to clarify ordering).
 
-**Access**: private  
+**Access**: private
 <a name="AMQPFrame#_getAdditionalPayload"></a>
 ##amqpFrame._getAdditionalPayload()
 AMQP Frames consist of two sections of payload - the performative, and the additional actual payload.
 Some frames don't have any additional payload, but for those that do, they should override this to generate it.
 
-**Access**: private  
+**Access**: private
 <a name="FrameReader"></a>
 #class: FrameReader
 **Members**
@@ -1201,9 +1220,9 @@ For now, just process performative headers.
 
 **Params**
 
-- cbuf  - circular buffer containing the potential frame data.  
+- cbuf  - circular buffer containing the potential frame data.
 
-**Returns**: [AMQPFrame](#AMQPFrame) - Frame with populated data, undefined if frame is incomplete.  Throws exception on unmatched frame.  
+**Returns**: [AMQPFrame](#AMQPFrame) - Frame with populated data, undefined if frame is incomplete.  Throws exception on unmatched frame.
 <a name="FrameReader#_readMessage"></a>
 ##frameReader._readMessage(messageBuf)
 An AMQP Message is composed of:
@@ -1218,10 +1237,10 @@ An AMQP Message is composed of:
 
 **Params**
 
-- messageBuf `Buffer` - Message buffer to decode  
+- messageBuf `Buffer` - Message buffer to decode
 
-**Returns**: [Message](#Message) - Complete message object decoded from buffer  
-**Access**: private  
+**Returns**: [Message](#Message) - Complete message object decoded from buffer
+**Access**: private
 <a name="HeartbeatFrame"></a>
 #class: HeartbeatFrame
 **Members**
@@ -1231,7 +1250,8 @@ An AMQP Message is composed of:
 
 <a name="new_HeartbeatFrame"></a>
 ##new HeartbeatFrame()
-Heartbeat frames are under-specified in the AMQP Specification as "an empty frame".  In practice, thisseems to be interpreted as a an empty header with a type of 0 (or 0x0000 0008 0200 0000).
+Heartbeat frames are under-specified in the AMQP Specification as "an empty frame".  In practice, this
+seems to be interpreted as a an empty header with a type of 0 (or 0x0000 0008 0200 0000).
 
 <a name="OpenFrame"></a>
 #class: OpenFrame
@@ -1464,7 +1484,7 @@ level of preference.
 **Params**
 
 - options  - Either the DescribedType of an incoming SASL Mechanisms frame,
-                 or an array of mechanisms, or a map with a mechanisms key.  
+                 or an array of mechanisms, or a map with a mechanisms key.
 
 <a name="SaslInit"></a>
 #class: SaslInit
@@ -1517,7 +1537,7 @@ specific means.
 
 **Params**
 
-- options   
+- options
 
 <a name="SaslChallenge"></a>
 #class: SaslChallenge
@@ -1541,7 +1561,7 @@ mechanism.
 
 **Params**
 
-- options   
+- options
 
 <a name="SaslResponse"></a>
 #class: SaslResponse
@@ -1565,7 +1585,7 @@ defined by the SASL security mechanism.
 
 **Params**
 
-- options   
+- options
 
 <a name="SaslOutcome"></a>
 #class: SaslOutcome
@@ -1618,7 +1638,7 @@ Connection authentication failed due to a transient system error.
 
 **Params**
 
-- options   
+- options
 
 <a name="TransferFrame"></a>
 #class: TransferFrame
@@ -1895,15 +1915,15 @@ Note: This implementation *assumes* it is the client, and thus will always be th
 
 **Params**
 
-- conn <code>[Connection](#Connection)</code> - Connection to bind session to.  
+- conn <code>[Connection](#Connection)</code> - Connection to bind session to.
 
 <a name="Session#sendMessage"></a>
 ##session.sendMessage(link, message, options)
 **Params**
 
-- link `Link`  
-- message <code>[Message](#Message)</code>  
-- options `*`  
+- link `Link`
+- message <code>[Message](#Message)</code>
+- options `*`
 
 <a name="Types"></a>
 #class: Types
@@ -1923,7 +1943,8 @@ Type definitions, encoders, and decoders - used extensively by [Codec](#Codec).
 
 <a name="Types#_listBuilder"></a>
 ##types._listBuilder(val, bufb, codec, [width])
-Encoder for list types, specified in AMQP 1.0 as:
+Encoder for list types, specified in AMQP 1.0 as:
+
  <pre>
                        +----------= count items =----------+
                        |                                   |
@@ -1946,15 +1967,17 @@ Encoder for list types, specified in AMQP 1.0 as:
 
 **Params**
 
-- val `Array` - Value to encode.  
-- bufb `builder` - Buffer-builder to write encoded list into.  
-- codec <code>[Codec](#Codec)</code> - Codec to use for encoding list entries.  
-- \[width\] `Number` - Should be 1 or 4.  If given, builder assumes code already written, and will ensure array is encoded to the given byte-width type.  Useful for arrays.  
+- val `Array` - Value to encode.
+- bufb `builder` - Buffer-builder to write encoded list into.
+- codec <code>[Codec](#Codec)</code> - Codec to use for encoding list entries.
+- \[width\] `Number` - Should be 1 or 4.  If given, builder assumes code already written, and will ensure array is encoded to the given byte-width type.  Useful for arrays.
 
-**Access**: private  
+**Access**: private
 <a name="Types#_arrayBuilder"></a>
 ##types._arrayBuilder(val, bufb, codec, [width])
-All array encodings consist of a size followed by a count followed by an element constructorfollowed by <i>count</i> elements of encoded data formatted as required by the elementconstructor:
+All array encodings consist of a size followed by a count followed by an element constructor
+followed by <i>count</i> elements of encoded data formatted as required by the element
+constructor:
  <pre>
                                              +--= count elements =--+
                                              |                      |
@@ -1971,40 +1994,47 @@ All array encodings consist of a size followed by a count followed by an element
 
 **Params**
 
-- val <code>[AMQPArray](#AMQPArray)</code> - Value to encode.  
-- bufb `builder` - Buffer-builder to encode array into.  
-- codec <code>[Codec](#Codec)</code> - Codec to use for encoding array values.  Passed into encoder.  
-- \[width\] `Number` - Should be 1 or 4.  If given, builder assumes code already written, and will ensure array is encoded to the given byte-width type.  Useful for arrays.  
+- val <code>[AMQPArray](#AMQPArray)</code> - Value to encode.
+- bufb `builder` - Buffer-builder to encode array into.
+- codec <code>[Codec](#Codec)</code> - Codec to use for encoding array values.  Passed into encoder.
+- \[width\] `Number` - Should be 1 or 4.  If given, builder assumes code already written, and will ensure array is encoded to the given byte-width type.  Useful for arrays.
 
-**Access**: private  
+**Access**: private
 <a name="Types#_mapBuilder"></a>
 ##types._mapBuilder(val, bufb, codec, [width])
-A map is encoded as a compound value where the constituent elements form alternating key value pairs.
+A map is encoded as a compound value where the constituent elements form alternating key value pairs.
+
  <pre>
   item 0   item 1      item n-1    item n
  +-------+-------+----+---------+---------+
  | key 1 | val 1 | .. | key n/2 | val n/2 |
  +-------+-------+----+---------+---------+
- </pre>Map encodings must contain an even number of items (i.e. an equal number of keys andvalues). A map in which there exist two identical key values is invalid. Unless known tobe otherwise, maps must be considered to be ordered - that is the order of the key-valuepairs is semantically important and two maps which are different only in the order inwhich their key-value pairs are encoded are not equal.
+ </pre>
+
+Map encodings must contain an even number of items (i.e. an equal number of keys and
+values). A map in which there exist two identical key values is invalid. Unless known to
+be otherwise, maps must be considered to be ordered - that is the order of the key-value
+pairs is semantically important and two maps which are different only in the order in
+which their key-value pairs are encoded are not equal.
 
 **Params**
 
-- val `Object` - Value to encode.  
-- bufb `builder` - Buffer-builder to encode map into.  
-- codec <code>[Codec](#Codec)</code> - Codec to use for encoding keys and values.  
-- \[width\] `Number` - Should be 1 or 4.  If given, builder assumes code already written, and will ensure array is encoded to the given byte-width type.  Useful for arrays.  
+- val `Object` - Value to encode.
+- bufb `builder` - Buffer-builder to encode map into.
+- codec <code>[Codec](#Codec)</code> - Codec to use for encoding keys and values.
+- \[width\] `Number` - Should be 1 or 4.  If given, builder assumes code already written, and will ensure array is encoded to the given byte-width type.  Useful for arrays.
 
-**Access**: private  
+**Access**: private
 <a name="Types#_initTypesArray"></a>
 ##types._initTypesArray()
 Initialize list of all types.  Each contains a number of encodings, one of which contains an encoder method and all contain decoders.
 
-**Access**: private  
+**Access**: private
 <a name="Types#_initEncodersDecoders"></a>
 ##types._initEncodersDecoders()
 Initialize all encoders and decoders based on type array.
 
-**Access**: private  
+**Access**: private
 <a name="AMQPArray"></a>
 #class: AMQPArray
 **Members**
@@ -2018,8 +2048,8 @@ Encoding for AMQP Arrays - homogeneous typed collections.  Provides the CODE for
 
 **Params**
 
-- arr `Array` - Array contents, should be encode-able to the given code type.  
-- elementType `Number` - BYTE code-point for the array values (e.g. 0xA1).  
+- arr `Array` - Array contents, should be encode-able to the given code type.
+- elementType `Number` - BYTE code-point for the array values (e.g. 0xA1).
 
 <a name="DescribedType"></a>
 #class: DescribedType
@@ -2055,8 +2085,8 @@ Described type, as described in the AMQP 1.0 spec as follows:
 
 **Params**
 
-- descriptor  - Descriptor for the type (can be any valid AMQP type, including another described type).  
-- value  - Value of the described type (can also be any valid AMQP type, including another described type).  
+- descriptor  - Descriptor for the type (can be any valid AMQP type, including another described type).
+- value  - Value of the described type (can also be any valid AMQP type, including another described type).
 
 <a name="ForcedType"></a>
 #class: ForcedType
@@ -2071,8 +2101,8 @@ ForcedType coerces the encoder to encode to the given type, regardless of what i
 
 **Params**
 
-- typeName  - Symbolic name or specific code (e.g. 'long', or 0xA0)  
-- value  - Value to encode, should be compatible or bad things will occur  
+- typeName  - Symbolic name or specific code (e.g. 'long', or 0xA0)
+- value  - Value to encode, should be compatible or bad things will occur
 
 <a name="Header"></a>
 #class: Header
@@ -2085,7 +2115,7 @@ ForcedType coerces the encoder to encode to the given type, regardless of what i
 ##new Header(options)
 **Params**
 
-- options   
+- options
 
 <a name="DeliveryAnnotations"></a>
 #class: DeliveryAnnotations
@@ -2098,7 +2128,7 @@ ForcedType coerces the encoder to encode to the given type, regardless of what i
 ##new DeliveryAnnotations(annotations)
 **Params**
 
-- annotations   
+- annotations
 
 <a name="Annotations"></a>
 #class: Annotations
@@ -2111,7 +2141,7 @@ ForcedType coerces the encoder to encode to the given type, regardless of what i
 ##new Annotations(annotations)
 **Params**
 
-- annotations   
+- annotations
 
 <a name="Properties"></a>
 #class: Properties
@@ -2124,7 +2154,7 @@ ForcedType coerces the encoder to encode to the given type, regardless of what i
 ##new Properties(options)
 **Params**
 
-- options   
+- options
 
 <a name="ApplicationProperties"></a>
 #class: ApplicationProperties
@@ -2137,7 +2167,7 @@ ForcedType coerces the encoder to encode to the given type, regardless of what i
 ##new ApplicationProperties(properties)
 **Params**
 
-- properties   
+- properties
 
 <a name="Footer"></a>
 #class: Footer
@@ -2150,7 +2180,7 @@ ForcedType coerces the encoder to encode to the given type, regardless of what i
 ##new Footer(map)
 **Params**
 
-- map   
+- map
 
 <a name="Data"></a>
 #class: Data
@@ -2163,7 +2193,7 @@ ForcedType coerces the encoder to encode to the given type, regardless of what i
 ##new Data(data)
 **Params**
 
-- data   
+- data
 
 <a name="AMQPSequence"></a>
 #class: AMQPSequence
@@ -2176,7 +2206,7 @@ ForcedType coerces the encoder to encode to the given type, regardless of what i
 ##new AMQPSequence(values)
 **Params**
 
-- values   
+- values
 
 <a name="AMQPValue"></a>
 #class: AMQPValue
@@ -2189,7 +2219,7 @@ ForcedType coerces the encoder to encode to the given type, regardless of what i
 ##new AMQPValue(value)
 **Params**
 
-- value   
+- value
 
 <a name="Message"></a>
 #class: Message
@@ -2229,8 +2259,8 @@ The message _may_ contain the sections above, and application data _may_ be repe
 
 **Params**
 
-- contents   
-- body   
+- contents
+- body
 
 <a name="Symbol"></a>
 #class: Symbol
@@ -2245,7 +2275,7 @@ Encoding for AMQP Symbol type, to differentiate from strings.  More terse than F
 
 **Params**
 
-- str `String` - Symbol contents  
+- str `String` - Symbol contents
 
 <a name="assertArguments"></a>
 #assertArguments(options, argnames)
@@ -2253,18 +2283,19 @@ Convenience method to assert that a given options object contains the required a
 
 **Params**
 
-- options   
-- argnames   
+- options
+- argnames
 
 <a name="encoder"></a>
 #encoder(val, buf, [codec])
-Encoder methods are used for all examples of that type and are expected to encode to the proper type (e.g. a uint willencode to the fixed-zero-value, the short uint, or the full uint as appropriate).
+Encoder methods are used for all examples of that type and are expected to encode to the proper type (e.g. a uint will
+encode to the fixed-zero-value, the short uint, or the full uint as appropriate).
 
 **Params**
 
-- val  - Value to encode (for fixed value encoders (e.g. null) this will be ignored)  
-- buf `builder` - Buffer-builder into which to write code and encoded value  
-- \[codec\] <code>[Codec](#Codec)</code> - If needed, the codec to encode other values (e.g. for lists/arrays)  
+- val  - Value to encode (for fixed value encoders (e.g. null) this will be ignored)
+- buf `builder` - Buffer-builder into which to write code and encoded value
+- \[codec\] <code>[Codec](#Codec)</code> - If needed, the codec to encode other values (e.g. for lists/arrays)
 
 <a name="decoder"></a>
 #decoder(buf, [codec])
@@ -2272,17 +2303,17 @@ Decoder methods decode an incoming buffer into an appropriate concrete JS entity
 
 **Params**
 
-- buf `Buffer` - Buffer to decode, stripped of prefix code (e.g. 0xA1 0x03 'foo' would have the 0xA1 stripped)  
-- \[codec\] <code>[Codec](#Codec)</code> - If needed, the codec to decode sub-values for composite types.  
+- buf `Buffer` - Buffer to decode, stripped of prefix code (e.g. 0xA1 0x03 'foo' would have the 0xA1 stripped)
+- \[codec\] <code>[Codec](#Codec)</code> - If needed, the codec to decode sub-values for composite types.
 
-**Returns**:  - Decoded value  
+**Returns**:  - Decoded value
 <a name="encode"></a>
 #encode(val)
 Encodes given value into node-amqp-encoder format.
 
 **Params**
 
-- val   
+- val
 
 <a name="onUndef"></a>
 #onUndef(arg1, arg2)
@@ -2293,10 +2324,10 @@ Could use _args_ and slice and work for arbitrary length argument list, but that
 
 **Params**
 
-- arg1   
-- arg2   
+- arg1
+- arg2
 
-**Returns**:  - arg2 if arg1 === undefined, otherwise arg1  
+**Returns**:  - arg2 if arg1 === undefined, otherwise arg1
 <a name="payload"></a>
 #payload
 Convenience methods for operating against DescribedType list payloads.
