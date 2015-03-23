@@ -48,6 +48,21 @@ all through policy overrides.  See [PolicyBase](https://github.com/noodlefrenzy/
 
 *NOTE*: This is early days - if you have ideas for an alternate API, please feel free to [open an issue](https://github.com/noodlefrenzy/node-amqp10/issues/new) on GitHub.
 
+## Supported Servers ##
+
+We are currently actively running against the following servers:
+
+1. Azure EventHubs
+1. Azure ServiceBus Queues and Topics
+
+We have been tested against the following servers, but not exhaustively so issues may remain:
+
+1. ActiveMQ
+1. RabbitMQ with the amqp 1.0 experimental extension
+1. QPID server
+
+If you find any issues, please report them via GitHub.
+
 ## Caveats and Todos ##
 
 I'm trying to manage my remaining work items via Github issues, but they aren't always kept up to date.  If you'd like to contribute,
@@ -55,7 +70,7 @@ feel free to send me an email or pull request.  Below is a high-level list of kn
 
 1. Disposition frames are not dealt with properly, and thus message lifecycles aren't tracked correctly.  Specifically, we don't
    send disposition frames on receipt, and we don't send proper "unsettled" information when re-attaching links.
-2. There are some AMQP types we don't process - notably GUID, and the Decimal23/64/128 types.  These are unused by the protocol, and no-one seems to
+1. There are some AMQP types we don't process - notably GUID, and the Decimal23/64/128 types.  These are unused by the protocol, and no-one seems to
    be using them to convey information in messages, so ignoring them is likely safe.
 
 ## Implementation Notes ##
@@ -65,9 +80,10 @@ submit an Issue or even a PR.  Trust me, I don't take criticism personally, and 
 "obviously bad" choices to someone who is more familiar with the landscape.
 
 +   I've used Node's built-in net/tls classes for communicating with the server.
-+   Data from the server is written to a circular buffer based on [CBarrick's](https://github.com/cbarrick/CircularBuffer).
++   Data from the server is written to a buffer-list based on [Rod Vagg's BL](https://github.com/rvagg/bl).
 +   Outgoing data is encoded using [this buffer builder](https://github.com/PeterReid/node-buffer-builder) - streaming
-    output won't really work since each outgoing payload needs to be prefixed with its encoded size.
+    output won't really work since each outgoing payload needs to be prefixed with its encoded size, however we're working on
+    converting to use as much streaming as possible.
 +   The connection state is managed using [Stately.js](https://github.com/fschaefer/Stately.js), with state transitions
     swapping which callback gets invoked on receipt of new data. (e.g. post-connection, we write the AMQP version header
     and then install a callback to ensure the correct version.  Once incoming data is written to the circular buffer, this
