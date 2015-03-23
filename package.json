@@ -1,7 +1,7 @@
 {
-  "name": "node-amqp-1-0",
+  "name": "amqp10",
   "version": "0.0.15",
-  "description": "AMQP-1.0 compatible Node client, not based on native code (e.g. no proton).",
+  "description": "Native AMQP-1.0 client for node.js",
   "main": "./lib/amqp_client.js",
   "engines": {
     "node": ">= 0.8"
@@ -33,7 +33,7 @@
     "email": "milanz@microsoft.com",
     "url": "http://www.mikelanzetta.com"
   },
-  "homepage": "https://github.com/noodlefrenzy/node-amqp-1-0",
+  "homepage": "https://github.com/noodlefrenzy/node-amqp10",
   "licenses": [
     "MIT"
   ],
@@ -41,11 +41,12 @@
     "amqp",
     "amqp 1.0",
     "amqp-1-0",
+    "amqp10",
     "messaging",
     "queues"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/noodlefrenzy/node-amqp-1-0.git"
+    "url": "https://github.com/noodlefrenzy/node-amqp10.git"
   }
 }

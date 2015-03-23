@@ -1,7 +1,7 @@
-node-amqp-1-0
+node-amqp10
 =============
 
-[![Build Status](https://secure.travis-ci.org/noodlefrenzy/node-amqp-1-0.svg?branch=master)](https://travis-ci.org/noodlefrenzy/node-amqp-1-0) [![Dependency Status](https://david-dm.org/noodlefrenzy/node-amqp-1-0.svg)](https://david-dm.org/noodlefrenzy/node-amqp-1-0) [![Test Coverage](https://codeclimate.com/github/noodlefrenzy/node-amqp-1-0/badges/coverage.svg)](https://codeclimate.com/github/noodlefrenzy/node-amqp-1-0)
+[![Build Status](https://secure.travis-ci.org/noodlefrenzy/node-amqp10.svg?branch=master)](https://travis-ci.org/noodlefrenzy/node-amqp10) [![Dependency Status](https://david-dm.org/noodlefrenzy/node-amqp10.svg)](https://david-dm.org/noodlefrenzy/node-amqp10) [![Test Coverage](https://codeclimate.com/github/noodlefrenzy/node-amqp10/badges/coverage.svg)](https://codeclimate.com/github/noodlefrenzy/node-amqp10)
 
 AMQP 1.0-compliant Node.js client.  Since AMQP 1.0 is such a large departure from 0.9.1,
 I've started a new project rather than fork from [node-amqp](https://github.com/postwait/node-amqp) or [amqp.node](https://github.com/squaremo/amqp.node).
@@ -15,7 +15,7 @@ See `simple_eventhub_test.js` or `simple_activemq_test.js` for examples.
 The basic usage is to require the module, new up a client with the appropriate policy for the server you're connecting against,
 connect, and then send/receive as necessary.  So a simple example for a local ActiveMQ server would look like:
 
-    var AMQPClient = require('node-amqp-1-0');
+    var AMQPClient = require('amqp10');
     var client = new AMQPClient(); // Uses PolicyBase default policy
     client.connect('amqp://localhost/myqueue', function(conn_err) {
       // ... check for errors ...
@@ -36,7 +36,7 @@ Send callbacks are called when the resulting disposition frame is received and t
 tweak the policy you give to AMQPClient on construction.  For instance, to force send callbacks to be called immediately on successful
 sending of the payload, you would build AMQPClient with:
 
-    var AMQPClient = require('node-amqp-1-0);
+    var AMQPClient = require('amqp10);
     var client = new AMQPClient(AMQPClient.policies.merge({
       senderLinkPolicy: {
         callbackPolicy: AMQPClient.policies.utils.SenderCallbackPolicies.OnSent
@@ -44,9 +44,9 @@ sending of the payload, you would build AMQPClient with:
     }, AMQPClient.policies.PolicyBase));
 
 In addition to the above, you can also tune how message link credit is doled out (for throttling), as well as most other AMQP behaviors,
-all through policy overrides.  See [PolicyBase](https://github.com/noodlefrenzy/node-amqp-1-0/blob/master/lib/policies/policy_base.js) and the [policy utilities](https://github.com/noodlefrenzy/node-amqp-1-0/blob/master/lib/policies/policy_utilities.js) for more details on altering various behaviors.
+all through policy overrides.  See [PolicyBase](https://github.com/noodlefrenzy/node-amqp10/blob/master/lib/policies/policy_base.js) and the [policy utilities](https://github.com/noodlefrenzy/node-amqp10/blob/master/lib/policies/policy_utilities.js) for more details on altering various behaviors.
 
-*NOTE*: This is early days - if you have ideas for an alternate API, please feel free to [open an issue](https://github.com/noodlefrenzy/node-amqp-1-0/issues/new) on GitHub.
+*NOTE*: This is early days - if you have ideas for an alternate API, please feel free to [open an issue](https://github.com/noodlefrenzy/node-amqp10/issues/new) on GitHub.
 
 ## Caveats and Todos ##
 
