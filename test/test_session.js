@@ -2,7 +2,6 @@
 
 var debug = require('debug')('amqp10-test_connection'),
     should = require('should'),
-    builder = require('buffer-builder'),
 
     constants = require('../lib/constants'),
     u = require('../lib/utilities'),
@@ -29,49 +28,41 @@ PolicyBase.connectPolicy.options.containerId = 'test';
 PolicyBase.senderLinkPolicy.options.name = 'sender';
 PolicyBase.receiverLinkPolicy.options.name = 'receiver';
 
-function openBuf(options) {
-  var open = new OpenFrame(options || PolicyBase.connectPolicy.options);
-  return open.outgoing();
-}
-
-function beginBuf(options, channel) {
+function MockBeginFrame(options, channel) {
   var begin = new BeginFrame(u.deepMerge(options, PolicyBase.sessionPolicy.options));
   begin.channel = channel;
-  return begin.outgoing();
+  return begin;
 }
 
 function src() { return { address: 'test-src' }; }
 function tgt() { return { address: 'test-tgt' }; }
 
-function attachBuf(options, channel) {
+function MockAttachFrame(options, channel) {
   var defaults = options.role === constants.linkRole.sender ?
       PolicyBase.senderLinkPolicy.options :
       PolicyBase.receiverLinkPolicy.options;
+
   var opts = u.deepMerge({
     name: 'test',
     source: src(),
     target: tgt()
   }, options, defaults);
+
   var attach = new AttachFrame(opts);
   attach.channel = channel;
-  return attach.outgoing();
+  return attach;
 }
 
-function detachBuf(options, channel) {
-  var detach = new DetachFrame(options);
-  detach.channel = channel;
-  return detach.outgoing();
+function MockDetachFrame(options, channel) {
+  var detachFrame = new DetachFrame(options);
+  detachFrame.channel = channel;
+  return detachFrame;
 }
 
-function endBuf(err, channel) {
-  var end = new EndFrame(err);
-  end.channel = channel;
-  return end.outgoing();
-}
-
-function closeBuf(err) {
-  var close = new CloseFrame(err);
-  return close.outgoing();
+function MockEndFrame(err, channel) {
+  var endFrame = new EndFrame(err);
+  endFrame.channel = channel;
+  return endFrame;
 }
 
 describe('Session', function() {
@@ -90,16 +81,16 @@ describe('Session', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        openBuf(),
-        beginBuf(null, 1),
-        endBuf(null, 1),
-        closeBuf()
+        new OpenFrame(PolicyBase.connectPolicy.options),
+        new MockBeginFrame(null, 1),
+        new MockEndFrame(null, 1),
+        new CloseFrame()
       ], [
         constants.amqpVersion,
-        openBuf(),
-        beginBuf({ remoteChannel: 1 }, 5),
-        [ true, endBuf(new AMQPError(AMQPError.ConnectionForced, 'test'), 5) ],
-        [ true, closeBuf() ]
+        new OpenFrame(PolicyBase.connectPolicy.options),
+        new MockBeginFrame({ remoteChannel: 1 }, 5),
+        [ true, new MockEndFrame(new AMQPError(AMQPError.ConnectionForced, 'test'), 5) ],
+        [ true, new CloseFrame() ]
       ]);
 
       var connection = new Connection(PolicyBase.connectPolicy);
@@ -140,16 +131,16 @@ describe('Session', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        openBuf(),
-        beginBuf({}, 1),
-        endBuf(null, 1),
-        closeBuf()
+        new OpenFrame(PolicyBase.connectPolicy.options),
+        new MockBeginFrame({}, 1),
+        new MockEndFrame(null, 1),
+        new CloseFrame()
       ], [
         constants.amqpVersion,
-        openBuf(),
-        beginBuf({ remoteChannel: 1 }, 5),
-        [ true, endBuf(new AMQPError(AMQPError.ConnectionForced, 'test'), 5) ],
-        [ true, closeBuf() ]
+        new OpenFrame(PolicyBase.connectPolicy.options),
+        new MockBeginFrame({ remoteChannel: 1 }, 5),
+        [ true, new MockEndFrame(new AMQPError(AMQPError.ConnectionForced, 'test'), 5) ],
+        [ true, new CloseFrame() ]
       ]);
 
       var connection = new Connection(PolicyBase.connectPolicy);
@@ -184,18 +175,20 @@ describe('Session', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        openBuf(),
-        beginBuf({}, 1),
-        attachBuf({ handle: 0, role: constants.linkRole.sender }, 1),
-        detachBuf({ handle: 0}, 1), endBuf(null, 1), closeBuf()
+        new OpenFrame(PolicyBase.connectPolicy.options),
+        new MockBeginFrame({}, 1),
+        new MockAttachFrame({ handle: 0, role: constants.linkRole.sender }, 1),
+        new MockDetachFrame({ handle: 0}, 1),
+        new MockEndFrame(null, 1),
+        new CloseFrame()
       ], [
         constants.amqpVersion,
-        openBuf(),
-        beginBuf({ remoteChannel: 1 }, 5),
-        attachBuf({ handle: 3, role: constants.linkRole.receiver }, 5),
-        [ true, detachBuf({ handle: 3, error: new AMQPError(AMQPError.LinkDetachForced, 'test') }, 5) ],
-        [ true, endBuf(new AMQPError(AMQPError.ConnectionForced, 'test'), 5) ],
-        [ true, closeBuf() ]
+        new OpenFrame(PolicyBase.connectPolicy.options),
+        new MockBeginFrame({ remoteChannel: 1 }, 5),
+        new MockAttachFrame({ handle: 3, role: constants.linkRole.receiver }, 5),
+        [ true, new MockDetachFrame({ handle: 3, error: new AMQPError(AMQPError.LinkDetachForced, 'test') }, 5) ],
+        [ true, new MockEndFrame(new AMQPError(AMQPError.ConnectionForced, 'test'), 5) ],
+        [ true, new CloseFrame() ]
       ]);
 
       var connection = new Connection(PolicyBase.connectPolicy);

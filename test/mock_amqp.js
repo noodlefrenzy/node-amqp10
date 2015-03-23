@@ -6,6 +6,10 @@ var BufferList = require('bl'),
     StateMachine = require('stately.js'),
     should = require('should'),
 
+    FrameBase = require('../lib/frames/frame'),
+    SaslFrame = require('../lib/frames/sasl_frame').SaslFrame,
+
+    tu = require('./testing_utils'),
     constants = require('../lib/constants'),
     utils = require('../lib/utilities');
 
@@ -69,9 +73,20 @@ MockServer.prototype.teardown = function() {
   }
 };
 
+function convertSequenceFramesToBuffers(frame) {
+  if (frame instanceof FrameBase.AMQPFrame ||
+      frame instanceof SaslFrame) {
+    return tu.convertFrameToBuffer(frame);
+  } else if (Array.isArray(frame)) {
+    return [frame[0], convertSequenceFramesToBuffers(frame[1])];
+  }
+
+  return frame;
+}
+
 MockServer.prototype.setSequence = function(reqs, resps) {
-  this.requestsExpected = reqs;
-  this.responsesToSend = resps;
+  this.requestsExpected = reqs.map(convertSequenceFramesToBuffers);
+  this.responsesToSend = resps.map(convertSequenceFramesToBuffers);
 };
 
 MockServer.prototype._sendNext = function() {
@@ -99,7 +114,9 @@ MockServer.prototype._sendUntil = function(toSend) {
     debug('No data to send.');
   }
 
-  if (this.responseIdx < this.responsesToSend.length && this.responsesToSend[this.responseIdx] instanceof Array && this.responsesToSend[this.responseIdx][0]) {
+  if (this.responseIdx < this.responsesToSend.length &&
+      this.responsesToSend[this.responseIdx] instanceof Array &&
+      this.responsesToSend[this.responseIdx][0]) {
     var nextToSend = this.responsesToSend[this.responseIdx++];
     this._sendUntil(nextToSend);
   }
