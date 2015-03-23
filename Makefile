@@ -12,7 +12,7 @@ coverage:
 	make jshint && $(NPM_BIN)/istanbul cover $(NPM_BIN)/_mocha --report lcovonly -- -t 10000 --ui tdd $(TESTS); \
 
 codeclimate-send:
-	CODECLIMATE_REPO_TOKEN=b33b8273d40cd973eaa72e274445544847dc4ed74447118765176eae6dd722cb codeclimate < coverage/lcov.info
+	CODECLIMATE_REPO_TOKEN=2612b6d4b7bed06760320154f22eba4e348e53055c0eaf9a9a00e3b05ef3b37d codeclimate < coverage/lcov.info
 
 test:
 	@if [ "$$GREP" ]; then \
