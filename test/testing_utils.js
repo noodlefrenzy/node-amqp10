@@ -3,9 +3,8 @@
 var builder = require('buffer-builder'),
     BufferList = require('bl'),
     should = require('should'),
-    _ = require('lodash');
-
-    var util = require('util');
+    _ = require('lodash'),
+    sb = require('stream-buffers');
 
 function buildBuffer(contents) {
   var bufb = new builder();
@@ -68,4 +67,10 @@ module.exports.assertTransitions = function(expectedTransitions, callback) {
 
     // @todo: should we display incorrect states?
   };
+};
+
+module.exports.convertFrameToBuffer = function(frame) {
+  var buffer = new sb.WritableStreamBuffer();
+  frame.write(buffer);
+  return buffer.getContents();
 };

@@ -29,32 +29,11 @@ var debug = require('debug')('amqp10-test_sasl'),
 
 PolicyBase.connectPolicy.options.containerId = 'test';
 
-function initBuf() {
-  var init = new SaslFrames.SaslInit({
+function MockSaslInitFrame() {
+  return new SaslFrames.SaslInit({
     mechanism: new AMQPSymbol('PLAIN'),
     initialResponse: tu.buildBuffer([0, builder.prototype.appendString, 'user', 0, builder.prototype.appendString, 'pass'])
   });
-  return init.outgoing();
-}
-
-function mechanismsBuf() {
-  var mech = new SaslFrames.SaslMechanisms(['PLAIN']);
-  return mech.outgoing();
-}
-
-function outcomeBuf() {
-  var outcome = new SaslFrames.SaslOutcome({code: constants.saslOutcomes.ok});
-  return outcome.outgoing();
-}
-
-function openBuf() {
-  var open = new OpenFrame(PolicyBase.connectPolicy.options);
-  return open.outgoing();
-}
-
-function closeBuf(err) {
-  var close = new CloseFrame(err);
-  return close.outgoing();
 }
 
 describe('Sasl', function() {
@@ -73,17 +52,17 @@ describe('Sasl', function() {
       server = new MockServer();
       server.setSequence([
         constants.saslVersion,
-        initBuf(),
+        new MockSaslInitFrame(),
         constants.amqpVersion,
-        openBuf(),
-        closeBuf()
+        new OpenFrame(PolicyBase.connectPolicy.options),
+        new CloseFrame()
       ], [
         constants.saslVersion,
-        [ true, mechanismsBuf() ],
-        outcomeBuf(),
+        [ true, new SaslFrames.SaslMechanisms(['PLAIN']) ],
+        new SaslFrames.SaslOutcome({code: constants.saslOutcomes.ok}),
         constants.amqpVersion,
-        openBuf(),
-        [ true, closeBuf(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
+        new OpenFrame(PolicyBase.connectPolicy.options),
+        [ true, new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
       ]);
 
       var connection = new Connection(PolicyBase.connectPolicy);

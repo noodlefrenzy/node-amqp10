@@ -2,7 +2,6 @@
 
 var debug = require('debug')('amqp10-test_connection'),
     should = require('should'),
-    builder = require('buffer-builder'),
 
     constants = require('../lib/constants'),
 
@@ -26,16 +25,6 @@ var debug = require('debug')('amqp10-test_connection'),
     tu = require('./testing_utils');
 
 PolicyBase.connectPolicy.options.containerId = 'test';
-
-function openBuf() {
-  var open = new OpenFrame(PolicyBase.connectPolicy.options);
-  return open.outgoing();
-}
-
-function closeBuf(err) {
-  var close = new CloseFrame(err);
-  return close.outgoing();
-}
 
 describe('Connection', function() {
   describe('#_open()', function() {
@@ -149,10 +138,10 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        openBuf()
+        new OpenFrame(PolicyBase.connectPolicy.options)
       ], [
         constants.amqpVersion,
-        closeBuf()
+        new CloseFrame()
       ]);
 
       var connection = new Connection(PolicyBase.connectPolicy);
@@ -170,10 +159,10 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        openBuf()
+        new OpenFrame(PolicyBase.connectPolicy.options)
       ], [
         [ true, constants.amqpVersion ],
-        closeBuf()
+        new CloseFrame()
       ]);
 
       var connection = new Connection(PolicyBase.connectPolicy);
@@ -220,12 +209,12 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        openBuf(),
-        closeBuf()
+        new OpenFrame(PolicyBase.connectPolicy.options),
+        new CloseFrame()
       ], [
         constants.amqpVersion,
-        openBuf(),
-        [ true, closeBuf(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
+        new OpenFrame(PolicyBase.connectPolicy.options),
+        [ true, new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
       ]);
 
       var connection = new Connection(PolicyBase.connectPolicy);
@@ -242,12 +231,12 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        openBuf(),
-        closeBuf()
+        new OpenFrame(PolicyBase.connectPolicy.options),
+        new CloseFrame()
       ], [
         constants.amqpVersion,
-        openBuf(),
-        [ true, closeBuf(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
+        new OpenFrame(PolicyBase.connectPolicy.options),
+        [ true, new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
       ]);
 
       var connection = new Connection(PolicyBase.connectPolicy);
