@@ -33,10 +33,15 @@
     "email": "milanz@microsoft.com",
     "url": "http://www.mikelanzetta.com"
   },
-  "homepage": "https://github.com/noodlefrenzy/node-amqp10",
-  "licenses": [
-    "MIT"
+  "contributors": [
+    {
+      "name": "mbroadst",
+      "email": "mbroadst@gmail.com",
+      "url": "https://github.com/mbroadst"
+    }
   ],
+  "homepage": "https://github.com/noodlefrenzy/node-amqp10",
+  "license": "MIT",
   "keywords": [
     "amqp",
     "amqp 1.0",
