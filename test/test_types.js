@@ -221,7 +221,20 @@ describe('Types', function() {
           { name: 'list0', type: 0x45, value: new Buffer([]), expectedOutput: [] },
           {
             name: 'list8', type: 0xC0,
-            value: buf([0xB, 0x2, 0x71, builder.prototype.appendInt32BE, 123, 0x71, builder.prototype.appendInt32BE, 456]),
+            value: buf([
+              0xC, 0x2,
+              0x71, builder.prototype.appendInt32BE, 123,
+              0x71, builder.prototype.appendInt32BE, 456
+            ]),
+            expectedOutput: [123, 456]
+          },
+          {
+            name: 'list32', type: 0xD0,
+            value: buf([
+              builder.prototype.appendUInt32BE, 0xD,  builder.prototype.appendUInt32BE, 0x2,
+              0x71, builder.prototype.appendInt32BE, 123,
+              0x71, builder.prototype.appendInt32BE, 456
+            ]),
             expectedOutput: [123, 456]
           },
           {
