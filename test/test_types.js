@@ -33,8 +33,8 @@ describe('Types', function() {
       describe('scalar', function() {
         [
           { name: 'null', value: null, expectedOutput: buf([0x40]) },
-          { name: 'boolean(true)', type: 'boolean', value: true, expectedOutput: buf([0x41]) },
-          { name: 'boolean(false)', type: 'boolean', value: false, expectedOutput: buf([0x42]) },
+          { name: 'true', type: 'boolean', value: true, expectedOutput: buf([0x41]) },
+          { name: 'false', type: 'boolean', value: false, expectedOutput: buf([0x42]) },
           {
             name: 'uint', value: 10000,
             expectedOutput: buf([0x70, builder.prototype.appendUInt32BE, 10000])
@@ -104,10 +104,6 @@ describe('Types', function() {
         expect(decode).to.be.an.instanceOf(Function);
 
         var actual = decode(test.value, codec);
-        if (actual instanceof Buffer) {
-          console.log(actual.toString());
-        }
-
         expect(actual).to.eql(test.expectedOutput);
       });
     }
