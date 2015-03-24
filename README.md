@@ -88,7 +88,6 @@ submit an Issue or even a PR.  Trust me, I don't take criticism personally, and 
     swapping which callback gets invoked on receipt of new data. (e.g. post-connection, we write the AMQP version header
     and then install a callback to ensure the correct version.  Once incoming data is written to the circular buffer, this
     callback is invoked, and a comparison vs. the expected version triggers another transition).
-+   Bit-twiddling is done via [node-butils](https://github.com/nlf/node-butils).
 +   Debug output is done via [debug](https://www.npmjs.com/package/debug) with the prefix `amqp10-`.  The main client's debug
     name is `amqp10-client` so setting `DEBUG=amqp10-client` will get you all top-level debugging output.
 

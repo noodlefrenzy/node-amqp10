@@ -3,7 +3,6 @@
 var fs = require('fs'),
   util = require('util'),
   int64 = require('node-int64'),
-  butils = require('butils'),
   constants = require('../lib/constants');
 
 if (process.argv.length < 3) {
