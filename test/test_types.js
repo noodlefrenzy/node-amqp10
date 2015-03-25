@@ -31,11 +31,13 @@ describe('Types', function() {
 
     describe('primitives', function() {
       describe('scalar', function() {
+        var vbin32Buffer = [];
         var str32Utf8String;
         var sym32String;
         for (var i = 0; i < 500; ++i) {
           str32Utf8String += 'f';
           sym32String += 'a';
+          vbin32Buffer.push(0x01);
         }
 
         var str32Utf8StringExpectedBuffer = [
@@ -49,6 +51,11 @@ describe('Types', function() {
           builder.prototype.appendUInt32BE, sym32String.length,
           builder.prototype.appendString, sym32String
         ];
+
+        var vbin32ExpectedBuffer = [
+          0xb0,
+          builder.prototype.appendUInt32BE, 500,
+        ].concat(vbin32Buffer);
 
         [
           { name: 'null', value: null, expectedOutput: buf([0x40]) },
@@ -146,9 +153,16 @@ describe('Types', function() {
           //   ]),
           //   expectedOutput: 'some uuid'
           // },
-          // { name: 'vbin8', type: 0xa0, value: buf([0x10]), expectedOutput: new Buffer([0x10]) },
-          // { name: 'vin32', type: 0xb0, value: buf([0x01, 0x02, 0x03, 0x04]), expectedOutput: new Buffer([0x01, 0x02, 0x03, 0x04]) },
-
+          {
+            name: 'vbin8', type: 'binary',
+            value: new Buffer([0x10]),
+            expectedOutput: buf([0xa0, 0x01, 0x10])
+          },
+          {
+            name: 'vbin32', type: 'binary',
+            value: new Buffer(vbin32Buffer),
+            expectedOutput: buf(vbin32ExpectedBuffer)
+          },
           {
             name: 'str8-utf8', type: 'string',
             value: 'foo',
@@ -334,6 +348,11 @@ describe('Types', function() {
             name: 'str32-utf8',
             value: buf([0xb1, builder.prototype.appendUInt32BE, 3, builder.prototype.appendString, 'foo']),
             expectedOutput: 'foo'
+          },
+          {
+            name: 'str32-utf8 (empty)',
+            value: buf([0xb1, builder.prototype.appendUInt32BE, 0, builder.prototype.appendString, '']),
+            expectedOutput: ''
           },
           {
             name: 'sym8',
