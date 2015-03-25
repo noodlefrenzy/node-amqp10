@@ -237,13 +237,11 @@ describe('Types', function() {
     function testDecoding(test) {
       it(test.name, function() {
         var actualOutput = codec.decode(test.value)[0];
-        if (test.name === 'float') {
-          // NOTE: this is pretty cheesy, but so is dealing with
-          //       floating point precision...
-          actualOutput = parseFloat(actualOutput.toFixed(2));
+        if (typeof test.expectedOutput === 'number' && test.expectedOutput % 1 !== 0) {
+          expect(actualOutput).to.be.closeTo(test.expectedOutput, 0.00001);
+        } else {
+          expect(actualOutput).to.eql(test.expectedOutput);
         }
-
-        expect(actualOutput).to.eql(test.expectedOutput);
       });
     }
 
