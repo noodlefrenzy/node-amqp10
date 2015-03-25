@@ -32,11 +32,11 @@ describe('OpenFrame', function() {
     var open = new OpenFrame({ containerId: 'test', hostname: 'localhost' });
     var actual = tu.convertFrameToBuffer(open);
     var expected = tu.buildBuffer([
-      0x00, 0x00, 0x00, 0x46,
+      0x00, 0x00, 0x00, 0x3f,
       0x02, 0x00, 0x00, 0x00,
       0x00,
-      0x80, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x10,
+      0x53,
+      0x10,
       0xc0, 0x32, 0x0a, // list
       0xa1, 4, builder.prototype.appendString, 'test',
       0xa1, 9, builder.prototype.appendString, 'localhost',
@@ -58,11 +58,11 @@ describe('BeginFrame', function() {
     begin.channel = 1;
     var actual = tu.convertFrameToBuffer(begin);
     var expected = tu.buildBuffer([
-      0x00, 0x00, 0x00, 0x26,
+      0x00, 0x00, 0x00, 0x1F,
       0x02, 0x00, 0x00, 0x01,
       0x00,
-      0x80, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x11,
+      0x53,
+      0x11,
       0xc0, 0x12, 0x08, // list
       0x40,
       0x52, 0x01,
@@ -89,22 +89,22 @@ describe('AttachFrame', function() {
     var actual = tu.convertFrameToBuffer(attach);
     var sourceSize = 1 + 1 + 1 + 13 + 1 + 1 + 3 + 1 + 3 + 1 + 1 + 1;
     var targetSize = 1 + 9 + 1 + 13 + 1 + 1 + 3 + 1;
-    var listSize = 1 + 6 + 2 + 1 + 2 + 2 + 10 + 2 + sourceSize + 10 + 2 + targetSize + 3 + 1 + 2 + 1 + 1 + 1 + 3;
+    var listSize = 1 + 6 + 2 + 1 + 2 + 2 + 3 + 2 + sourceSize + 3 + 2 + targetSize + 3 + 1 + 2 + 1 + 1 + 1 + 3;
     var listCount = 14;
-    var frameSize = 8 + 1 + 9 + 2 + listSize;
+    var frameSize = 1 + 1 + 9 + 2 + listSize;
     var expected = tu.buildBuffer([
       0x00, 0x00, 0x00, frameSize,
       0x02, 0x00, 0x00, 0x01,
       0x00,
-      0x80, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x12,
+      0x53,
+      0x12,
       0xc0, listSize, listCount,
       0xA1, 4, builder.prototype.appendString, 'test',
       0x52, 1, // handle
       0x42, // role=sender
       0x50, 2, // sender-settle-mode=mixed
       0x50, 0, // rcv-settle-mode=first
-      0x00, 0x80, 0, 0, 0, 0, 0, 0, 0, 0x28, // source
+      0x00, 0x53, 0x28, // source
       0xc0, sourceSize, 11,
       0x40,
       0x43,
@@ -117,7 +117,7 @@ describe('AttachFrame', function() {
       0x40,
       0x40,
       0x40,
-      0x00, 0x80, 0, 0, 0, 0, 0, 0, 0, 0x29, // target
+      0x00, 0x53, 0x29, // target
       0xc0, targetSize, 7,
       0xA1, 7, builder.prototype.appendString, 'testtgt',
       0x43,
@@ -156,13 +156,13 @@ describe('FlowFrame', function() {
     flow.channel = 1;
     var actual = tu.convertFrameToBuffer(flow);
     var listSize = 1 + 2 + 2 + 2 + 2 + 2 + 2 + 2 + 1 + 1 + 1 + 3;
-    var frameSize = 8 + 1 + 9 + 2 + listSize;
+    var frameSize = 1 + 1 + 9 + 2 + listSize;
     var expected = tu.buildBuffer([
       0x00, 0x00, 0x00, frameSize,
       0x02, 0x00, 0x00, 0x01,
       0x00,
-      0x80, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x13,
+      0x53,
+      0x13,
       0xc0, listSize, 11,
       0x52, 1,
       0x52, 100,
@@ -197,13 +197,13 @@ describe('TransferFrame', function() {
     var actual = tu.convertFrameToBuffer(transfer);
     var payloadSize = 12;
     var listSize = 1 + 2 + 2 + 3 + 5 + 1 + 1 + 2 + 1 + 1 + 1 + 1;
-    var frameSize = 8 + 1 + 9 + 2 + listSize + payloadSize;
+    var frameSize = 1 + 1 + 2 + 2 + listSize + payloadSize;
     var expected = tu.buildBuffer([
       0x00, 0x00, 0x00, frameSize,
       0x02, 0x00, 0x00, 0x01,
       0x00,
-      0x80, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x14,
+      0x53,
+      0x14,
       0xc0, listSize, 11,
       0x52, 1, // handle
       0x52, 1, // delivery-id
@@ -215,7 +215,7 @@ describe('TransferFrame', function() {
       0x40, // state
       0x42, 0x42, 0x42, // resume/aborted/batchable
       // Message Body - amqp-value of uint(10)
-      0x00, 0x80, 0, 0, 0, 0, 0, 0, 0, 0x77,
+      0x00, 0x53, 0x77,
       0x52, 10
     ]);
 
@@ -228,13 +228,12 @@ describe('SaslFrames', function() {
     it('should encode correctly', function() {
       var mechanisms = new Sasl.SaslMechanisms();
       var actual = tu.convertFrameToBuffer(mechanisms);
-      var frameSize = 8 + 1 + 9 + 3 + 2 + 'ANONYMOUS'.length;
+      var frameSize = 8 + 1 + 2 + 3 + 2 + 'ANONYMOUS'.length;
       var expected = tu.buildBuffer([
         0x00, 0x00, 0x00, frameSize,
         0x02, 0x01, 0x00, 0x00,
         0x00,
-        0x80, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x40,
+        0x53, 0x40,
         0xC0, 9 + 3, 1,
         0xA3, 9, builder.prototype.appendString, 'ANONYMOUS'
       ]);

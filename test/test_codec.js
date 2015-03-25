@@ -215,7 +215,7 @@ describe('Codec', function() {
     });
     it('should encode lists', function() {
       var list = [1, 'foo'];
-      var expected = buildBuffer([0xC0, (1 + 5 + 5), 2, 0x71, 0, 0, 0, 1, 0xA1, 3, builder.prototype.appendString, 'foo']);
+      var expected = buildBuffer([0xC0, (1 + 2 + 5), 2, 0x54, 1, 0xA1, 3, builder.prototype.appendString, 'foo']);
       var bufb = new builder();
       codec.encode(list, bufb);
       tu.shouldBufEql(expected, bufb);
@@ -235,7 +235,7 @@ describe('Codec', function() {
     it('should encode described types with no values', function() {
       var bufb = new builder();
       codec.encode(new DescribedType(new Int64(0x0, 0x26)), bufb);
-      var expected = buildBuffer([0x00, 0x80, 0, 0, 0, 0, 0, 0, 0, 0x26, 0x45]);
+      var expected = buildBuffer([0x00, 0x53, 0x26, 0x45]);
       tu.shouldBufEql(expected, bufb);
     });
     it('should encode objects as lists when asked', function() {
@@ -317,9 +317,9 @@ describe('Codec', function() {
           'incomingLocales', 'offeredCapabilities', 'desiredCapabilities', 'properties']
       });
       var expected = buildBuffer([0x00,
-        0x80, builder.prototype.appendUInt32BE, 0x0, builder.prototype.appendUInt32BE, 0x10, // Descriptor
+        0x53, 0x10, // Descriptor
         // 0xD0, builder.prototype.appendUInt32BE, 0x0, builder.prototype.appendUInt32BE, 0x0, // List (size & count)
-        0xC0, (1 + 8 + 11 + 5 + 3 + 5 + 7 + 7 + 1 + 1 + 3), 10,
+        0xC0, 0x34, 10,
         0xA1, 0x6, builder.prototype.appendString, 'client', // ID
         0xA1, 0x9, builder.prototype.appendString, 'localhost', // Hostname
         0x70, builder.prototype.appendUInt32BE, 512, // Max Frame Size
