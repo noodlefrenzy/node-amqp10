@@ -14,6 +14,7 @@ var debugOutputFile = process.argv[2];
 var tryToConvert = true;
 
 var rxPrefix = 'Connection Rx:';
+var txPrefix = 'amqp10-Frame Sending frame:';
 
 function s(cnt) {
   var r = '';
@@ -110,8 +111,22 @@ function x(hexstr, consumed, result, indent) {
         var parsedColl = x(val, 0, '', indent + 2);
         result += s(indent) + prefix + ' ' + len + ' ' + nent + '\n' + parsedColl.result;
         break;
+      case 'd':
+        len = new Buffer(hexstr.substr(0, 8), 'hex').readUInt32BE(0);
+        consumed += 8;
+        hexstr = hexstr.substr(8);
+        nent = new Buffer(hexstr.substr(0, 8), 'hex').readUInt32BE(0);
+        consumed += 8;
+        hexstr = hexstr.substr(8);
+        val = hexstr.substr(0, (len - 1) * 2);
+        consumed += (len - 1) * 2;
+        hexstr = hexstr.substr((len - 1) * 2);
+        var parsedColl = x(val, 0, '', indent + 2);
+        result += s(indent) + prefix + ' ' + len + ' ' + nent + '\n' + parsedColl.result;
+        break;
       default:
         console.log('Error: Unexpected prefix ' + prefix);
+        result += s(indent) + prefix + ' unexpected\n';
         break;
     }
   }
@@ -137,11 +152,9 @@ function parseHex(hexstr) {
       body = body.substr(16);
       var frameLength64 = new int64(new Buffer('00000000' + lengthstr, 'hex'));
       var frameLength = frameLength64.valueOf() * 2 - (8*2);
-      console.log(lengthstr + ': ' + frameLength);
       if (checkLength(body, frameLength)) {
         var frame = body.substr(0, frameLength);
         var parsedFrame = x(frame, 0, '', 2).result;
-        console.log(parsedFrame);
         parsed += 'Frame of length ' + frameLength + ':\n';
         parsed += parsedFrame;
         body = body.substr(frameLength);
@@ -153,18 +166,45 @@ function parseHex(hexstr) {
 
 fs.readFile(debugOutputFile, function (err, data) {
   var lines = data.toString().split('\n');
-  var allhex = '';
+  var rxHex = '';
+  var txHex = '';
   for (var idx in lines) {
     var line = lines[idx].trim();
     var idxOfPrefix = line.indexOf(rxPrefix);
     if (idxOfPrefix >= 0) {
-      var curhex = line.substr(idxOfPrefix + rxPrefix.length + 1).trim();
-      allhex += curhex;
+      var curRxHex = line.substr(idxOfPrefix + rxPrefix.length + 1).trim();
+      if (curRxHex.indexOf(' +') != -1) {
+        curRxHex = curRxHex.substr(0, curRxHex.indexOf(' +'));
+      }
+      rxHex += curRxHex;
+    }
+    idxOfPrefix = line.indexOf(txPrefix);
+    if (idxOfPrefix >= 0) {
+      var rest = line.substr(idxOfPrefix + txPrefix.length + 1).trim();
+      var idxOfHexStart = rest.indexOf('}: ');
+      if (idxOfHexStart >= 0) {
+        var curTxHex = rest.substr(idxOfHexStart + '}: '.length);
+        if (curTxHex.indexOf(' +') != -1) {
+          curTxHex = curTxHex.substr(0, curTxHex.indexOf(' +'));
+        }
+        txHex += curTxHex;
+      }
     }
   }
-  var parsedHex = parseHex(allhex);
-  //console.log('Hex:');
-  //console.log(allhex);
+  var parsedRxHex = parseHex(rxHex);
+  var parsedTxHex = parseHex(txHex);
+  console.log('============================================');
+  console.log('=============== Received ===================');
+  console.log('============================================\n');
+  console.log('Hex:');
+  console.log(rxHex);
   console.log('\nParsed:');
-  console.log(parsedHex);
+  console.log(parsedRxHex);
+  console.log('\n============================================');
+  console.log('================= Sent =====================');
+  console.log('============================================\n');
+  console.log('Hex:');
+  console.log(txHex);
+  console.log('\nParsed:');
+  console.log(parsedTxHex);
 });
