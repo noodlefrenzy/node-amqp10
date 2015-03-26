@@ -1,7 +1,7 @@
 node-amqp10
 =============
 
-[![Build Status](https://secure.travis-ci.org/noodlefrenzy/node-amqp10.svg?branch=master)](https://travis-ci.org/noodlefrenzy/node-amqp10) [![Dependency Status](https://david-dm.org/noodlefrenzy/node-amqp10.svg)](https://david-dm.org/noodlefrenzy/node-amqp10) [![Test Coverage](https://codeclimate.com/github/noodlefrenzy/node-amqp10/badges/coverage.svg)](https://codeclimate.com/github/noodlefrenzy/node-amqp10)
+[![Build Status](https://secure.travis-ci.org/noodlefrenzy/node-amqp10.svg?branch=master)](https://travis-ci.org/noodlefrenzy/node-amqp10) [![Dependency Status](https://david-dm.org/noodlefrenzy/node-amqp10.svg)](https://david-dm.org/noodlefrenzy/node-amqp10) [![Code Climate](https://codeclimate.com/github/noodlefrenzy/node-amqp10/badges/gpa.svg)](https://codeclimate.com/github/noodlefrenzy/node-amqp10) [![Test Coverage](https://codeclimate.com/github/noodlefrenzy/node-amqp10/badges/coverage.svg)](https://codeclimate.com/github/noodlefrenzy/node-amqp10)
 
 AMQP 1.0-compliant Node.js client.  Since AMQP 1.0 is such a large departure from 0.9.1,
 I've started a new project rather than fork from [node-amqp](https://github.com/postwait/node-amqp) or [amqp.node](https://github.com/squaremo/amqp.node).
@@ -36,7 +36,7 @@ Send callbacks are called when the resulting disposition frame is received and t
 tweak the policy you give to AMQPClient on construction.  For instance, to force send callbacks to be called immediately on successful
 sending of the payload, you would build AMQPClient with:
 
-    var AMQPClient = require('amqp10);
+    var AMQPClient = require('amqp10');
     var client = new AMQPClient(AMQPClient.policies.merge({
       senderLinkPolicy: {
         callbackPolicy: AMQPClient.policies.utils.SenderCallbackPolicies.OnSent
