@@ -47,9 +47,7 @@ function x(hexstr, consumed, result, indent) {
     result = body.result;
     consumed = body.consumed;
   } else {
-    var len;
-    var nent;
-    var val;
+    var len, nent, val, parsedColl;
     switch (prefix[0]) {
       case '4':
         result += s(indent) + prefix + '\n';
@@ -108,7 +106,7 @@ function x(hexstr, consumed, result, indent) {
         val = hexstr.substr(0, (len - 1) * 2);
         consumed += (len - 1) * 2;
         hexstr = hexstr.substr((len - 1) * 2);
-        var parsedColl = x(val, 0, '', indent + 2);
+        parsedColl = x(val, 0, '', indent + 2);
         result += s(indent) + prefix + ' ' + len + ' ' + nent + '\n' + parsedColl.result;
         break;
       case 'd':
@@ -121,7 +119,7 @@ function x(hexstr, consumed, result, indent) {
         val = hexstr.substr(0, (len - 1) * 2);
         consumed += (len - 1) * 2;
         hexstr = hexstr.substr((len - 1) * 2);
-        var parsedColl = x(val, 0, '', indent + 2);
+        parsedColl = x(val, 0, '', indent + 2);
         result += s(indent) + prefix + ' ' + len + ' ' + nent + '\n' + parsedColl.result;
         break;
       default:
@@ -173,7 +171,7 @@ fs.readFile(debugOutputFile, function (err, data) {
     var idxOfPrefix = line.indexOf(rxPrefix);
     if (idxOfPrefix >= 0) {
       var curRxHex = line.substr(idxOfPrefix + rxPrefix.length + 1).trim();
-      if (curRxHex.indexOf(' +') != -1) {
+      if (curRxHex.indexOf(' +') !== -1) {
         curRxHex = curRxHex.substr(0, curRxHex.indexOf(' +'));
       }
       rxHex += curRxHex;
@@ -184,7 +182,7 @@ fs.readFile(debugOutputFile, function (err, data) {
       var idxOfHexStart = rest.indexOf('}: ');
       if (idxOfHexStart >= 0) {
         var curTxHex = rest.substr(idxOfHexStart + '}: '.length);
-        if (curTxHex.indexOf(' +') != -1) {
+        if (curTxHex.indexOf(' +') !== -1) {
           curTxHex = curTxHex.substr(0, curTxHex.indexOf(' +'));
         }
         txHex += curTxHex;
