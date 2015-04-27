@@ -1,7 +1,7 @@
 'use strict';
 
 var debug = require('debug')('amqp10-test_amqpclient'),
-    should = require('should'),
+    expect = require('chai').expect,should = require('should'),
     util = require('util'),
     EventEmitter = require('events').EventEmitter,
 
@@ -42,7 +42,7 @@ MockSession.prototype.begin = function(policy) {
 
 MockSession.prototype.attachLink = function(policy) {
   var link = this._mockLinks[policy.options.name];
-  (link !== undefined).should.be.true;
+  expect(link).to.exist;
   link._created++;
   link._clearState();
   this.emit('attachLink-called', this, policy, link);
@@ -75,7 +75,6 @@ MockLink.prototype.sendMessage = function(msg, options) {
 
 MockLink.prototype._clearState = function() {
   this.name = this.options.name;
-  this.options = this.options;
   this.isSender = this.options.isSender || false;
   this.capacity = this.options.capacity || 0;
   this.messages = [];
@@ -95,7 +94,7 @@ function MakeMockClient(c, s) {
       var l = s._mockLinks[lname];
       [Link.MessageReceived, Link.ErrorReceived, Link.CreditChange, Link.Detached].forEach(l.removeAllListeners);
     }
-    c.should.eql(conn);
+    expect(c).to.equal(conn);
     s._created++;
     return s;
   };
@@ -129,8 +128,8 @@ describe('AMQPClient', function() {
       var addr = 'amqp://localhost';
       var called = {open: 0, begin: 0};
       c.on('open-called', function(_c, _addr, _sasl) {
-        _addr.should.eql(u.parseAddress(addr));
-        (_sasl === null).should.be.true;
+        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_sasl).to.be.null;
         called.open++;
         _c.emit(Connection.Connected, _c);
       });
@@ -141,11 +140,10 @@ describe('AMQPClient', function() {
       });
 
       client.connect(addr, function(err, _client) {
-        (err === null).should.be.true;
-        c._created.should.eql(1);
-        s._created.should.eql(1);
-        called.open.should.eql(1);
-        called.begin.should.eql(1);
+        expect(err).to.be.null;
+        expect(c._created).to.eql(1);
+        expect(s._created).to.eql(1);
+        expect(called).to.eql({ open: 1, begin: 1 });
         done();
       });
     });
@@ -167,8 +165,8 @@ describe('AMQPClient', function() {
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        _addr.should.eql(u.parseAddress(addr));
-        (_sasl === null).should.be.true;
+        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_sasl).to.be.null;
         called.open++;
         _c.emit(Connection.Connected, _c);
       });
