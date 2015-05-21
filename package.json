@@ -13,7 +13,8 @@
     "lodash": "^3.3.0",
     "node-amqp-encoder": "^0.0.2",
     "node-int64": "^0.3.2",
-    "stately.js": "^1.2.0"
+    "stately.js": "^1.2.0",
+    "uuid": "^1.4.2"
   },
   "devDependencies": {
     "bluebird": "^2.8.2",
