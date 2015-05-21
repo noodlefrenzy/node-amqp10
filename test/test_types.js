@@ -32,7 +32,7 @@ describe('Types', function() {
     }
 
     describe('errors', function() {
-      ['decimal32', 'decimal64', 'decimal128', 'char', 'uuid'].forEach(function(typeName) {
+      ['decimal32', 'decimal64', 'decimal128', 'char'].forEach(function(typeName) {
         it('should error on unsupported type: ' + typeName, function() {
           var buffer = new BufferBuilder();
           var type = new ForcedType(typeName, 'some data');
@@ -201,14 +201,14 @@ describe('Types', function() {
           //   expectedOutput: 1.1
           // },
           // { name: 'utf32 (char)', type: 0x73, value: buf([0x24]), expectedOutput: '$' },
-          // {
-          //   name: 'uuid', type: 0x98,
-          //   value: buf([
-          //     0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-          //     0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16
-          //   ]),
-          //   expectedOutput: 'some uuid'
-          // },
+          {
+            name: 'uuid', type: 0x98,
+            value: '797ff043-11eb-11e1-80d6-510998755d10',
+            expectedOutput: buf([
+              0x79, 0x7f, 0xf0, 0x43, 0x11, 0xeb, 0x11, 0xe1,
+              0x80, 0xd6, 0x51, 0x09, 0x98, 0x75, 0x5d, 0x10
+            ])
+          },
           {
             name: 'ms64 (timestamp int64)', type: 'timestamp',
             value: new Int64(1427143480),
@@ -441,8 +441,7 @@ describe('Types', function() {
         { name: 'char', value: buf([0x73, 0x00, 0x00, 0x00, 0x00]) },
         { name: 'decimal32', value: buf([0x74, 0x00, 0x00, 0x00, 0x00]) },
         { name: 'decimal64', value: buf([0x84, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]) },
-        { name: 'decimal128' , value: buf([0x94, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]) },
-        { name: 'uuid', value: buf([0x98, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]) }
+        { name: 'decimal128' , value: buf([0x94, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]) }
       ].forEach(function(type) {
         it('should error on unsupported type: ' + type.name, function() {
           expect(function() { codec.decode(type.value, 0); }).to.throw(exceptions.NotImplementedError);
@@ -522,15 +521,15 @@ describe('Types', function() {
           //   expectedOutput: 1.1
           // },
           // { name: 'utf32 (char)', type: 0x73, value: buf([0x24]), expectedOutput: '$' },
-          // {
-          //   name: 'uuid', type: 0x98,
-          //   value: buf([
-          //     0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-          //     0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16
-          //   ]),
-          //   expectedOutput: 'some uuid'
-          // },
-
+          {
+            name: 'uuid',
+            value: buf([
+              0x98,
+              0x79, 0x7f, 0xf0, 0x43, 0x11, 0xeb, 0x11, 0xe1,
+              0x80, 0xd6, 0x51, 0x09, 0x98, 0x75, 0x5d, 0x10
+            ]),
+            expectedOutput: '797ff043-11eb-11e1-80d6-510998755d10'
+          },
           {
             name: 'ms64 (timestamp)',
             value: buf([0x83, 0x00, 0x00, 0x00, 0x00, 0x55, 0x10, 0x7B, 0x38]),
