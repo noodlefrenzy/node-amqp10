@@ -1,7 +1,6 @@
 'use strict';
 
 var Int64 = require('node-int64'),
-    should = require('should'),
     expect = require('chai').expect,
 
     debug = require('debug')('amqp10-test-FrameReader'),
@@ -104,7 +103,7 @@ describe('FrameReader', function() {
           0x53, 0x10
         ]);
         var newOpen = reader.read(buffer);
-        (newOpen === undefined).should.be.true;
+        expect(newOpen).to.not.exist;
       });
 
       it('heartbeat (empty payload)', function() {
@@ -128,9 +127,9 @@ describe('FrameReader', function() {
         ]);
 
         var newOpen = reader.read(buffer);
-        (newOpen === undefined).should.be.false;
-        newOpen.should.be.instanceof(OpenFrame);
-        newOpen.maxFrameSize.should.eql(0x00100000);
+        expect(newOpen).to.exist;
+        expect(newOpen).to.be.an.instanceOf(OpenFrame);
+        expect(newOpen.maxFrameSize).to.eql(0x00100000);
       });
 
       it('close', function() {
@@ -140,9 +139,9 @@ describe('FrameReader', function() {
           0x53, 0x18, 0x45
         ]);
         var newClose = reader.read(buffer);
-        (newClose === undefined).should.be.false;
-        newClose.should.be.instanceof(CloseFrame);
-        (newClose.error === undefined).should.be.true;
+        expect(newClose).to.exist;
+        expect(newClose).to.be.an.instanceOf(CloseFrame);
+        expect(newClose.error).to.not.exist;
       });
 
       it('close (with error)', function() {
@@ -160,9 +159,9 @@ describe('FrameReader', function() {
         ]);
 
         var newClose = reader.read(buffer);
-        (newClose === undefined).should.be.false;
-        newClose.should.be.instanceof(CloseFrame);
-        newClose.error.should.be.instanceof(AMQPError);
+        expect(newClose).to.exist;
+        expect(newClose).to.be.an.instanceOf(CloseFrame);
+        expect(newClose.error).to.be.an.instanceOf(AMQPError);
       });
 
       it('begin', function() {
@@ -179,14 +178,14 @@ describe('FrameReader', function() {
         ]);
 
         var newBegin = reader.read(buffer);
-        (newBegin === undefined).should.be.false;
-        newBegin.should.be.instanceof(BeginFrame);
-        newBegin.channel.should.eql(5);
-        newBegin.remoteChannel.should.eql(10);
-        newBegin.nextOutgoingId.should.eql(2);
-        newBegin.incomingWindow.should.eql(10);
-        newBegin.outgoingWindow.should.eql(11);
-        newBegin.handleMax.should.eql(100);
+        expect(newBegin).to.exist;
+        expect(newBegin).to.be.an.instanceOf(BeginFrame);
+        expect(newBegin.channel).to.eql(5);
+        expect(newBegin.remoteChannel).to.eql(10);
+        expect(newBegin.nextOutgoingId).to.eql(2);
+        expect(newBegin.incomingWindow).to.eql(10);
+        expect(newBegin.outgoingWindow).to.eql(11);
+        expect(newBegin.handleMax).to.eql(100);
       });
 
       it('attach', function() {
@@ -203,13 +202,13 @@ describe('FrameReader', function() {
         ]);
 
         var newAttach = reader.read(buffer);
-        newAttach.should.be.instanceof(AttachFrame);
-        newAttach.channel.should.eql(0);
-        newAttach.name.should.eql('test');
-        newAttach.handle.should.eql(0);
-        newAttach.role.should.eql(true);
-        newAttach.senderSettleMode.should.eql(constants.senderSettleMode.mixed);
-        newAttach.receiverSettleMode.should.eql(constants.receiverSettleMode.autoSettle);
+        expect(newAttach).to.be.an.instanceOf(AttachFrame);
+        expect(newAttach.channel).to.eql(0);
+        expect(newAttach.name).to.eql('test');
+        expect(newAttach.handle).to.eql(0);
+        expect(newAttach.role).to.eql(true);
+        expect(newAttach.senderSettleMode).to.eql(constants.senderSettleMode.mixed);
+        expect(newAttach.receiverSettleMode).to.eql(constants.receiverSettleMode.autoSettle);
       });
 
       it('transfer (trivial message body)', function() {
@@ -240,12 +239,12 @@ describe('FrameReader', function() {
         ]);
 
         var newTransfer = reader.read(buffer);
-        newTransfer.should.be.instanceof(TransferFrame);
-        newTransfer.channel.should.eql(channel);
-        newTransfer.handle.should.eql(handle);
-        newTransfer.receiverSettleMode.should.eql(constants.receiverSettleMode.autoSettle);
-        newTransfer.message.body.length.should.eql(1);
-        newTransfer.message.body[0].should.eql(10);
+        expect(newTransfer).to.be.an.instanceOf(TransferFrame);
+        expect(newTransfer.channel).to.eql(channel);
+        expect(newTransfer.handle).to.eql(handle);
+        expect(newTransfer.receiverSettleMode).to.eql(constants.receiverSettleMode.autoSettle);
+        expect(newTransfer.message.body).to.have.length(1);
+        expect(newTransfer.message.body[0]).to.eql(10);
       });
 
       it('flow', function() {
@@ -287,7 +286,7 @@ describe('FrameReader', function() {
           0x53, 0x10
         ]);
         var newOpen = reader.read(buffer);
-        (newOpen === undefined).should.be.true;
+        expect(newOpen).to.not.exist;
       });
 
       it('init', function() {
@@ -324,10 +323,10 @@ describe('FrameReader', function() {
           4, builder.prototype.appendString, 'CRAP'
         ]);
         var newMechanisms = reader.read(buffer);
-        newMechanisms.should.be.instanceof(Sasl.SaslMechanisms);
-        newMechanisms.mechanisms.length.should.eql(2);
-        newMechanisms.mechanisms[0].should.eql('PLAIN');
-        newMechanisms.mechanisms[1].should.eql('CRAP');
+        expect(newMechanisms).to.be.an.instanceOf(Sasl.SaslMechanisms);
+        expect(newMechanisms.mechanisms).to.have.length(2);
+        expect(newMechanisms.mechanisms[0]).to.eql('PLAIN');
+        expect(newMechanisms.mechanisms[1]).to.eql('CRAP');
       });
 
       it('challenge', function() {

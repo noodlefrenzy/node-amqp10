@@ -1,7 +1,6 @@
 'use strict';
 
 var Int64 = require('node-int64'),
-    should = require('should'),
     debug = require('debug')('amqp10-test_frame_encodings'),
     builder = require('buffer-builder'),
 

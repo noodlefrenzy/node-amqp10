@@ -1,7 +1,7 @@
 'use strict';
 
 var debug = require('debug')('amqp10-test_connection'),
-    should = require('should'),
+    expect = require('chai').expect,
 
     constants = require('../lib/constants'),
 
@@ -257,10 +257,10 @@ describe('Connection', function() {
         // NOTE: need to wait a tick for the event emitter, consider reordering
         //       event emission in Connection.prototype._processCloseFrame
         process.nextTick(function() {
-          events.length.should.eql(3);
-          events[0].should.eql(Connection.Connected);
-          events[1].should.eql(Connection.Disconnected);
-          events[2][0].should.eql(Connection.ErrorReceived);
+          expect(events).to.have.length(3);
+          expect(events[0]).to.eql(Connection.Connected);
+          expect(events[1]).to.eql(Connection.Disconnected);
+          expect(events[2][0]).to.eql(Connection.ErrorReceived);
           done();
         });
       }));

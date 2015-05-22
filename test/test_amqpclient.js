@@ -1,7 +1,7 @@
 'use strict';
 
 var debug = require('debug')('amqp10-test_amqpclient'),
-    expect = require('chai').expect,should = require('should'),
+    expect = require('chai').expect,
     util = require('util'),
     EventEmitter = require('events').EventEmitter,
 
@@ -106,12 +106,12 @@ function MakeMockClient(c, s) {
     for (idx in connEvts) {
       e = connEvts[idx];
       c.removeAllListeners(e);
-      EventEmitter.listenerCount(c, e).should.eql(0);
+      expect(EventEmitter.listenerCount(c, e)).to.eql(0);
     }
     for (idx in sessEvts) {
       e = sessEvts[idx];
       s.removeAllListeners(e);
-      EventEmitter.listenerCount(s, e).should.eql(0);
+      expect(EventEmitter.listenerCount(s, e)).to.eql(0);
     }
   };
 
@@ -178,8 +178,8 @@ describe('AMQPClient', function() {
 
       s.on('attachLink-called', function(_s, _policy, _l) {
         called.attachLink++;
-        _policy.options.target.should.eql({ address: queue });
-        _policy.options.role.should.eql(constants.linkRole.sender);
+        expect(_policy.options.target).to.eql({ address: queue });
+        expect(_policy.options.role).to.eql(constants.linkRole.sender);
         _s.emit(Session.LinkAttached, _l);
       });
 
@@ -200,17 +200,18 @@ describe('AMQPClient', function() {
       });
 
       client.send({ my: 'message' }, addr + queue, function(err) {
-        (err === null).should.be.true;
-        c._created.should.eql(1);
-        s._created.should.eql(1);
-        l._created.should.eql(1);
-        called.open.should.eql(1);
-        called.begin.should.eql(1);
-        called.attachLink.should.eql(1);
-        called.canSend.should.eql(1);
-        called.sendMessage.should.eql(1);
-        l.messages.length.should.eql(1);
-        l.messages[0].message.should.eql({ my: 'message' });
+        expect(err).to.not.exist;
+
+        expect(c._created).to.eql(1);
+        expect(s._created).to.eql(1);
+        expect(l._created).to.eql(1);
+        expect(called.open).to.eql(1);
+        expect(called.begin).to.eql(1);
+        expect(called.attachLink).to.eql(1);
+        expect(called.canSend).to.eql(1);
+        expect(called.sendMessage).to.eql(1);
+        expect(l.messages).to.not.be.empty;
+        expect(l.messages[0].message).to.eql({ my: 'message' });
         done();
       });
     });
@@ -230,8 +231,8 @@ describe('AMQPClient', function() {
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        _addr.should.eql(u.parseAddress(addr));
-        (_sasl === null).should.be.true;
+        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_sasl).to.not.exist;
         called.open++;
         _c.emit(Connection.Connected, _c);
       });
@@ -243,9 +244,9 @@ describe('AMQPClient', function() {
 
       s.on('attachLink-called', function(_s, _policy, _l) {
         called.attachLink++;
-        client._pendingSends[_l.name].length.should.eql(1);
-        _policy.options.target.should.eql({ address: queue });
-        _policy.options.role.should.eql(constants.linkRole.sender);
+        expect(client._pendingSends[_l.name]).to.not.be.empty;
+        expect(_policy.options.target).to.eql({ address: queue });
+        expect(_policy.options.role).to.eql(constants.linkRole.sender);
         process.nextTick(function() {
           _l.capacity = 100;
           _l.emit(Link.CreditChange, _l);
@@ -271,17 +272,18 @@ describe('AMQPClient', function() {
       });
 
       client.send({ my: 'message' }, addr + queue, function(err) {
-        (err === null).should.be.true;
-        c._created.should.eql(1);
-        s._created.should.eql(1);
-        l._created.should.eql(1);
-        called.open.should.eql(1);
-        called.begin.should.eql(1);
-        called.attachLink.should.eql(1);
-        called.canSend.should.eql(2);
-        called.sendMessage.should.eql(1);
-        l.messages.length.should.eql(1);
-        l.messages[0].message.should.eql({ my: 'message' });
+        expect(err).to.not.exist;
+
+        expect(c._created).to.eql(1);
+        expect(s._created).to.eql(1);
+        expect(l._created).to.eql(1);
+        expect(called.open).to.eql(1);
+        expect(called.begin).to.eql(1);
+        expect(called.attachLink).to.eql(1);
+        expect(called.canSend).to.eql(2);
+        expect(called.sendMessage).to.eql(1);
+        expect(l.messages).to.not.be.empty;
+        expect(l.messages[0].message).to.eql({ my: 'message' });
         done();
       });
     });
@@ -301,8 +303,8 @@ describe('AMQPClient', function() {
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        _addr.should.eql(u.parseAddress(addr));
-        (_sasl === null).should.be.true;
+        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_sasl).to.not.exist;
         called.open++;
         _c.emit(Connection.Connected, _c);
       });
@@ -314,8 +316,8 @@ describe('AMQPClient', function() {
 
       s.on('attachLink-called', function(_s, _policy, _l) {
         called.attachLink++;
-        _policy.options.target.should.eql({ address: queue });
-        _policy.options.role.should.eql(constants.linkRole.sender);
+        expect(_policy.options.target).to.eql({ address: queue });
+        expect(_policy.options.role).to.eql(constants.linkRole.sender);
         _s.emit(Session.LinkAttached, _l);
       });
 
@@ -341,15 +343,15 @@ describe('AMQPClient', function() {
       }
 
       process.nextTick(function() {
-        c._created.should.eql(1);
-        s._created.should.eql(1);
-        l._created.should.eql(1);
-        called.open.should.eql(1);
-        called.begin.should.eql(1);
-        called.attachLink.should.eql(1);
-        called.canSend.should.eql(5);
-        called.sendMessage.should.eql(5);
-        l.messages.length.should.eql(5);
+        expect(c._created).to.eql(1);
+        expect(s._created).to.eql(1);
+        expect(l._created).to.eql(1);
+        expect(called.open).to.eql(1);
+        expect(called.begin).to.eql(1);
+        expect(called.attachLink).to.eql(1);
+        expect(called.canSend).to.eql(5);
+        expect(called.sendMessage).to.eql(5);
+        expect(l.messages.length).to.eql(5);
         done();
       });
     });
@@ -369,8 +371,8 @@ describe('AMQPClient', function() {
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        _addr.should.eql(u.parseAddress(addr));
-        (_sasl === null).should.be.true;
+        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_sasl).to.not.exist;
         called.open++;
         _c.emit(Connection.Connected, _c);
       });
@@ -382,8 +384,8 @@ describe('AMQPClient', function() {
 
       s.on('attachLink-called', function(_s, _policy, _l) {
         called.attachLink++;
-        _policy.options.target.should.eql({ address: queue });
-        _policy.options.role.should.eql(constants.linkRole.sender);
+        expect(_policy.options.target).to.eql({ address: queue });
+        expect(_policy.options.role).to.eql(constants.linkRole.sender);
         if (called.attachLink === 1) {
           process.nextTick(function() {
             _l.emit(Link.Detached);
@@ -415,15 +417,15 @@ describe('AMQPClient', function() {
       });
 
       process.nextTick(function() {
-        c._created.should.eql(1);
-        s._created.should.eql(1);
-        l._created.should.eql(2);
-        called.open.should.eql(1);
-        called.begin.should.eql(1);
-        called.attachLink.should.eql(2);
-        called.canSend.should.eql(2);
-        called.sendMessage.should.eql(2);
-        l.messages.length.should.eql(1);
+        expect(c._created).to.eql(1);
+        expect(s._created).to.eql(1);
+        expect(l._created).to.eql(2);
+        expect(called.open).to.eql(1);
+        expect(called.begin).to.eql(1);
+        expect(called.attachLink).to.eql(2);
+        expect(called.canSend).to.eql(2);
+        expect(called.sendMessage).to.eql(2);
+        expect(l.messages).to.not.be.empty;
         done();
       });
     });
@@ -443,8 +445,8 @@ describe('AMQPClient', function() {
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        _addr.should.eql(u.parseAddress(addr));
-        (_sasl === null).should.be.true;
+        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_sasl).to.not.exist;
         called.open++;
         _c.emit(Connection.Connected, _c);
       });
@@ -456,8 +458,8 @@ describe('AMQPClient', function() {
 
       s.on('attachLink-called', function(_s, _policy, _l) {
         called.attachLink++;
-        _policy.options.target.should.eql({ address: queue });
-        _policy.options.role.should.eql(constants.linkRole.sender);
+        expect(_policy.options.target).to.eql({ address: queue });
+        expect(_policy.options.role).to.eql(constants.linkRole.sender);
         if (called.attachLink === 1) {
           process.nextTick(function() {
             c.emit(Connection.Disconnected);
@@ -488,15 +490,15 @@ describe('AMQPClient', function() {
       });
 
       process.nextTick(function() {
-        c._created.should.eql(2);
-        s._created.should.eql(2);
-        l._created.should.eql(2);
-        called.open.should.eql(2);
-        called.begin.should.eql(2);
-        called.attachLink.should.eql(2);
-        called.canSend.should.eql(2);
-        called.sendMessage.should.eql(2);
-        l.messages.length.should.eql(1);
+        expect(c._created).to.eql(2);
+        expect(s._created).to.eql(2);
+        expect(l._created).to.eql(2);
+        expect(called.open).to.eql(2);
+        expect(called.begin).to.eql(2);
+        expect(called.attachLink).to.eql(2);
+        expect(called.canSend).to.eql(2);
+        expect(called.sendMessage).to.eql(2);
+        expect(l.messages).to.not.be.empty;
         done();
       });
     });
@@ -516,8 +518,9 @@ describe('AMQPClient', function() {
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        _addr.should.eql(u.parseAddress(addr));
-        (_sasl === null).should.be.true;
+        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_sasl).to.not.exist;
+
         called.open++;
         _c.emit(Connection.Connected, _c);
       });
@@ -529,9 +532,9 @@ describe('AMQPClient', function() {
 
       s.on('attachLink-called', function(_s, _policy, _l) {
         called.attachLink++;
-        client._pendingSends[_l.name].length.should.eql(1);
-        _policy.options.target.should.eql({ address: queue });
-        _policy.options.role.should.eql(constants.linkRole.sender);
+        expect(client._pendingSends[_l.name]).to.not.be.empty;
+        expect(_policy.options.target).to.eql({ address: queue });
+        expect(_policy.options.role).to.eql(constants.linkRole.sender);
         if (called.attachLink === 1) {
           process.nextTick(function() {
             c.emit(Connection.Disconnected);
@@ -565,15 +568,15 @@ describe('AMQPClient', function() {
 
       // NOTE: reverted to setTimeout, but nextTick -should- work...
       setTimeout(function() {
-        c._created.should.eql(2);
-        s._created.should.eql(2);
-        l._created.should.eql(2);
-        called.open.should.eql(2);
-        called.begin.should.eql(2);
-        called.attachLink.should.eql(2);
-        called.canSend.should.eql(3);
-        called.sendMessage.should.eql(1);
-        l.messages.length.should.eql(1);
+        expect(c._created).to.eql(2);
+        expect(s._created).to.eql(2);
+        expect(l._created).to.eql(2);
+        expect(called.open).to.eql(2);
+        expect(called.begin).to.eql(2);
+        expect(called.attachLink).to.eql(2);
+        expect(called.canSend).to.eql(3);
+        expect(called.sendMessage).to.eql(1);
+        expect(l.messages).to.not.be.empty;
         done();
       }, 1);
     });
@@ -595,8 +598,9 @@ describe('AMQPClient', function() {
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        _addr.should.eql(u.parseAddress(addr));
-        (_sasl === null).should.be.true;
+        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_sasl).to.not.exist;
+
         called.open++;
         _c.emit(Connection.Connected, _c);
       });
@@ -608,19 +612,19 @@ describe('AMQPClient', function() {
 
       s.on('attachLink-called', function(_s, _policy, _l) {
         called.attachLink++;
-        _policy.options.source.should.eql({ address: queue, filter: undefined });
-        _policy.options.role.should.eql(constants.linkRole.receiver);
+        expect(_policy.options.source).to.eql({ address: queue, filter: undefined });
+        expect(_policy.options.role).to.eql(constants.linkRole.receiver);
         _s.emit(Session.LinkAttached, _l);
       });
 
       client.receive(addr + queue, function(err, payload, annotations) {});
       process.nextTick(function() {
-        c._created.should.eql(1);
-        s._created.should.eql(1);
-        l._created.should.eql(1);
-        called.open.should.eql(1);
-        called.begin.should.eql(1);
-        called.attachLink.should.eql(1);
+        expect(c._created).to.eql(1);
+        expect(s._created).to.eql(1);
+        expect(l._created).to.eql(1);
+        expect(called.open).to.eql(1);
+        expect(called.begin).to.eql(1);
+        expect(called.attachLink).to.eql(1);
         done();
       });
     });
@@ -647,8 +651,9 @@ describe('AMQPClient', function() {
       var addr = 'amqp://localhost/';
       var called = { open: 0, begin: 0, attachLink: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        _addr.should.eql(u.parseAddress(addr));
-        (_sasl === null).should.be.true;
+        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_sasl).to.not.exist;
+
         called.open++;
         _c.emit(Connection.Connected, _c);
       });
@@ -660,20 +665,20 @@ describe('AMQPClient', function() {
 
       s.on('attachLink-called', function(_s, _policy, _l) {
         called.attachLink++;
-        _policy.options.role.should.eql(constants.linkRole.receiver);
+        expect(_policy.options.role).to.eql(constants.linkRole.receiver);
         _s.emit(Session.LinkAttached, _l);
       });
 
       client.receive(addr + 'queue1', function(err, payload, annotations) {});
       client.receive(addr + 'queue2', function(err, payload, annotations) {});
       process.nextTick(function() {
-        c._created.should.eql(1);
-        s._created.should.eql(1);
-        l1._created.should.eql(1);
-        l2._created.should.eql(1);
-        called.open.should.eql(1);
-        called.begin.should.eql(1);
-        called.attachLink.should.eql(2);
+        expect(c._created).to.eql(1);
+        expect(s._created).to.eql(1);
+        expect(l1._created).to.eql(1);
+        expect(l2._created).to.eql(1);
+        expect(called.open).to.eql(1);
+        expect(called.begin).to.eql(1);
+        expect(called.attachLink).to.eql(2);
         done();
       });
     });
@@ -693,8 +698,9 @@ describe('AMQPClient', function() {
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        _addr.should.eql(u.parseAddress(addr));
-        (_sasl === null).should.be.true;
+        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_sasl).to.not.exist;
+
         called.open++;
         _c.emit(Connection.Connected, _c);
       });
@@ -706,8 +712,8 @@ describe('AMQPClient', function() {
 
       s.on('attachLink-called', function(_s, _policy, _l) {
         called.attachLink++;
-        _policy.options.source.should.eql({ address: queue, filter: undefined });
-        _policy.options.role.should.eql(constants.linkRole.receiver);
+        expect(_policy.options.source).to.eql({ address: queue, filter: undefined });
+        expect(_policy.options.role).to.eql(constants.linkRole.receiver);
         if (called.attachLink === 1) {
           process.nextTick(function() {
             _l.emit(Link.Detached);
@@ -719,12 +725,12 @@ describe('AMQPClient', function() {
 
       client.receive(addr + queue, function() {});
       process.nextTick(function() {
-        c._created.should.eql(1);
-        s._created.should.eql(1);
-        l._created.should.eql(2);
-        called.open.should.eql(1);
-        called.begin.should.eql(1);
-        called.attachLink.should.eql(2);
+        expect(c._created).to.eql(1);
+        expect(s._created).to.eql(1);
+        expect(l._created).to.eql(2);
+        expect(called.open).to.eql(1);
+        expect(called.begin).to.eql(1);
+        expect(called.attachLink).to.eql(2);
         done();
       });
     });
@@ -744,8 +750,9 @@ describe('AMQPClient', function() {
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        _addr.should.eql(u.parseAddress(addr));
-        (_sasl === null).should.be.true;
+        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_sasl).to.not.exist;
+
         called.open++;
         _c.emit(Connection.Connected, _c);
       });
@@ -757,8 +764,8 @@ describe('AMQPClient', function() {
 
       s.on('attachLink-called', function(_s, _policy, _l) {
         called.attachLink++;
-        _policy.options.source.should.eql({ address: queue, filter: undefined });
-        _policy.options.role.should.eql(constants.linkRole.receiver);
+        expect(_policy.options.source).to.eql({ address: queue, filter: undefined });
+        expect(_policy.options.role).to.eql(constants.linkRole.receiver);
         if (called.attachLink === 1) {
           process.nextTick(function() {
             c.emit(Connection.Disconnected);
@@ -770,12 +777,12 @@ describe('AMQPClient', function() {
 
       client.receive(addr + queue, function() {});
       process.nextTick(function() {
-        c._created.should.eql(2);
-        s._created.should.eql(2);
-        l._created.should.eql(2);
-        called.open.should.eql(2);
-        called.begin.should.eql(2);
-        called.attachLink.should.eql(2);
+        expect(c._created).to.eql(2);
+        expect(s._created).to.eql(2);
+        expect(l._created).to.eql(2);
+        expect(called.open).to.eql(2);
+        expect(called.begin).to.eql(2);
+        expect(called.attachLink).to.eql(2);
         done();
       });
     });

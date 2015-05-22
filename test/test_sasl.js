@@ -1,7 +1,6 @@
 'use strict';
 
 var debug = require('debug')('amqp10-test_sasl'),
-    should = require('should'),
     builder = require('buffer-builder'),
 
     constants = require('../lib/constants'),

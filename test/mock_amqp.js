@@ -4,7 +4,7 @@ var BufferList = require('bl'),
     debug = require('debug')('amqp10-MockServer'),
     net = require('net'),
     StateMachine = require('stately.js'),
-    should = require('should'),
+    expect = require('chai').expect,
 
     FrameBase = require('../lib/frames/frame'),
     SaslFrame = require('../lib/frames/sasl_frame').SaslFrame,
@@ -55,12 +55,12 @@ MockServer.prototype.setup = function(client) {
   self.server = net.createServer(connectionHandler);
   self.server.on('error', function(err) {
     if (err.code === 'EADDRINUSE') {
-      self.listenAttempts.should.be.lessThan(5, 'Failed to connect too many times');
+      expect(self.listenAttempts).to.be.lessThan(5, 'Failed to connect too many times');
       debug('Address in use on ' + self.port + ', trying again...');
       self.port++;
       self.server = self._listen();
     } else {
-      should.fail('Error starting mock server: ' + err);
+      throw new Error('Error starting mock server: ' + err);
     }
   });
   self._listen();
@@ -123,7 +123,7 @@ MockServer.prototype._sendUntil = function(toSend) {
 };
 
 MockServer.prototype._testData = function() {
-  this.requestsExpected.length.should.be.greaterThan(0, 'More data received than expected');
+  expect(this.requestsExpected.length).to.be.greaterThan(0, 'More data received than expected');
   var expected = this.requestsExpected[0];
   if (this.buffer.length >= expected.length) {
     expected = this.requestsExpected[this.requestIdx++];
@@ -131,7 +131,7 @@ MockServer.prototype._testData = function() {
     this.buffer.consume(expected.length);
 
     debug('Receiving ' + actual.toString('hex'));
-    actual.toString('hex').should.eql(expected.toString('hex'), 'Req ' + (this.requestIdx - 1));
+    expect(actual.toString('hex')).to.eql(expected.toString('hex'), 'Req ' + (this.requestIdx - 1));
     this._sendNext();
   }
 };
