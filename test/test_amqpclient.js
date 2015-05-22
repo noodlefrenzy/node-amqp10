@@ -142,12 +142,13 @@ describe('AMQPClient', function() {
         _s.emit(Session.Mapped, _s);
       });
 
-      client.connect(mock_uri, function(err, _client) {
-        expect(err).to.be.null;
+      client.connect(mock_uri).then(function(_client) {
         expect(c._created).to.eql(1);
         expect(s._created).to.eql(1);
         expect(called).to.eql({ open: 1, begin: 1 });
         done();
+      }).catch(function(err) {
+        console.log(err);
       });
     });
   });
@@ -206,7 +207,7 @@ describe('AMQPClient', function() {
         });
       });
 
-      client.connect(mock_uri, function(err, _client) {
+      client.connect(mock_uri).then(function(_client) {
         _client.send({ my: 'message' }, queue, function(err) {
           expect(err).to.not.exist;
 
@@ -279,7 +280,7 @@ describe('AMQPClient', function() {
         });
       });
 
-      client.connect(mock_uri, function(err, _client) {
+      client.connect(mock_uri).then(function(_client) {
         _client.send({ my: 'message' }, queue, function(err) {
           expect(err).to.not.exist;
 
@@ -346,7 +347,7 @@ describe('AMQPClient', function() {
         });
       });
 
-      client.connect(mock_uri, function(err, _client) {
+      client.connect(mock_uri).then(function(_client) {
         var tmpFunction = function () {};
         for (var idx = 0; idx < 5; idx++) {
           _client.send({my: 'message'}, queue, tmpFunction);
@@ -421,7 +422,7 @@ describe('AMQPClient', function() {
         });
       });
 
-      client.connect(mock_uri, function(err, _client) {
+      client.connect(mock_uri).then(function(_client) {
         _client.send({my: 'message'}, queue, function() {});
         process.nextTick(function() {
           _client.send({my: 'message'}, queue, function() {});
@@ -495,7 +496,7 @@ describe('AMQPClient', function() {
         });
       });
 
-      client.connect(mock_uri, function(err, _client) {
+      client.connect(mock_uri).then(function(_client) {
         _client.send({my: 'message'}, queue, function() {});
         process.nextTick(function() {
           _client.send({my: 'message'}, queue, function() {});
@@ -576,7 +577,7 @@ describe('AMQPClient', function() {
         });
       });
 
-      client.connect(mock_uri, function(err, _client) {
+      client.connect(mock_uri).then(function(_client) {
         _client.send({my: 'message'}, queue, function() {});
 
         // NOTE: reverted to setTimeout, but nextTick -should- work...
@@ -635,7 +636,7 @@ describe('AMQPClient', function() {
         _s.emit(Session.LinkAttached, _l);
       });
 
-      client.connect(mock_uri, function(err, _client) {
+      client.connect(mock_uri).then(function(_client) {
         _client.receive(queue, function(err, payload, annotations) {});
         process.nextTick(function() {
           expect(c._created).to.eql(1);
@@ -688,7 +689,7 @@ describe('AMQPClient', function() {
         _s.emit(Session.LinkAttached, _l);
       });
 
-      client.connect(mock_uri, function(err, _client) {
+      client.connect(mock_uri).then(function(_client) {
         _client.receive('queue1', function(err, payload, annotations) {});
         _client.receive('queue2', function(err, payload, annotations) {});
         process.nextTick(function() {
@@ -743,7 +744,7 @@ describe('AMQPClient', function() {
         _s.emit(Session.LinkAttached, _l);
       });
 
-      client.connect(mock_uri, function(err, _client) {
+      client.connect(mock_uri).then(function(_client) {
         _client.receive(queue, function() {});
         process.nextTick(function() {
           expect(c._created).to.eql(1);
@@ -796,7 +797,7 @@ describe('AMQPClient', function() {
         _s.emit(Session.LinkAttached, _l);
       });
 
-      client.connect(mock_uri, function(err, _client) {
+      client.connect(mock_uri).then(function(_client) {
         _client.receive(queue, function() {});
         process.nextTick(function() {
           expect(c._created).to.eql(2);
