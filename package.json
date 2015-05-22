@@ -12,19 +12,16 @@
     "debug": "^2.0.0",
     "lodash": "^3.3.0",
     "node-amqp-encoder": "^0.0.2",
-    "node-int64": "^0.3.2",
+    "node-int64": "^0.4.0",
     "stately.js": "^1.2.0",
-    "uuid": "^1.4.2"
+    "uuid": "^2.0.1"
   },
   "devDependencies": {
     "bluebird": "^2.8.2",
-    "mocha": "^1.21.4",
-    "should": "^4.0.4",
-    "xml2js": "^0.4.4",
-    "mocha": "^2.1.0",
     "chai": "^2.0.0",
-    "jshint": "^2.6.0",
     "istanbul": "^0.3.6",
+    "jshint": "^2.6.0",
+    "mocha": "^2.1.0",
     "stream-buffers": "2.1.0"
   },
   "scripts": {},

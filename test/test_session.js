@@ -1,7 +1,7 @@
 'use strict';
 
 var debug = require('debug')('amqp10-test_connection'),
-    should = require('should'),
+    expect = require('chai').expect,
 
     constants = require('../lib/constants'),
     u = require('../lib/utilities'),
@@ -161,10 +161,10 @@ describe('Session', function() {
       ];
 
       connection.connSM.bind(tu.assertTransitions(expected, function() {
-        events.length.should.eql(3, JSON.stringify(events));
-        events[0].should.eql(Session.Mapped);
-        events[1][0].should.eql(Session.ErrorReceived);
-        events[2].should.eql(Session.Unmapped);
+        expect(events).to.have.length(3, JSON.stringify(events));
+        expect(events[0]).to.eql(Session.Mapped);
+        expect(events[1][0]).to.eql(Session.ErrorReceived);
+        expect(events[2]).to.eql(Session.Unmapped);
         done();
       }));
 

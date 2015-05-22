@@ -1,7 +1,7 @@
 'use strict';
 
 var Int64 = require('node-int64'),
-    should = require('should'),
+    expect = require('chai').expect,
     debug = require('debug')('amqp10-test-codec'),
     builder = require('buffer-builder'),
 
@@ -23,101 +23,102 @@ describe('Codec', function() {
     it('should match fixed values', function() {
       var buffer = newBuffer([0x50, 0x05]);
       var actual = codec.decode(buffer);
-      actual[0].should.eql(5);
-      actual[1].should.eql(2);
+      expect(actual[0]).to.eql(5);
+      expect(actual[1]).to.eql(2);
     });
 
     it('should match simple values', function() {
-      (codec.decode(newBuffer([0x40]))[0] === null).should.be.true;
-      codec.decode(newBuffer([0x41]))[0].should.be.true;
-      codec.decode(newBuffer([0x42]))[0].should.be.false;
-      codec.decode(newBuffer([0x43]))[0].should.eql(0);
-      codec.decode(newBuffer([0x44]))[0].should.eql(new Int64(0, 0));
+      expect(codec.decode(newBuffer([0x40]))[0]).to.not.exist;
+
+      expect(codec.decode(newBuffer([0x41]))[0]).to.be.true;
+      expect(codec.decode(newBuffer([0x42]))[0]).to.be.false;
+      expect(codec.decode(newBuffer([0x43]))[0]).to.eql(0);
+      expect(codec.decode(newBuffer([0x44]))[0]).to.eql(new Int64(0, 0));
     });
 
     it('should match longs', function() {
       var buffer = newBuffer([0x80, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80]);
       var actual = codec.decode(buffer);
-      actual[0].should.eql(new Int64(new Buffer([0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80])));
-      actual[1].should.eql(9);
+      expect(actual[0]).to.eql(new Int64(new Buffer([0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80])));
+      expect(actual[1]).to.eql(9);
     });
 
     it('should match floats', function() {
       var expected = new Buffer([0x01, 0x02, 0x03, 0x04]).readFloatBE(0);
       var buffer = newBuffer([0x72, 0x01, 0x02, 0x03, 0x04]);
       var actual = codec.decode(buffer);
-      actual[0].should.eql(expected);
-      actual[1].should.eql(5);
+      expect(actual[0]).to.eql(expected);
+      expect(actual[1]).to.eql(5);
 
       expected = new Buffer([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]).readDoubleBE(0);
       buffer = newBuffer([0x82, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]);
       actual = codec.decode(buffer);
-      actual[0].should.eql(expected);
-      actual[1].should.eql(9);
+      expect(actual[0]).to.eql(expected);
+      expect(actual[1]).to.eql(9);
     });
 
     it('should match strings', function() {
       var buffer = newBuffer([0xA1, 0x3, 0x46, 0x4F, 0x4F]);
       var actual = codec.decode(buffer);
-      actual[0].should.eql('FOO');
-      actual[1].should.eql(5);
+      expect(actual[0]).to.eql('FOO');
+      expect(actual[1]).to.eql(5);
 
       buffer = newBuffer([0xB1, 0x0, 0x0, 0x0, 0x3, 0x46, 0x4F, 0x4F]);
       actual = codec.decode(buffer);
-      actual[0].should.eql('FOO');
-      actual[1].should.eql(8);
+      expect(actual[0]).to.eql('FOO');
+      expect(actual[1]).to.eql(8);
     });
 
     it('should match buffers', function() {
       var buffer = newBuffer([0xA0, 0x3, 0x7b, 0x22, 0x7d]);
       var actual = codec.decode(buffer);
-      actual[0].should.be.instanceof(Buffer);
+      expect(actual[0]).to.be.instanceof(Buffer);
       tu.shouldBufEql(buildBuffer([0x7b, 0x22, 0x7d]), actual[0]);
-      actual[1].should.eql(5);
+      expect(actual[1]).to.eql(5);
     });
 
     it('should fail when not implemented', function() {
       var buffer = newBuffer([0x73, 0x01, 0x02, 0x03, 0x04]);
-      (function() { codec.decode(buffer); }).should.throw(Error);   // jshint ignore:line
+      expect(function() { codec.decode(buffer); }).to.throw(Error);   // jshint ignore:line
     });
 
     it('should decode described types', function() {
       var buffer = newBuffer([0x00, 0xA1, 0x03, builder.prototype.appendString, 'URL', 0xA1, 0x1E, builder.prototype.appendString, 'http://example.org/hello-world']);
       var actual = codec.decode(buffer);
-      actual[0].should.be.instanceof(DescribedType);
-      actual[0].descriptor.should.eql('URL');
-      actual[0].value.should.eql('http://example.org/hello-world');
+      expect(actual[0]).to.be.an.instanceOf(DescribedType);
+      expect(actual[0].descriptor).to.eql('URL');
+      expect(actual[0].value).to.eql('http://example.org/hello-world');
     });
 
     it('should decode nested described types', function() {
       var buffer = newBuffer([0x00, 0xA1, 3, builder.prototype.appendString, 'FOO', 0x00, 0xA1, 3, builder.prototype.appendString, 'BAR', 0xA1, 3, builder.prototype.appendString, 'BAZ']);
       var actual = codec.decode(buffer);
-      actual[0].should.be.instanceof(DescribedType);
-      actual[0].value.should.be.instanceof(DescribedType);
-      actual[0].descriptor.should.eql('FOO');
-      actual[0].value.descriptor.should.eql('BAR');
-      actual[0].value.value.should.eql('BAZ');
+      expect(actual[0]).to.be.an.instanceOf(DescribedType);
+      expect(actual[0].value).to.be.an.instanceOf(DescribedType);
+      expect(actual[0].descriptor).to.eql('FOO');
+      expect(actual[0].value.descriptor).to.eql('BAR');
+      expect(actual[0].value.value).to.eql('BAZ');
     });
 
     it('should decode nested described and composites', function() {
       // Described (int64(0x1), [ Described(int64(0x2), 'VAL') ])
       var buffer = newBuffer([0x00, 0x53, 0x1, 0xC0, (1 + 1 + 2 + 1 + 1 + 3), 1, 0x00, 0x53, 0x2, 0xA1, 3, builder.prototype.appendString, 'VAL']);
       var actual = codec.decode(buffer);
-      actual[0].should.be.instanceof(DescribedType);
-      actual[0].value.should.be.instanceof(Array);
-      actual[0].descriptor.should.eql(new Int64(0, 1));
-      actual[0].value.length.should.eql(1);
-      actual[0].value[0].should.be.instanceof(DescribedType);
-      actual[0].value[0].descriptor.should.eql(new Int64(0, 2));
-      actual[0].value[0].value.should.eql('VAL');
+      expect(actual[0]).to.be.an.instanceOf(DescribedType);
+      expect(actual[0].value).to.be.an.instanceOf(Array);
+      expect(actual[0].descriptor).to.eql(new Int64(0, 1));
+      expect(actual[0].value).to.not.be.empty;
+      expect(actual[0].value[0]).to.be.an.instanceOf(DescribedType);
+      expect(actual[0].value[0].descriptor).to.eql(new Int64(0, 2));
+      expect(actual[0].value[0].value).to.eql('VAL');
     });
 
     it('should decode forced-type values', function() {
       var buffer = buildBuffer([0x03, builder.prototype.appendString, 'URL']);
       var actual = codec.decode(buffer, 0, 0xA3);
-      actual[0].should.be.instanceof(AMQPSymbol);
-      actual[0].contents.should.eql('URL');
-      actual[1].should.eql(4); // Count + contents
+      expect(actual[0]).to.be.an.instanceOf(AMQPSymbol);
+      expect(actual[0].contents).to.eql('URL');
+      expect(actual[1]).to.eql(4); // Count + contents
     });
 
     it('should decode composite example from spec', function() {
@@ -132,7 +133,7 @@ describe('Codec', function() {
         builder.prototype.appendString, 'Rafael H. Schloming',
         0x40]);
       var actual = codec.decode(newBuffer(buffer));
-      actual[0].should.eql(new DescribedType(new AMQPSymbol('example:book:list'),
+      expect(actual[0]).to.eql(new DescribedType(new AMQPSymbol('example:book:list'),
           [
            'AMQP for & by Dummies',
            ['Rob J. Godfrey', 'Rafael H. Schloming'],
@@ -148,7 +149,7 @@ describe('Codec', function() {
         0xa1, 0x00,
         0x70, 0x00, 0x10, 0x00, 0x00]);
       var actual = codec.decode(newBuffer(buffer));
-      actual[0].should.eql(new DescribedType(new Int64(0, 0x10), ['', '', 0x00100000]));
+      expect(actual[0]).to.eql(new DescribedType(new Int64(0, 0x10), ['', '', 0x00100000]));
     });
 
     it('should decode known type (AMQPError) from described type', function() {
@@ -159,10 +160,10 @@ describe('Codec', function() {
         0xC1, 1, 0x0 // empty info map
       ]);
       var actual = codec.decode(newBuffer(buffer));
-      (actual === undefined).should.be.false;
-      actual[0].should.be.instanceof(AMQPError);
-      actual[0].condition.contents.should.eql('amqp:internal-error');
-      actual[0].description.should.eql('test');
+      expect(actual).to.exist;
+      expect(actual[0]).to.be.an.instanceOf(AMQPError);
+      expect(actual[0].condition.contents).to.eql('amqp:internal-error');
+      expect(actual[0].description).to.eql('test');
     });
   });
 

@@ -1,8 +1,6 @@
 'use strict';
 
-var assert = require('assert'),
-    should = require('should'),
-    debug = require('debug')('amqp10-test-types'),
+var debug = require('debug')('amqp10-test-types'),
     expect = require('chai').expect,
     builder = require('buffer-builder'),
     BufferBuilder = require('buffer-builder'),

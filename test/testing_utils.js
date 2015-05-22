@@ -2,7 +2,7 @@
 
 var builder = require('buffer-builder'),
     BufferList = require('bl'),
-    should = require('should'),
+    expect = require('chai').expect,
     _ = require('lodash'),
     sb = require('stream-buffers');
 
@@ -42,14 +42,14 @@ function shouldBufEql(expected, actual, msg) {
   var actualStr = actual.toString('hex');
   if (actualStr.length > 100) {
     // If too long, check length first.
-    actualStr.length.should.eql(expectedStr.length,
+    expect(actualStr.length).to.eql(expectedStr.length,
         msg + '\nActual:   ' + (actualStr.length > 100 ? actualStr.substring(0, 100) + '...' : actualStr) +
             ' vs.  \nExpected: ' + (expectedStr.length > 100 ? expectedStr.substring(0, 100) + '...' : expectedStr));
   }
   if (msg) {
-    actualStr.should.eql(expectedStr, msg);
+    expect(actualStr).to.eql(expectedStr, msg);
   } else {
-    actualStr.should.eql(expectedStr);
+    expect(actualStr).to.eql(expectedStr);
   }
 }
 
