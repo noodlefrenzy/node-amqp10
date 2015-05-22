@@ -14,6 +14,11 @@ var debug = require('debug')('amqp10-test_amqpclient'),
     u = require('../lib/utilities'),
     tu = require('./testing_utils');
 
+var chai = require('chai');
+chai.config.includeStack = true; // turn on stack trace
+
+var mock_uri = 'amqp://localhost/';
+
 function MockConnection() {
   this._created = 0;
 }
@@ -119,16 +124,14 @@ function MakeMockClient(c, s) {
 }
 
 describe('AMQPClient', function() {
-
   describe('#connect()', function() {
     it('should set up connection and session', function(done) {
       var c = new MockConnection();
       var s = new MockSession(c);
       var client = new MakeMockClient(c, s);
-      var addr = 'amqp://localhost';
       var called = {open: 0, begin: 0};
       c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_addr).to.eql(u.parseAddress(mock_uri));
         expect(_sasl).to.be.null;
         called.open++;
         _c.emit(Connection.Connected, _c);
@@ -139,7 +142,7 @@ describe('AMQPClient', function() {
         _s.emit(Session.Mapped, _s);
       });
 
-      client.connect(addr, function(err, _client) {
+      client.connect(mock_uri, function(err, _client) {
         expect(err).to.be.null;
         expect(c._created).to.eql(1);
         expect(s._created).to.eql(1);
@@ -150,6 +153,11 @@ describe('AMQPClient', function() {
   });
 
   describe('#send()', function() {
+    it('should throw an error if not connected', function() {
+      var client = new MakeMockClient();
+      expect(function() { client.send(); }).to.throw(Error);
+    });
+
     it('should create connection, session, and link on send with full address', function(done) {
       var c = new MockConnection();
       var s = new MockSession(c);
@@ -161,11 +169,10 @@ describe('AMQPClient', function() {
 
       s._addMockLink(l);
       var client = new MakeMockClient(c, s);
-      var addr = 'amqp://localhost/';
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_addr).to.eql(u.parseAddress(mock_uri));
         expect(_sasl).to.be.null;
         called.open++;
         _c.emit(Connection.Connected, _c);
@@ -199,20 +206,22 @@ describe('AMQPClient', function() {
         });
       });
 
-      client.send({ my: 'message' }, addr + queue, function(err) {
-        expect(err).to.not.exist;
+      client.connect(mock_uri, function(err, _client) {
+        _client.send({ my: 'message' }, queue, function(err) {
+          expect(err).to.not.exist;
 
-        expect(c._created).to.eql(1);
-        expect(s._created).to.eql(1);
-        expect(l._created).to.eql(1);
-        expect(called.open).to.eql(1);
-        expect(called.begin).to.eql(1);
-        expect(called.attachLink).to.eql(1);
-        expect(called.canSend).to.eql(1);
-        expect(called.sendMessage).to.eql(1);
-        expect(l.messages).to.not.be.empty;
-        expect(l.messages[0].message).to.eql({ my: 'message' });
-        done();
+          expect(c._created).to.eql(1);
+          expect(s._created).to.eql(1);
+          expect(l._created).to.eql(1);
+          expect(called.open).to.eql(1);
+          expect(called.begin).to.eql(1);
+          expect(called.attachLink).to.eql(1);
+          expect(called.canSend).to.eql(1);
+          expect(called.sendMessage).to.eql(1);
+          expect(l.messages).to.not.be.empty;
+          expect(l.messages[0].message).to.eql({ my: 'message' });
+          done();
+        });
       });
     });
 
@@ -227,11 +236,10 @@ describe('AMQPClient', function() {
 
       s._addMockLink(l);
       var client = new MakeMockClient(c, s);
-      var addr = 'amqp://localhost/';
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_addr).to.eql(u.parseAddress(mock_uri));
         expect(_sasl).to.not.exist;
         called.open++;
         _c.emit(Connection.Connected, _c);
@@ -271,20 +279,22 @@ describe('AMQPClient', function() {
         });
       });
 
-      client.send({ my: 'message' }, addr + queue, function(err) {
-        expect(err).to.not.exist;
+      client.connect(mock_uri, function(err, _client) {
+        _client.send({ my: 'message' }, queue, function(err) {
+          expect(err).to.not.exist;
 
-        expect(c._created).to.eql(1);
-        expect(s._created).to.eql(1);
-        expect(l._created).to.eql(1);
-        expect(called.open).to.eql(1);
-        expect(called.begin).to.eql(1);
-        expect(called.attachLink).to.eql(1);
-        expect(called.canSend).to.eql(2);
-        expect(called.sendMessage).to.eql(1);
-        expect(l.messages).to.not.be.empty;
-        expect(l.messages[0].message).to.eql({ my: 'message' });
-        done();
+          expect(c._created).to.eql(1);
+          expect(s._created).to.eql(1);
+          expect(l._created).to.eql(1);
+          expect(called.open).to.eql(1);
+          expect(called.begin).to.eql(1);
+          expect(called.attachLink).to.eql(1);
+          expect(called.canSend).to.eql(2);
+          expect(called.sendMessage).to.eql(1);
+          expect(l.messages).to.not.be.empty;
+          expect(l.messages[0].message).to.eql({ my: 'message' });
+          done();
+        });
       });
     });
 
@@ -299,11 +309,10 @@ describe('AMQPClient', function() {
 
       s._addMockLink(l);
       var client = new MakeMockClient(c, s);
-      var addr = 'amqp://localhost/';
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_addr).to.eql(u.parseAddress(mock_uri));
         expect(_sasl).to.not.exist;
         called.open++;
         _c.emit(Connection.Connected, _c);
@@ -337,22 +346,24 @@ describe('AMQPClient', function() {
         });
       });
 
-      var tmpFunction = function () {};
-      for (var idx = 0; idx < 5; idx++) {
-        client.send({my: 'message'}, addr + queue, tmpFunction);
-      }
+      client.connect(mock_uri, function(err, _client) {
+        var tmpFunction = function () {};
+        for (var idx = 0; idx < 5; idx++) {
+          _client.send({my: 'message'}, queue, tmpFunction);
+        }
 
-      process.nextTick(function() {
-        expect(c._created).to.eql(1);
-        expect(s._created).to.eql(1);
-        expect(l._created).to.eql(1);
-        expect(called.open).to.eql(1);
-        expect(called.begin).to.eql(1);
-        expect(called.attachLink).to.eql(1);
-        expect(called.canSend).to.eql(5);
-        expect(called.sendMessage).to.eql(5);
-        expect(l.messages.length).to.eql(5);
-        done();
+        process.nextTick(function() {
+          expect(c._created).to.eql(1);
+          expect(s._created).to.eql(1);
+          expect(l._created).to.eql(1);
+          expect(called.open).to.eql(1);
+          expect(called.begin).to.eql(1);
+          expect(called.attachLink).to.eql(1);
+          expect(called.canSend).to.eql(5);
+          expect(called.sendMessage).to.eql(5);
+          expect(l.messages.length).to.eql(5);
+          done();
+        });
       });
     });
 
@@ -367,11 +378,10 @@ describe('AMQPClient', function() {
 
       s._addMockLink(l);
       var client = new MakeMockClient(c, s);
-      var addr = 'amqp://localhost/';
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_addr).to.eql(u.parseAddress(mock_uri));
         expect(_sasl).to.not.exist;
         called.open++;
         _c.emit(Connection.Connected, _c);
@@ -411,22 +421,24 @@ describe('AMQPClient', function() {
         });
       });
 
-      client.send({my: 'message'}, addr + queue, function() {});
-      process.nextTick(function() {
-        client.send({my: 'message'}, addr + queue, function() {});
-      });
+      client.connect(mock_uri, function(err, _client) {
+        _client.send({my: 'message'}, queue, function() {});
+        process.nextTick(function() {
+          _client.send({my: 'message'}, queue, function() {});
+        });
 
-      process.nextTick(function() {
-        expect(c._created).to.eql(1);
-        expect(s._created).to.eql(1);
-        expect(l._created).to.eql(2);
-        expect(called.open).to.eql(1);
-        expect(called.begin).to.eql(1);
-        expect(called.attachLink).to.eql(2);
-        expect(called.canSend).to.eql(2);
-        expect(called.sendMessage).to.eql(2);
-        expect(l.messages).to.not.be.empty;
-        done();
+        process.nextTick(function() {
+          expect(c._created).to.eql(1);
+          expect(s._created).to.eql(1);
+          expect(l._created).to.eql(2);
+          expect(called.open).to.eql(1);
+          expect(called.begin).to.eql(1);
+          expect(called.attachLink).to.eql(2);
+          expect(called.canSend).to.eql(2);
+          expect(called.sendMessage).to.eql(2);
+          expect(l.messages).to.not.be.empty;
+          done();
+        });
       });
     });
 
@@ -441,11 +453,10 @@ describe('AMQPClient', function() {
 
       s._addMockLink(l);
       var client = new MakeMockClient(c, s);
-      var addr = 'amqp://localhost/';
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_addr).to.eql(u.parseAddress(mock_uri));
         expect(_sasl).to.not.exist;
         called.open++;
         _c.emit(Connection.Connected, _c);
@@ -484,22 +495,24 @@ describe('AMQPClient', function() {
         });
       });
 
-      client.send({my: 'message'}, addr + queue, function() {});
-      process.nextTick(function() {
-        client.send({my: 'message'}, addr + queue, function() {});
-      });
+      client.connect(mock_uri, function(err, _client) {
+        _client.send({my: 'message'}, queue, function() {});
+        process.nextTick(function() {
+          _client.send({my: 'message'}, queue, function() {});
+        });
 
-      process.nextTick(function() {
-        expect(c._created).to.eql(2);
-        expect(s._created).to.eql(2);
-        expect(l._created).to.eql(2);
-        expect(called.open).to.eql(2);
-        expect(called.begin).to.eql(2);
-        expect(called.attachLink).to.eql(2);
-        expect(called.canSend).to.eql(2);
-        expect(called.sendMessage).to.eql(2);
-        expect(l.messages).to.not.be.empty;
-        done();
+        process.nextTick(function() {
+          expect(c._created).to.eql(2);
+          expect(s._created).to.eql(2);
+          expect(l._created).to.eql(2);
+          expect(called.open).to.eql(2);
+          expect(called.begin).to.eql(2);
+          expect(called.attachLink).to.eql(2);
+          expect(called.canSend).to.eql(2);
+          expect(called.sendMessage).to.eql(2);
+          expect(l.messages).to.not.be.empty;
+          done();
+        });
       });
     });
 
@@ -514,11 +527,10 @@ describe('AMQPClient', function() {
 
       s._addMockLink(l);
       var client = new MakeMockClient(c, s);
-      var addr = 'amqp://localhost/';
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_addr).to.eql(u.parseAddress(mock_uri));
         expect(_sasl).to.not.exist;
 
         called.open++;
@@ -564,25 +576,32 @@ describe('AMQPClient', function() {
         });
       });
 
-      client.send({my: 'message'}, addr + queue, function() {});
+      client.connect(mock_uri, function(err, _client) {
+        _client.send({my: 'message'}, queue, function() {});
 
-      // NOTE: reverted to setTimeout, but nextTick -should- work...
-      setTimeout(function() {
-        expect(c._created).to.eql(2);
-        expect(s._created).to.eql(2);
-        expect(l._created).to.eql(2);
-        expect(called.open).to.eql(2);
-        expect(called.begin).to.eql(2);
-        expect(called.attachLink).to.eql(2);
-        expect(called.canSend).to.eql(3);
-        expect(called.sendMessage).to.eql(1);
-        expect(l.messages).to.not.be.empty;
-        done();
-      }, 1);
+        // NOTE: reverted to setTimeout, but nextTick -should- work...
+        setTimeout(function() {
+          expect(c._created).to.eql(2);
+          expect(s._created).to.eql(2);
+          expect(l._created).to.eql(2);
+          expect(called.open).to.eql(2);
+          expect(called.begin).to.eql(2);
+          expect(called.attachLink).to.eql(2);
+          expect(called.canSend).to.eql(3);
+          expect(called.sendMessage).to.eql(1);
+          expect(l.messages).to.not.be.empty;
+          done();
+        }, 1);
+      });
     });
   });
 
   describe('#receive()', function() {
+    it('should throw an error if not connected', function() {
+      var client = new MakeMockClient();
+      expect(function() { client.receive(); }).to.throw(Error);
+    });
+
     it('should create connection, session, and link on receive with full address', function(done) {
       var c = new MockConnection();
       var s = new MockSession(c);
@@ -594,11 +613,10 @@ describe('AMQPClient', function() {
 
       s._addMockLink(l);
       var client = new MakeMockClient(c, s);
-      var addr = 'amqp://localhost/';
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_addr).to.eql(u.parseAddress(mock_uri));
         expect(_sasl).to.not.exist;
 
         called.open++;
@@ -617,15 +635,17 @@ describe('AMQPClient', function() {
         _s.emit(Session.LinkAttached, _l);
       });
 
-      client.receive(addr + queue, function(err, payload, annotations) {});
-      process.nextTick(function() {
-        expect(c._created).to.eql(1);
-        expect(s._created).to.eql(1);
-        expect(l._created).to.eql(1);
-        expect(called.open).to.eql(1);
-        expect(called.begin).to.eql(1);
-        expect(called.attachLink).to.eql(1);
-        done();
+      client.connect(mock_uri, function(err, _client) {
+        _client.receive(queue, function(err, payload, annotations) {});
+        process.nextTick(function() {
+          expect(c._created).to.eql(1);
+          expect(s._created).to.eql(1);
+          expect(l._created).to.eql(1);
+          expect(called.open).to.eql(1);
+          expect(called.begin).to.eql(1);
+          expect(called.attachLink).to.eql(1);
+          done();
+        });
       });
     });
 
@@ -648,10 +668,9 @@ describe('AMQPClient', function() {
       s._addMockLink(l2);
 
       var client = new MakeMockClient(c, s);
-      var addr = 'amqp://localhost/';
       var called = { open: 0, begin: 0, attachLink: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_addr).to.eql(u.parseAddress(mock_uri));
         expect(_sasl).to.not.exist;
 
         called.open++;
@@ -669,17 +688,19 @@ describe('AMQPClient', function() {
         _s.emit(Session.LinkAttached, _l);
       });
 
-      client.receive(addr + 'queue1', function(err, payload, annotations) {});
-      client.receive(addr + 'queue2', function(err, payload, annotations) {});
-      process.nextTick(function() {
-        expect(c._created).to.eql(1);
-        expect(s._created).to.eql(1);
-        expect(l1._created).to.eql(1);
-        expect(l2._created).to.eql(1);
-        expect(called.open).to.eql(1);
-        expect(called.begin).to.eql(1);
-        expect(called.attachLink).to.eql(2);
-        done();
+      client.connect(mock_uri, function(err, _client) {
+        _client.receive('queue1', function(err, payload, annotations) {});
+        _client.receive('queue2', function(err, payload, annotations) {});
+        process.nextTick(function() {
+          expect(c._created).to.eql(1);
+          expect(s._created).to.eql(1);
+          expect(l1._created).to.eql(1);
+          expect(l2._created).to.eql(1);
+          expect(called.open).to.eql(1);
+          expect(called.begin).to.eql(1);
+          expect(called.attachLink).to.eql(2);
+          done();
+        });
       });
     });
 
@@ -694,11 +715,10 @@ describe('AMQPClient', function() {
 
       s._addMockLink(l);
       var client = new MakeMockClient(c, s);
-      var addr = 'amqp://localhost/';
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_addr).to.eql(u.parseAddress(mock_uri));
         expect(_sasl).to.not.exist;
 
         called.open++;
@@ -723,15 +743,17 @@ describe('AMQPClient', function() {
         _s.emit(Session.LinkAttached, _l);
       });
 
-      client.receive(addr + queue, function() {});
-      process.nextTick(function() {
-        expect(c._created).to.eql(1);
-        expect(s._created).to.eql(1);
-        expect(l._created).to.eql(2);
-        expect(called.open).to.eql(1);
-        expect(called.begin).to.eql(1);
-        expect(called.attachLink).to.eql(2);
-        done();
+      client.connect(mock_uri, function(err, _client) {
+        _client.receive(queue, function() {});
+        process.nextTick(function() {
+          expect(c._created).to.eql(1);
+          expect(s._created).to.eql(1);
+          expect(l._created).to.eql(2);
+          expect(called.open).to.eql(1);
+          expect(called.begin).to.eql(1);
+          expect(called.attachLink).to.eql(2);
+          done();
+        });
       });
     });
 
@@ -746,11 +768,10 @@ describe('AMQPClient', function() {
 
       s._addMockLink(l);
       var client = new MakeMockClient(c, s);
-      var addr = 'amqp://localhost/';
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(addr));
+        expect(_addr).to.eql(u.parseAddress(mock_uri));
         expect(_sasl).to.not.exist;
 
         called.open++;
@@ -775,15 +796,17 @@ describe('AMQPClient', function() {
         _s.emit(Session.LinkAttached, _l);
       });
 
-      client.receive(addr + queue, function() {});
-      process.nextTick(function() {
-        expect(c._created).to.eql(2);
-        expect(s._created).to.eql(2);
-        expect(l._created).to.eql(2);
-        expect(called.open).to.eql(2);
-        expect(called.begin).to.eql(2);
-        expect(called.attachLink).to.eql(2);
-        done();
+      client.connect(mock_uri, function(err, _client) {
+        _client.receive(queue, function() {});
+        process.nextTick(function() {
+          expect(c._created).to.eql(2);
+          expect(s._created).to.eql(2);
+          expect(l._created).to.eql(2);
+          expect(called.open).to.eql(2);
+          expect(called.begin).to.eql(2);
+          expect(called.attachLink).to.eql(2);
+          done();
+        });
       });
     });
   });
