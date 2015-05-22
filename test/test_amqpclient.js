@@ -4,6 +4,7 @@ var debug = require('debug')('amqp10-test_amqpclient'),
     expect = require('chai').expect,
     util = require('util'),
     EventEmitter = require('events').EventEmitter,
+    Promise = require('bluebird'),
 
     AMQPClient = require('../lib/amqp_client'),
     constants = require('../lib/constants'),
@@ -125,7 +126,7 @@ function MakeMockClient(c, s) {
 
 describe('AMQPClient', function() {
   describe('#connect()', function() {
-    it('should set up connection and session', function(done) {
+    it('should set up connection and session', function() {
       var c = new MockConnection();
       var s = new MockSession(c);
       var client = new MakeMockClient(c, s);
@@ -142,14 +143,12 @@ describe('AMQPClient', function() {
         _s.emit(Session.Mapped, _s);
       });
 
-      client.connect(mock_uri).then(function(_client) {
-        expect(c._created).to.eql(1);
-        expect(s._created).to.eql(1);
-        expect(called).to.eql({ open: 1, begin: 1 });
-        done();
-      }).catch(function(err) {
-        console.log(err);
-      });
+      return client.connect(mock_uri)
+        .then(function(_client) {
+          expect(c._created).to.eql(1);
+          expect(s._created).to.eql(1);
+          expect(called).to.eql({ open: 1, begin: 1 });
+        });
     });
   });
 
@@ -159,7 +158,7 @@ describe('AMQPClient', function() {
       expect(function() { client.send(); }).to.throw(Error);
     });
 
-    it('should create connection, session, and link on send with full address', function(done) {
+    it('should create connection, session, and link on send with full address', function() {
       var c = new MockConnection();
       var s = new MockSession(c);
       var l = new MockLink(s, {
@@ -207,10 +206,11 @@ describe('AMQPClient', function() {
         });
       });
 
-      client.connect(mock_uri).then(function(_client) {
-        _client.send({ my: 'message' }, queue, function(err) {
-          expect(err).to.not.exist;
-
+      return client.connect(mock_uri)
+        .then(function() {
+          return client.send({ my: 'message' }, queue);
+        })
+        .then(function() {
           expect(c._created).to.eql(1);
           expect(s._created).to.eql(1);
           expect(l._created).to.eql(1);
@@ -221,12 +221,10 @@ describe('AMQPClient', function() {
           expect(called.sendMessage).to.eql(1);
           expect(l.messages).to.not.be.empty;
           expect(l.messages[0].message).to.eql({ my: 'message' });
-          done();
         });
-      });
     });
 
-    it('should wait for capacity before sending', function(done) {
+    it('should wait for capacity before sending', function() {
       var c = new MockConnection();
       var s = new MockSession(c);
       var l = new MockLink(s, {
@@ -280,10 +278,11 @@ describe('AMQPClient', function() {
         });
       });
 
-      client.connect(mock_uri).then(function(_client) {
-        _client.send({ my: 'message' }, queue, function(err) {
-          expect(err).to.not.exist;
-
+      return client.connect(mock_uri)
+        .then(function(_client) {
+          return client.send({ my: 'message' }, queue);
+        })
+        .then(function() {
           expect(c._created).to.eql(1);
           expect(s._created).to.eql(1);
           expect(l._created).to.eql(1);
@@ -294,12 +293,10 @@ describe('AMQPClient', function() {
           expect(called.sendMessage).to.eql(1);
           expect(l.messages).to.not.be.empty;
           expect(l.messages[0].message).to.eql({ my: 'message' });
-          done();
         });
-      });
     });
 
-    it('should only create a single connection, session, link for multiple sends', function(done) {
+    it('should only create a single connection, session, link for multiple sends', function() {
       var c = new MockConnection();
       var s = new MockSession(c);
       var l = new MockLink(s, {
@@ -347,13 +344,14 @@ describe('AMQPClient', function() {
         });
       });
 
-      client.connect(mock_uri).then(function(_client) {
-        var tmpFunction = function () {};
-        for (var idx = 0; idx < 5; idx++) {
-          _client.send({my: 'message'}, queue, tmpFunction);
-        }
-
-        process.nextTick(function() {
+      return client.connect(mock_uri)
+        .then(function() {
+          var promises = [];
+          for (var idx = 0; idx < 5; idx++)
+            promises.push(client.send({my: 'message'}, queue));
+          return Promise.all(promises);
+        })
+        .then(function() {
           expect(c._created).to.eql(1);
           expect(s._created).to.eql(1);
           expect(l._created).to.eql(1);
@@ -363,12 +361,10 @@ describe('AMQPClient', function() {
           expect(called.canSend).to.eql(5);
           expect(called.sendMessage).to.eql(5);
           expect(l.messages.length).to.eql(5);
-          done();
         });
-      });
     });
 
-    it('should re-establish send link on detach, on next send', function(done) {
+    it('should re-establish send link on detach, on next send', function() {
       var c = new MockConnection();
       var s = new MockSession(c);
       var l = new MockLink(s, {
@@ -422,25 +418,28 @@ describe('AMQPClient', function() {
         });
       });
 
-      client.connect(mock_uri).then(function(_client) {
-        _client.send({my: 'message'}, queue, function() {});
-        process.nextTick(function() {
-          _client.send({my: 'message'}, queue, function() {});
+      return client.connect(mock_uri)
+        .then(function() {
+          return client.send({my: 'message'}, queue);
+        })
+        .then(function() {
+          process.nextTick(function() {
+            return client.send({my: 'message'}, queue);
+          });
+        })
+        .then(function() {
+          process.nextTick(function() {
+            expect(c._created).to.eql(1);
+            expect(s._created).to.eql(1);
+            expect(l._created).to.eql(2);
+            expect(called.open).to.eql(1);
+            expect(called.begin).to.eql(1);
+            expect(called.attachLink).to.eql(2);
+            expect(called.canSend).to.eql(2);
+            expect(called.sendMessage).to.eql(2);
+            expect(l.messages).to.not.be.empty;
+          });
         });
-
-        process.nextTick(function() {
-          expect(c._created).to.eql(1);
-          expect(s._created).to.eql(1);
-          expect(l._created).to.eql(2);
-          expect(called.open).to.eql(1);
-          expect(called.begin).to.eql(1);
-          expect(called.attachLink).to.eql(2);
-          expect(called.canSend).to.eql(2);
-          expect(called.sendMessage).to.eql(2);
-          expect(l.messages).to.not.be.empty;
-          done();
-        });
-      });
     });
 
     it('should re-establish connection on disconnect, on next send', function(done) {
@@ -496,28 +495,32 @@ describe('AMQPClient', function() {
         });
       });
 
-      client.connect(mock_uri).then(function(_client) {
-        _client.send({my: 'message'}, queue, function() {});
-        process.nextTick(function() {
-          _client.send({my: 'message'}, queue, function() {});
-        });
-
-        process.nextTick(function() {
-          expect(c._created).to.eql(2);
-          expect(s._created).to.eql(2);
-          expect(l._created).to.eql(2);
-          expect(called.open).to.eql(2);
-          expect(called.begin).to.eql(2);
-          expect(called.attachLink).to.eql(2);
-          expect(called.canSend).to.eql(2);
-          expect(called.sendMessage).to.eql(2);
-          expect(l.messages).to.not.be.empty;
-          done();
-        });
+      return client.connect(mock_uri)
+        .then(function(_client) {
+          client.send({ my: 'message' }, queue);
+        })
+        .tap(function() {
+          process.nextTick(function() {
+            return client.send({ my: 'message' }, queue);
+          });
+        })
+        .then(function() {
+          process.nextTick(function() {
+            expect(c._created).to.eql(2);
+            expect(s._created).to.eql(2);
+            expect(l._created).to.eql(2);
+            expect(called.open).to.eql(2);
+            expect(called.begin).to.eql(2);
+            expect(called.attachLink).to.eql(2);
+            expect(called.canSend).to.eql(2);
+            expect(called.sendMessage).to.eql(2);
+            expect(l.messages).to.not.be.empty;
+            done();
+          });
       });
     });
 
-    it('should re-establish connection on disconnect, if send is pending', function(done) {
+    it('should re-establish connection on disconnect, if send is pending', function() {
       var c = new MockConnection();
       var s = new MockSession(c);
       var l = new MockLink(s, {
@@ -577,23 +580,24 @@ describe('AMQPClient', function() {
         });
       });
 
-      client.connect(mock_uri).then(function(_client) {
-        _client.send({my: 'message'}, queue, function() {});
-
-        // NOTE: reverted to setTimeout, but nextTick -should- work...
-        setTimeout(function() {
-          expect(c._created).to.eql(2);
-          expect(s._created).to.eql(2);
-          expect(l._created).to.eql(2);
-          expect(called.open).to.eql(2);
-          expect(called.begin).to.eql(2);
-          expect(called.attachLink).to.eql(2);
-          expect(called.canSend).to.eql(3);
-          expect(called.sendMessage).to.eql(1);
-          expect(l.messages).to.not.be.empty;
-          done();
-        }, 1);
-      });
+      return client.connect(mock_uri)
+        .then(function() {
+          return client.send({ my: 'message' }, queue);
+        })
+        .then(function() {
+          // NOTE: reverted to setTimeout, but nextTick -should- work...
+          setTimeout(function() {
+            expect(c._created).to.eql(2);
+            expect(s._created).to.eql(2);
+            expect(l._created).to.eql(2);
+            expect(called.open).to.eql(2);
+            expect(called.begin).to.eql(2);
+            expect(called.attachLink).to.eql(2);
+            expect(called.canSend).to.eql(3);
+            expect(called.sendMessage).to.eql(1);
+            expect(l.messages).to.not.be.empty;
+          }, 1);
+        });
     });
   });
 

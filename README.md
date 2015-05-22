@@ -1,9 +1,9 @@
 node-amqp10
 =============
 
-[![Build Status](https://secure.travis-ci.org/noodlefrenzy/node-amqp10.svg?branch=master)](https://travis-ci.org/noodlefrenzy/node-amqp10) 
-[![Dependency Status](https://david-dm.org/noodlefrenzy/node-amqp10.svg)](https://david-dm.org/noodlefrenzy/node-amqp10) 
-[![Code Climate](https://codeclimate.com/github/noodlefrenzy/node-amqp10/badges/gpa.svg)](https://codeclimate.com/github/noodlefrenzy/node-amqp10) 
+[![Build Status](https://secure.travis-ci.org/noodlefrenzy/node-amqp10.svg?branch=master)](https://travis-ci.org/noodlefrenzy/node-amqp10)
+[![Dependency Status](https://david-dm.org/noodlefrenzy/node-amqp10.svg)](https://david-dm.org/noodlefrenzy/node-amqp10)
+[![Code Climate](https://codeclimate.com/github/noodlefrenzy/node-amqp10/badges/gpa.svg)](https://codeclimate.com/github/noodlefrenzy/node-amqp10)
 [![Test Coverage](https://codeclimate.com/github/noodlefrenzy/node-amqp10/badges/coverage.svg)](https://codeclimate.com/github/noodlefrenzy/node-amqp10)
 [![npm version](https://badge.fury.io/js/amqp10.svg)](http://badge.fury.io/js/amqp10)
 
@@ -21,17 +21,20 @@ connect, and then send/receive as necessary.  So a simple example for a local Ac
 
     var AMQPClient = require('amqp10');
     var client = new AMQPClient(); // Uses PolicyBase default policy
-    client.connect('amqp://localhost/myqueue', function(conn_err) {
-      // ... check for errors ...
-      client.send(JSON.stringify({ key: "Value" }), function (send_err) {
-        // ... check for errors ...
+    client.connect('amqp://localhost/myqueue')
+      .then(function() {
+        client.receive(function (rx_err, payload, annotations) {
+          // ... check for errors ...
+          console.log('Rx message: ');
+          console.log(JSON.parse(payload));
+        });
+
+        return client.send(JSON.stringify({ key: "Value" }));
+      })
+      .catch(function(err) {
+        console.log("error: " + err);
       });
-      client.receive(function (rx_err, payload, annotations) {
-        // ... check for errors ...
-        console.log('Rx message: ');
-        console.log(JSON.parse(payload));
-      });
-    });
+
 
 Note that the above JSON.stringify/JSON.parse on send/receive can be moved into the encoder/decoder methods on the policy object -
 see the Event Hub policy for an example.
