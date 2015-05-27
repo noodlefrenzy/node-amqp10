@@ -144,7 +144,7 @@ describe('AMQPClient', function() {
       });
 
       return client.connect(mock_uri)
-        .then(function(_client) {
+        .then(function() {
           expect(c._created).to.eql(1);
           expect(s._created).to.eql(1);
           expect(called).to.eql({ open: 1, begin: 1 });
@@ -279,7 +279,7 @@ describe('AMQPClient', function() {
       });
 
       return client.connect(mock_uri)
-        .then(function(_client) {
+        .then(function() {
           return client.send({ my: 'message' }, queue);
         })
         .then(function() {
@@ -442,7 +442,7 @@ describe('AMQPClient', function() {
         });
     });
 
-    it('should re-establish connection on disconnect, on next send', function(done) {
+    it('should re-establish connection on disconnect, on next send', function() {
       var c = new MockConnection();
       var s = new MockSession(c);
       var l = new MockLink(s, {
@@ -496,7 +496,7 @@ describe('AMQPClient', function() {
       });
 
       return client.connect(mock_uri)
-        .then(function(_client) {
+        .then(function() {
           client.send({ my: 'message' }, queue);
         })
         .tap(function() {
@@ -515,7 +515,6 @@ describe('AMQPClient', function() {
             expect(called.canSend).to.eql(2);
             expect(called.sendMessage).to.eql(2);
             expect(l.messages).to.not.be.empty;
-            done();
           });
       });
     });
@@ -604,10 +603,10 @@ describe('AMQPClient', function() {
   describe('#receive()', function() {
     it('should throw an error if not connected', function() {
       var client = new MakeMockClient();
-      expect(function() { client.receive(); }).to.throw(Error);
+      expect(function() { client.createReceiver(); }).to.throw(Error);
     });
 
-    it('should create connection, session, and link on receive with full address', function(done) {
+    it('should create connection, session, and link on receive with full address', function() {
       var c = new MockConnection();
       var s = new MockSession(c);
       var l = new MockLink(s, {
@@ -640,21 +639,21 @@ describe('AMQPClient', function() {
         _s.emit(Session.LinkAttached, _l);
       });
 
-      client.connect(mock_uri).then(function(_client) {
-        _client.receive(queue, function(err, payload, annotations) {});
-        process.nextTick(function() {
+      return client.connect(mock_uri)
+        .then(function() {
+          return client.createReceiver(queue, function(err, payload, annotations) {});
+        })
+        .then(function() {
           expect(c._created).to.eql(1);
           expect(s._created).to.eql(1);
           expect(l._created).to.eql(1);
           expect(called.open).to.eql(1);
           expect(called.begin).to.eql(1);
           expect(called.attachLink).to.eql(1);
-          done();
         });
-      });
     });
 
-    it('should only create a single connection, session, multiple links for multiple receives', function(done) {
+    it('should only create a single connection, session, multiple links for multiple receives', function() {
       var c = new MockConnection();
       var s = new MockSession(c);
       var l1 = new MockLink(s, {
@@ -693,10 +692,14 @@ describe('AMQPClient', function() {
         _s.emit(Session.LinkAttached, _l);
       });
 
-      client.connect(mock_uri).then(function(_client) {
-        _client.receive('queue1', function(err, payload, annotations) {});
-        _client.receive('queue2', function(err, payload, annotations) {});
-        process.nextTick(function() {
+      return client.connect(mock_uri)
+        .then(function() {
+          return Promise.all([
+            client.createReceiver('queue1', function(err, payload, annotations) {}),
+            client.createReceiver('queue2', function(err, payload, annotations) {})
+          ]);
+        })
+        .then(function() {
           expect(c._created).to.eql(1);
           expect(s._created).to.eql(1);
           expect(l1._created).to.eql(1);
@@ -704,12 +707,10 @@ describe('AMQPClient', function() {
           expect(called.open).to.eql(1);
           expect(called.begin).to.eql(1);
           expect(called.attachLink).to.eql(2);
-          done();
         });
-      });
     });
 
-    it('should re-establish receive link on detach, automatically', function(done) {
+    it('should re-establish receive link on detach, automatically', function() {
       var c = new MockConnection();
       var s = new MockSession(c);
       var l = new MockLink(s, {
@@ -748,21 +749,23 @@ describe('AMQPClient', function() {
         _s.emit(Session.LinkAttached, _l);
       });
 
-      client.connect(mock_uri).then(function(_client) {
-        _client.receive(queue, function() {});
-        process.nextTick(function() {
-          expect(c._created).to.eql(1);
-          expect(s._created).to.eql(1);
-          expect(l._created).to.eql(2);
-          expect(called.open).to.eql(1);
-          expect(called.begin).to.eql(1);
-          expect(called.attachLink).to.eql(2);
-          done();
+      return client.connect(mock_uri)
+        .then(function() {
+          return client.createReceiver(queue, function() {});
+        })
+        .then(function() {
+          process.nextTick(function() {
+            expect(c._created).to.eql(1);
+            expect(s._created).to.eql(1);
+            expect(l._created).to.eql(2);
+            expect(called.open).to.eql(1);
+            expect(called.begin).to.eql(1);
+            expect(called.attachLink).to.eql(2);
+          });
         });
-      });
     });
 
-    it('should re-establish connection on disconnect, automatically', function(done) {
+    it('should re-establish connection on disconnect, automatically', function() {
       var c = new MockConnection();
       var s = new MockSession(c);
       var l = new MockLink(s, {
@@ -801,18 +804,20 @@ describe('AMQPClient', function() {
         _s.emit(Session.LinkAttached, _l);
       });
 
-      client.connect(mock_uri).then(function(_client) {
-        _client.receive(queue, function() {});
-        process.nextTick(function() {
-          expect(c._created).to.eql(2);
-          expect(s._created).to.eql(2);
-          expect(l._created).to.eql(2);
-          expect(called.open).to.eql(2);
-          expect(called.begin).to.eql(2);
-          expect(called.attachLink).to.eql(2);
-          done();
+      return client.connect(mock_uri)
+        .then(function() {
+          return client.createReceiver(queue, function() {});
+        })
+        .then(function() {
+          process.nextTick(function() {
+            expect(c._created).to.eql(2);
+            expect(s._created).to.eql(2);
+            expect(l._created).to.eql(2);
+            expect(called.open).to.eql(2);
+            expect(called.begin).to.eql(2);
+            expect(called.attachLink).to.eql(2);
+          });
         });
-      });
     });
   });
 });
