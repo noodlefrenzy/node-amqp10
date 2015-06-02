@@ -1,5 +1,23 @@
+//================================
+// Simple EventHub test - takes in a JSON settings file
+// containing settings for connecting to the Hub:
+// - protocol: should never be set, defaults to amqps
+// - SASKeyName: name of your SAS key which should allow send/receive
+// - SASKey: actual SAS key value
+// - serviceBusHost: name of the host without suffix (e.g. https://foobar-ns.servicebus.windows.net/foobar-hub => foobar-ns)
+// - eventHubName: name of the hub (e.g. https://foobar-ns.servicebus.windows.net/foobar-hub => foobar-hub)
+// - partitions: number of partitions (see node-sbus-amqp10 for a wrapper client that will figure this out for you and connect appropriately)
+//
+// By default, will set up a receiver on each partition, then send a message and exit when that message is received.
+// Passing in a final argument of (send|receive) causes it to only execute one branch of that flow.
+//================================
+
+//var AMQPClient = require('amqp10').Client;
 var AMQPClient  = require('../lib/amqp_client');
 
+// Set the offset for the EventHub - this is where it should start receiving from, and is typically different for each partition
+// Here, I'm setting a global offset, just to show you how it's done. See node-sbus-amqp10 for a wrapper library that will
+// take care of this for you.
 var filterOffset; // example filter offset value might be: 43350;
 var filter;
 if (filterOffset) {
@@ -9,6 +27,7 @@ if (filterOffset) {
     };
 }
 
+// Simple argument-checker, you can ignore.
 function argCheck(settings, options) {
     var missing = [];
     for (var idx in options) {
@@ -46,22 +65,22 @@ if (process.argv.length < 3) {
         else throw new Error('Unknown action.');
     }
 
-    var receiveCB = function (myIdx, err, payload, annotations) {
+    var receiveCB = function (myIdx, err, msg) {
         if (err) {
             console.log('ERROR: ');
             console.log(err);
         } else {
             console.log('Recv(' + myIdx + '): ');
-            console.log(payload);
-            if (annotations) {
+            console.log(msg.body);
+            if (msg.annotations) {
                 console.log('Annotations:');
-                console.log(annotations);
+                console.log(msg.annotations);
             }
             console.log('');
             if (sender) {
                 // If not a sender, no use checking for value.
-                if (payload.DataValue === msgVal) {
-                    client.disconnect(function () {
+                if (msg.body.DataValue === msgVal) {
+                    client.disconnect().then(function () {
                         console.log("Disconnected, when we saw the value we'd inserted.");
                         process.exit(0);
                     });
@@ -70,37 +89,32 @@ if (process.argv.length < 3) {
         }
     };
 
-    var sendCB = function(tx_err, state) {
-        if (tx_err) {
-            console.log('Error Sending: ');
-            console.log(tx_err);
-        } else {
-            if (receiver) {
-                for (var idx = 0; idx < numPartitions; ++idx) {
-                    var curIdx = idx;
-                    var curRcvAddr = recvAddr + curIdx;
-                    client.receive(curRcvAddr, filter, receiveCB.bind(null, curIdx));
-                }
-            } else {
-                console.log('Send message with value ' + msgVal + '.  Not receiving, so exiting');
-                process.exit(0);
-            }
-        }
-    };
-
     var client = new AMQPClient(AMQPClient.policies.EventHubPolicy);
-    client.connect(uri, function() {
+    client.connect(uri).then(function () {
         if (sender) {
             client.send({
                 "DataString": "From Node",
                 "DataValue": msgVal
-            }, sendAddr, {'x-opt-partition-key': 'pk' + msgVal}, sendCB);
+            }, sendAddr, {'x-opt-partition-key': 'pk' + msgVal}).then(function (state) {
+              if (receiver) {
+                for (var idx = 0; idx < numPartitions; ++idx) {
+                  var curIdx = idx;
+                  var curRcvAddr = recvAddr + curIdx;
+                  client.createReceiver(curRcvAddr, filter, receiveCB.bind(null, curIdx));
+                }
+              } else {
+                console.log('Send message with value ' + msgVal + '.  Not receiving, so exiting');
+                process.exit(0);
+              }
+            });
         } else if (receiver) {
             for (var idx = 0; idx < numPartitions; ++idx) {
                 var curIdx = idx;
                 var curRcvAddr = recvAddr + curIdx;
-                client.receive(curRcvAddr, undefined, receiveCB.bind(null, curIdx));
+                client.createReceiver(curRcvAddr, filter, receiveCB.bind(null, curIdx));
             }
         }
+    }).catch(function (e) {
+      console.warn('Failed to send due to ', e);
     });
 }
