@@ -12,7 +12,7 @@
 //================================
 
 //var AMQPClient = require('amqp10').Client;
-var AMQPClient  = require('../lib/amqp_client');
+var AMQPClient  = require('../lib').Client;
 
 // Simple argument-checker, you can ignore.
 function argCheck(settings, options) {
