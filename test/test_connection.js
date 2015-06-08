@@ -18,8 +18,8 @@ var debug = require('debug')('amqp10-test_connection'),
     OpenFrame = require('../lib/frames/open_frame'),
 
     Connection = require('../lib/connection'),
-    Session = require('../lib/session').Session,
-    Link = require('../lib/session').Link,
+    Session = require('../lib/session'),
+    Link = require('../lib/link'),
 
     _ = require('lodash'),
     tu = require('./testing_utils');

@@ -9,8 +9,8 @@ var debug = require('debug')('amqp10-test_amqpclient'),
     AMQPClient = require('../lib/amqp_client'),
     constants = require('../lib/constants'),
     Connection = require('../lib/connection'),
-    Session = require('../lib/session').Session,
-    Link = require('../lib/session').Link,
+    Session = require('../lib/session'),
+    Link = require('../lib/link'),
 
     u = require('../lib/utilities'),
     tu = require('./testing_utils');

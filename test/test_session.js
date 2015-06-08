@@ -11,7 +11,7 @@ var debug = require('debug')('amqp10-test_connection'),
     PolicyBase = require('../lib/policies/policy_base'),
 
     Connection = require('../lib/connection'),
-    Session = require('../lib/session').Session,
+    Session = require('../lib/session'),
 
     AMQPError = require('../lib/types/amqp_error'),
 
