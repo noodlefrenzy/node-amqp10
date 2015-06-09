@@ -606,6 +606,84 @@ describe('AMQPClient', function() {
       expect(function() { client.createReceiver(); }).to.throw(Error);
     });
 
+
+    function DelayedAttachMockSession(conn) {
+      MockSession.call(this);
+    }
+    util.inherits(DelayedAttachMockSession, MockSession);
+
+    DelayedAttachMockSession.prototype.attachLink = function(policy) {
+      var link = this._mockLinks[policy.options.name];
+      expect(link).to.exist;
+      link._created++;
+      link._clearState();
+
+      // emulate some delayed link attachment
+      var self = this;
+      setTimeout(function() {
+        self.emit('attachLink-called', self, policy, link);
+      }, 100);
+    };
+
+    it('should return cached receiver links upon multiple createReceive calls', function() {
+      var c = new MockConnection();
+      var s = new DelayedAttachMockSession(c);
+      var l = new MockLink(s, {
+        name: 'queue_RX',
+        isSender: false,
+        capacity: 100
+      });
+
+      s._addMockLink(l);
+      var client = new MakeMockClient(c, s);
+      var queue = 'queue';
+      var called = { open: 0, begin: 0, attachLink: 0 };
+      c.on('open-called', function(_c, _addr, _sasl) {
+        expect(_addr).to.eql(u.parseAddress(mock_uri));
+        expect(_sasl).to.not.exist;
+
+        called.open++;
+        _c.emit(Connection.Connected, _c);
+      });
+
+      s.on('begin-called', function(_s, _policy) {
+        called.begin++;
+        _s.emit(Session.Mapped, _s);
+      });
+
+      s.on('attachLink-called', function(_s, _policy, _l) {
+        called.attachLink++;
+        expect(_policy.options.source).to.eql({ address: queue, filter: undefined });
+        expect(_policy.options.role).to.eql(constants.linkRole.receiver);
+        _s.emit(Session.LinkAttached, _l);
+      });
+
+      var originalLink;
+      return client.connect(mock_uri)
+        .then(function() {
+          // create but don't wait so we can simulate an attaching link
+          client.createReceiver(queue, function(err, payload, annotations) {})
+            .then(function(link) {
+              originalLink = link;
+            });
+        })
+        .then(function() {
+          return Promise.all([
+            client.createReceiver(queue, function(err, payload, annotations) {}),
+            client.createReceiver(queue, function(err, payload, annotations) {}),
+            client.createReceiver(queue, function(err, payload, annotations) {})
+          ]);
+        })
+        .spread(function(link1, link2, link3) {
+          expect(originalLink).to.exist;
+          expect(link1).to.eql(originalLink);
+          expect(link1).to.eql(link2);
+          expect(link1).to.eql(link3);
+          expect(link2).to.eql(link3);
+        });
+    });
+
+
     it('should create connection, session, and link on receive with full address', function() {
       var c = new MockConnection();
       var s = new MockSession(c);
