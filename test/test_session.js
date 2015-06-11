@@ -178,7 +178,7 @@ describe('Session', function() {
         new OpenFrame(PolicyBase.connectPolicy.options),
         new MockBeginFrame({}, 1),
         new MockAttachFrame({ handle: 0, role: constants.linkRole.sender }, 1),
-        new MockDetachFrame({ handle: 0}, 1),
+        new MockDetachFrame({ handle: 0, closed: true }, 1),
         new MockEndFrame(null, 1),
         new CloseFrame()
       ], [
