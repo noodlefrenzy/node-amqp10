@@ -3,24 +3,24 @@
 var debug = require('debug')('amqp10-test_connection'),
     expect = require('chai').expect,
 
-    constants = require('../lib/constants'),
-    u = require('../lib/utilities'),
+    constants = require('../../lib/constants'),
+    u = require('../../lib/utilities'),
     tu = require('./testing_utils'),
     _ = require('lodash'),
 
-    PolicyBase = require('../lib/policies/policy_base'),
+    PolicyBase = require('../../lib/policies/policy_base'),
 
-    Connection = require('../lib/connection'),
-    Session = require('../lib/session'),
+    Connection = require('../../lib/connection'),
+    Session = require('../../lib/session'),
 
-    AMQPError = require('../lib/types/amqp_error'),
+    AMQPError = require('../../lib/types/amqp_error'),
 
-    AttachFrame = require('../lib/frames/attach_frame'),
-    BeginFrame = require('../lib/frames/begin_frame'),
-    CloseFrame = require('../lib/frames/close_frame'),
-    DetachFrame = require('../lib/frames/detach_frame'),
-    EndFrame = require('../lib/frames/end_frame'),
-    OpenFrame = require('../lib/frames/open_frame'),
+    AttachFrame = require('../../lib/frames/attach_frame'),
+    BeginFrame = require('../../lib/frames/begin_frame'),
+    CloseFrame = require('../../lib/frames/close_frame'),
+    DetachFrame = require('../../lib/frames/detach_frame'),
+    EndFrame = require('../../lib/frames/end_frame'),
+    OpenFrame = require('../../lib/frames/open_frame'),
 
     MockServer = require('./mock_amqp');
 

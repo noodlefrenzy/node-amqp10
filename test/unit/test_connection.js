@@ -3,23 +3,23 @@
 var debug = require('debug')('amqp10-test_connection'),
     expect = require('chai').expect,
 
-    constants = require('../lib/constants'),
+    constants = require('../../lib/constants'),
 
-    PolicyBase = require('../lib/policies/policy_base'),
+    PolicyBase = require('../../lib/policies/policy_base'),
 
     MockServer = require('./mock_amqp'),
-    AMQPError = require('../lib/types/amqp_error'),
-    Source = require('../lib/types/source_target').Source,
-    Target = require('../lib/types/source_target').Target,
-    M = require('../lib/types/message'),
+    AMQPError = require('../../lib/types/amqp_error'),
+    Source = require('../../lib/types/source_target').Source,
+    Target = require('../../lib/types/source_target').Target,
+    M = require('../../lib/types/message'),
 
-    CloseFrame = require('../lib/frames/close_frame'),
-    FlowFrame = require('../lib/frames/flow_frame'),
-    OpenFrame = require('../lib/frames/open_frame'),
+    CloseFrame = require('../../lib/frames/close_frame'),
+    FlowFrame = require('../../lib/frames/flow_frame'),
+    OpenFrame = require('../../lib/frames/open_frame'),
 
-    Connection = require('../lib/connection'),
-    Session = require('../lib/session'),
-    Link = require('../lib/link'),
+    Connection = require('../../lib/connection'),
+    Session = require('../../lib/session'),
+    Link = require('../../lib/link'),
 
     _ = require('lodash'),
     tu = require('./testing_utils');

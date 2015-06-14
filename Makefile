@@ -1,5 +1,5 @@
 REPORTER ?= spec
-TESTS = $(shell find ./test/* -name "test_*.js")
+UNIT_TESTS = $(shell find ./test/unit -name "test_*.js")
 NPM_BIN = ./node_modules/.bin
 
 jshint:
@@ -14,11 +14,13 @@ coverage:
 codeclimate-send:
 	CODECLIMATE_REPO_TOKEN=2612b6d4b7bed06760320154f22eba4e348e53055c0eaf9a9a00e3b05ef3b37d codeclimate < coverage/lcov.info
 
-test:
+test-unit:
 	@if [ "$$GREP" ]; then \
-		make jshint && $(NPM_BIN)/mocha --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) -g "$$GREP" $(TESTS); \
+		make jshint && $(NPM_BIN)/mocha --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) -g "$$GREP" $(UNIT_TESTS); \
 	else \
-		make jshint && $(NPM_BIN)/mocha --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) $(TESTS); \
+		make jshint && $(NPM_BIN)/mocha --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) $(UNIT_TESTS); \
 	fi
+
+test: test-unit
 
 .PHONY: jshint fixjsstyle coverage codeclimate-send test

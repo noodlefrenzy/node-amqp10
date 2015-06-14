@@ -5,12 +5,12 @@ var Int64 = require('node-int64'),
     debug = require('debug')('amqp10-test-codec'),
     builder = require('buffer-builder'),
 
-    codec = require('../lib/codec'),
-    AMQPArray = require('../lib/types/amqp_composites').Array,
-    AMQPError = require('../lib/types/amqp_error'),
-    DescribedType = require('../lib/types/described_type'),
-    ForcedType = require('../lib/types/forced_type'),
-    AMQPSymbol = require('../lib/types/amqp_symbol'),
+    codec = require('../../lib/codec'),
+    AMQPArray = require('../../lib/types/amqp_composites').Array,
+    AMQPError = require('../../lib/types/amqp_error'),
+    DescribedType = require('../../lib/types/described_type'),
+    ForcedType = require('../../lib/types/forced_type'),
+    AMQPSymbol = require('../../lib/types/amqp_symbol'),
 
     tu = require('./testing_utils');
 
