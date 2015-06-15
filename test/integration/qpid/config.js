@@ -1,4 +1,5 @@
 'use strict';
 module.exports = {
-  address: 'amqp://localhost'
+  address: 'amqp://localhost',
+  defaultLink: 'amq.topic'
 };
