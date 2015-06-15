@@ -13,7 +13,7 @@ var debug = require('debug')('amqp10-test-types'),
     AMQPSymbol = require('../../lib/types/amqp_symbol'),
     AMQPArray = require('../../lib/types/amqp_composites').Array,
 
-    exceptions = require('../../lib/exceptions'),
+    errors = require('../../lib/errors'),
     tu = require('./testing_utils');
 
 var buf = tu.buildBuffer;
@@ -34,7 +34,7 @@ describe('Types', function() {
         it('should error on unsupported type: ' + typeName, function() {
           var buffer = new BufferBuilder();
           var type = new ForcedType(typeName, 'some data');
-          expect(function() { codec.encode(type, buffer); }).to.throw(exceptions.NotImplementedError);
+          expect(function() { codec.encode(type, buffer); }).to.throw(errors.NotImplementedError);
         });
       });
     });
@@ -45,38 +45,38 @@ describe('Types', function() {
           it('should error encoding ulongs greater than 2^32 - 1', function() {
             var buffer = new BufferBuilder();
             var type = new ForcedType('ulong', 4294967295);
-            expect(function() { codec.encode(type, buffer); }).to.throw(exceptions.NotImplementedError);
+            expect(function() { codec.encode(type, buffer); }).to.throw(errors.NotImplementedError);
           });
 
           it('should error encoding ulongs of invalid type', function() {
             var buffer = new BufferBuilder();
             var type = new ForcedType('ulong', 'giraffes');
-            expect(function() { codec.encode(type, buffer); }).to.throw(exceptions.EncodingError);
+            expect(function() { codec.encode(type, buffer); }).to.throw(errors.EncodingError);
           });
 
 
           it('should error encoding longs greater than 2^32 - 1', function() {
             var buffer = new BufferBuilder();
             var type = new ForcedType('long', 4294967295);
-            expect(function() { codec.encode(type, buffer); }).to.throw(exceptions.NotImplementedError);
+            expect(function() { codec.encode(type, buffer); }).to.throw(errors.NotImplementedError);
           });
 
           it('should error encoding longs of invalid type', function() {
             var buffer = new BufferBuilder();
             var type = new ForcedType('long', 'elephants');
-            expect(function() { codec.encode(type, buffer); }).to.throw(exceptions.EncodingError);
+            expect(function() { codec.encode(type, buffer); }).to.throw(errors.EncodingError);
           });
 
           it('should error encoding timestamps greater than 2^32 - 1', function() {
             var buffer = new BufferBuilder();
             var type = new ForcedType('timestamp', 4294967295);
-            expect(function() { codec.encode(type, buffer); }).to.throw(exceptions.NotImplementedError);
+            expect(function() { codec.encode(type, buffer); }).to.throw(errors.NotImplementedError);
           });
 
           it('should error encoding timestamps of invalid type', function() {
             var buffer = new BufferBuilder();
             var type = new ForcedType('timestamp', 'turtles');
-            expect(function() { codec.encode(type, buffer); }).to.throw(exceptions.EncodingError);
+            expect(function() { codec.encode(type, buffer); }).to.throw(errors.EncodingError);
           });
 
         });
@@ -262,31 +262,31 @@ describe('Types', function() {
           it('should error trying to build an array of non AMQPArray', function() {
             var buffer = new BufferBuilder();
             var type = new ForcedType('array', []);
-            expect(function() { codec.encode(type, buffer); }).to.throw(exceptions.EncodingError);
+            expect(function() { codec.encode(type, buffer); }).to.throw(errors.EncodingError);
           });
 
           it('should error trying to build an AMQPArray with invalid types', function() {
             var buffer = new BufferBuilder();
             var type = new ForcedType('array', new AMQPArray('invalidType', []));
-            expect(function() { codec.encode(type, buffer); }).to.throw(exceptions.EncodingError);
+            expect(function() { codec.encode(type, buffer); }).to.throw(errors.EncodingError);
           });
 
           it('should error trying to build a list with non arrays', function() {
             var buffer = new BufferBuilder();
             var type = new ForcedType('list', {});
-            expect(function() { codec.encode(type, buffer); }).to.throw(exceptions.EncodingError);
+            expect(function() { codec.encode(type, buffer); }).to.throw(errors.EncodingError);
           });
 
           it('should error trying to build a map with non object', function() {
             var buffer = new BufferBuilder();
             var type = new ForcedType('map', 'dogs');
-            expect(function() { codec.encode(type, buffer); }).to.throw(exceptions.EncodingError);
+            expect(function() { codec.encode(type, buffer); }).to.throw(errors.EncodingError);
           });
 
           it('should error trying to build a map from an array', function() {
             var buffer = new BufferBuilder();
             var type = new ForcedType('map', ['dogs']);
-            expect(function() { codec.encode(type, buffer); }).to.throw(exceptions.EncodingError);
+            expect(function() { codec.encode(type, buffer); }).to.throw(errors.EncodingError);
           });
         });
 
@@ -442,7 +442,7 @@ describe('Types', function() {
         { name: 'decimal128' , value: buf([0x94, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]) }
       ].forEach(function(type) {
         it('should error on unsupported type: ' + type.name, function() {
-          expect(function() { codec.decode(type.value, 0); }).to.throw(exceptions.NotImplementedError);
+          expect(function() { codec.decode(type.value, 0); }).to.throw(errors.NotImplementedError);
         });
       });
     });
@@ -583,7 +583,7 @@ describe('Types', function() {
               4, builder.prototype.appendString, 'elt2',
             ]);
 
-            expect(function() { codec.decode(data); }).to.throw(exceptions.MalformedPayloadError);
+            expect(function() { codec.decode(data); }).to.throw(errors.MalformedPayloadError);
           });
 
           it('should error trying to decode an array with non uniform types', function() {
@@ -594,7 +594,7 @@ describe('Types', function() {
               0x71, builder.prototype.appendInt32BE, 456
             ]);
 
-            expect(function() { codec.decode(data); }).to.throw(exceptions.MalformedPayloadError);
+            expect(function() { codec.decode(data); }).to.throw(errors.MalformedPayloadError);
           });
         });
 
