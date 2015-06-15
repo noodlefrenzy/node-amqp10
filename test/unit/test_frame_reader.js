@@ -8,7 +8,7 @@ var Int64 = require('node-int64'),
 
     constants = require('../../lib/constants'),
     codec = require('../../lib/codec'),
-    exceptions = require('../../lib/exceptions'),
+    errors = require('../../lib/errors'),
 
     AMQPError = require('../../lib/types/amqp_error'),
     Delivery = require('../../lib/types/delivery_state'),
@@ -29,7 +29,7 @@ var Int64 = require('node-int64'),
     tu = require('./testing_utils');
 
 describe('FrameReader', function() {
-  describe('#exceptions', function() {
+  describe('#errors', function() {
     it('should throw an exception on unsupported frame type', function() {
       var buffer = tu.newBuffer([
         0x00, 0x00, 0x00, 0x17,
@@ -42,7 +42,7 @@ describe('FrameReader', function() {
         0x70, 0x00, 0x10, 0x00, 0x00
       ]);
 
-      expect(function() { reader.read(buffer); }).to.throw(exceptions.NotImplementedError);
+      expect(function() { reader.read(buffer); }).to.throw(errors.NotImplementedError);
     });
 
     it('should throw an exception on invalid AMQP performative', function() {
@@ -57,7 +57,7 @@ describe('FrameReader', function() {
         0x70, 0x00, 0x10, 0x00, 0x00
       ]);
 
-      expect(function() { reader.read(buffer); }).to.throw(exceptions.MalformedPayloadError);
+      expect(function() { reader.read(buffer); }).to.throw(errors.MalformedPayloadError);
     });
 
     it('should throw an exception on invalid SASL performative', function() {
@@ -72,7 +72,7 @@ describe('FrameReader', function() {
         0x70, 0x00, 0x10, 0x00, 0x00
       ]);
 
-      expect(function() { reader.read(buffer); }).to.throw(exceptions.MalformedPayloadError);
+      expect(function() { reader.read(buffer); }).to.throw(errors.MalformedPayloadError);
     });
 
     it('should throw an exception on malformed payload', function() {
@@ -87,7 +87,7 @@ describe('FrameReader', function() {
         0x70, 0x00, 0x10, 0x00, 0x00
       ]);
 
-      expect(function() { reader.read(buffer); }).to.throw(exceptions.MalformedPayloadError);
+      expect(function() { reader.read(buffer); }).to.throw(errors.MalformedPayloadError);
     });
   });
 
