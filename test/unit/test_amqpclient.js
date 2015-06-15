@@ -6,13 +6,13 @@ var debug = require('debug')('amqp10-test_amqpclient'),
     EventEmitter = require('events').EventEmitter,
     Promise = require('bluebird'),
 
-    AMQPClient = require('../lib/amqp_client'),
-    constants = require('../lib/constants'),
-    Connection = require('../lib/connection'),
-    Session = require('../lib/session'),
-    Link = require('../lib/link'),
+    AMQPClient = require('../../lib/amqp_client'),
+    constants = require('../../lib/constants'),
+    Connection = require('../../lib/connection'),
+    Session = require('../../lib/session'),
+    Link = require('../../lib/link'),
 
-    u = require('../lib/utilities'),
+    u = require('../../lib/utilities'),
     tu = require('./testing_utils');
 
 var chai = require('chai');

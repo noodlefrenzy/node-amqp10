@@ -6,12 +6,12 @@ var BufferList = require('bl'),
     StateMachine = require('stately.js'),
     expect = require('chai').expect,
 
-    FrameBase = require('../lib/frames/frame'),
-    SaslFrame = require('../lib/frames/sasl_frame').SaslFrame,
+    FrameBase = require('../../lib/frames/frame'),
+    SaslFrame = require('../../lib/frames/sasl_frame').SaslFrame,
 
     tu = require('./testing_utils'),
-    constants = require('../lib/constants'),
-    utils = require('../lib/utilities');
+    constants = require('../../lib/constants'),
+    utils = require('../../lib/utilities');
 
 var MockServer = function(port) {
   this.server = null;

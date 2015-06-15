@@ -6,14 +6,14 @@ var debug = require('debug')('amqp10-test-types'),
     BufferBuilder = require('buffer-builder'),
     Int64 = require('node-int64'),
 
-    types = require('../lib/types'),
-    codec = require('../lib/codec'),
-    ForcedType = require('../lib/types/forced_type'),
+    types = require('../../lib/types'),
+    codec = require('../../lib/codec'),
+    ForcedType = require('../../lib/types/forced_type'),
 
-    AMQPSymbol = require('../lib/types/amqp_symbol'),
-    AMQPArray = require('../lib/types/amqp_composites').Array,
+    AMQPSymbol = require('../../lib/types/amqp_symbol'),
+    AMQPArray = require('../../lib/types/amqp_composites').Array,
 
-    exceptions = require('../lib/exceptions'),
+    exceptions = require('../../lib/exceptions'),
     tu = require('./testing_utils');
 
 var buf = tu.buildBuffer;

@@ -3,26 +3,26 @@
 var debug = require('debug')('amqp10-test_sasl'),
     builder = require('buffer-builder'),
 
-    constants = require('../lib/constants'),
+    constants = require('../../lib/constants'),
 
-    PolicyBase = require('../lib/policies/policy_base'),
+    PolicyBase = require('../../lib/policies/policy_base'),
 
     MockServer = require('./mock_amqp'),
-    AMQPError = require('../lib/types/amqp_error'),
-    AMQPSymbol = require('../lib/types/amqp_symbol'),
-    Source = require('../lib/types/source_target').Source,
-    Target = require('../lib/types/source_target').Target,
-    M = require('../lib/types/message'),
+    AMQPError = require('../../lib/types/amqp_error'),
+    AMQPSymbol = require('../../lib/types/amqp_symbol'),
+    Source = require('../../lib/types/source_target').Source,
+    Target = require('../../lib/types/source_target').Target,
+    M = require('../../lib/types/message'),
 
-    CloseFrame = require('../lib/frames/close_frame'),
-    FlowFrame = require('../lib/frames/flow_frame'),
-    OpenFrame = require('../lib/frames/open_frame'),
-    SaslFrames = require('../lib/frames/sasl_frame'),
+    CloseFrame = require('../../lib/frames/close_frame'),
+    FlowFrame = require('../../lib/frames/flow_frame'),
+    OpenFrame = require('../../lib/frames/open_frame'),
+    SaslFrames = require('../../lib/frames/sasl_frame'),
 
-    Connection = require('../lib/connection'),
-    Session = require('../lib/session').Session,
-    Link = require('../lib/session').Link,
-    Sasl = require('../lib/sasl'),
+    Connection = require('../../lib/connection'),
+    Session = require('../../lib/session').Session,
+    Link = require('../../lib/session').Link,
+    Sasl = require('../../lib/sasl'),
 
     tu = require('./testing_utils');
 

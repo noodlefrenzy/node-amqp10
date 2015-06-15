@@ -3,12 +3,12 @@
 var debug = require('debug')('amqp10-test_utilities'),
     expect = require('chai').expect,
 
-    constants = require('../lib/constants'),
-    u = require('../lib/utilities'),
-    DescribedType = require('../lib/types/described_type'),
-    Fields = require('../lib/types/amqp_composites').Fields,
-    AMQPSymbol = require('../lib/types/amqp_symbol'),
-    ST = require('../lib/types/source_target'),
+    constants = require('../../lib/constants'),
+    u = require('../../lib/utilities'),
+    DescribedType = require('../../lib/types/described_type'),
+    Fields = require('../../lib/types/amqp_composites').Fields,
+    AMQPSymbol = require('../../lib/types/amqp_symbol'),
+    ST = require('../../lib/types/source_target'),
     Source = ST.Source,
     Target = ST.Target,
     tu = require('./testing_utils');

@@ -4,8 +4,6 @@ node_js:
   - "0.10"
   - "0.12"
 
-sudo: false
-
 cache:
   directories:
     - node_modules
@@ -14,8 +12,22 @@ branches:
   except:
     - gh-pages
 
+# addons:
+#   apt:
+#     sources:
+#       - rabbitmq-testing
+#       - qpid-testing
+#     packages:
+#       - rabbitmq-server
+#       - qpidd
+
 before_script:
   - npm install -g codeclimate-test-reporter
+  - sudo add-apt-repository ppa:mcpierce/qpid-testing -y
+  - sudo apt-get update -q
+  - sudo apt-get install qpidd
+  - sudo sh -c 'echo "auth=no" >> /etc/qpid/qpidd.conf'
+  - sudo /etc/init.d/qpidd restart
 
 script:
   - make coverage
