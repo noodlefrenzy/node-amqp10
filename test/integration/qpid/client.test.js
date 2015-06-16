@@ -1,6 +1,7 @@
 'use strict';
 var AMQPClient = require('../../..').Client,
     Message = require('../../../lib/types/message'),
+    Promise = require('bluebird'),
     config = require('./config'),
     expect = require('chai').expect;
 
@@ -30,6 +31,29 @@ describe('Client', function() {
       })
       .then(function() {
         return test.client.send('test', config.defaultLink);
+      })
+      .catch(function(err) {
+        expect(err).to.not.exist;
+      });
+  });
+
+  it('should be able to create multiple receivers for same link', function(done) {
+    var receviedCount = 0;
+    var messageHandler = function(err, message) {
+      expect(message.body).to.equal('TESTMESSAGE');
+      receviedCount++;
+      if (receviedCount === 2) done();
+    };
+
+    test.client.connect(config.address)
+      .then(function() {
+        return Promise.all([
+          test.client.createReceiver(config.defaultLink, null, messageHandler),
+          test.client.createReceiver(config.defaultLink, null, messageHandler)
+        ]);
+      })
+      .then(function() {
+        return test.client.send('TESTMESSAGE', config.defaultLink);
       })
       .catch(function(err) {
         expect(err).to.not.exist;
