@@ -241,4 +241,30 @@ describe('Utilities', function() {
       }).to.throw(Error, null, 'Bad regex match');
     });
   });
+
+  describe('#generateTimeouts', function() {
+    it('should generate a fibonacci sequence of timeouts', function() {
+      var options = {
+        retries: 10,
+        strategy: 'fibonacci',
+      };
+
+      var timeouts = u.generateTimeouts(options);
+      expect(timeouts).to.eql(
+        [0, 1, 1, 2, 3, 5, 8, 13, 21, 34].map(function(i) { return i * 1000; })
+      );
+    });
+
+    it('should generate an exponential sequence of timeouts', function() {
+      var options = {
+        retries: 10,
+        strategy: 'exponential',
+      };
+
+      var timeouts = u.generateTimeouts(options);
+      expect(timeouts).to.eql(
+        [1, 2, 4, 8, 16, 32, 64, 128, 256, 512].map(function(i) { return i * 1000; })
+      );
+    });
+  });
 });
