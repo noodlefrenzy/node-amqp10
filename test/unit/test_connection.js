@@ -5,7 +5,7 @@ var debug = require('debug')('amqp10-test_connection'),
 
     constants = require('../../lib/constants'),
 
-    PolicyBase = require('../../lib/policies/policy_base'),
+    DefaultPolicy = require('../../lib/policies/default_policy'),
 
     MockServer = require('./mock_amqp'),
     AMQPError = require('../../lib/types/amqp_error'),
@@ -24,7 +24,7 @@ var debug = require('debug')('amqp10-test_connection'),
     _ = require('lodash'),
     tu = require('./testing_utils');
 
-PolicyBase.connectPolicy.options.containerId = 'test';
+DefaultPolicy.connect.options.containerId = 'test';
 
 describe('Connection', function() {
   describe('#_open()', function() {
@@ -138,13 +138,13 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        new OpenFrame(PolicyBase.connectPolicy.options)
+        new OpenFrame(DefaultPolicy.connect.options)
       ], [
         constants.amqpVersion,
         new CloseFrame()
       ]);
 
-      var connection = new Connection(PolicyBase.connectPolicy);
+      var connection = new Connection(DefaultPolicy.connect);
       server.setup(connection);
 
       var expected = ['DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'DISCONNECTED'];
@@ -159,13 +159,13 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        new OpenFrame(PolicyBase.connectPolicy.options)
+        new OpenFrame(DefaultPolicy.connect.options)
       ], [
         [ true, constants.amqpVersion ],
         new CloseFrame()
       ]);
 
-      var connection = new Connection(PolicyBase.connectPolicy);
+      var connection = new Connection(DefaultPolicy.connect);
       server.setup(connection);
 
       var expected = ['DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'DISCONNECTED'];
@@ -181,7 +181,7 @@ describe('Connection', function() {
         'disconnect'
       ]);
 
-      var connection = new Connection(PolicyBase.connectPolicy);
+      var connection = new Connection(DefaultPolicy.connect);
       server.setup(connection);
 
       var expected = ['DISCONNECTED', 'START', 'HDR_SENT', 'DISCONNECTED'];
@@ -197,7 +197,7 @@ describe('Connection', function() {
         'error'
       ]);
 
-      var connection = new Connection(PolicyBase.connectPolicy);
+      var connection = new Connection(DefaultPolicy.connect);
       server.setup(connection);
 
       var expected = ['DISCONNECTED', 'START', 'HDR_SENT', 'DISCONNECTED'];
@@ -209,15 +209,15 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        new OpenFrame(PolicyBase.connectPolicy.options),
+        new OpenFrame(DefaultPolicy.connect.options),
         new CloseFrame()
       ], [
         constants.amqpVersion,
-        new OpenFrame(PolicyBase.connectPolicy.options),
+        new OpenFrame(DefaultPolicy.connect.options),
         [ true, new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
       ]);
 
-      var connection = new Connection(PolicyBase.connectPolicy);
+      var connection = new Connection(DefaultPolicy.connect);
       server.setup(connection);
       var expected = [
         'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'OPENED',
@@ -231,15 +231,15 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        new OpenFrame(PolicyBase.connectPolicy.options),
+        new OpenFrame(DefaultPolicy.connect.options),
         new CloseFrame()
       ], [
         constants.amqpVersion,
-        new OpenFrame(PolicyBase.connectPolicy.options),
+        new OpenFrame(DefaultPolicy.connect.options),
         [ true, new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
       ]);
 
-      var connection = new Connection(PolicyBase.connectPolicy);
+      var connection = new Connection(DefaultPolicy.connect);
       server.setup(connection);
 
       var events = [];

@@ -5,7 +5,7 @@ var debug = require('debug')('amqp10-test_sasl'),
 
     constants = require('../../lib/constants'),
 
-    PolicyBase = require('../../lib/policies/policy_base'),
+    DefaultPolicy = require('../../lib/policies/default_policy'),
 
     MockServer = require('./mock_amqp'),
     AMQPError = require('../../lib/types/amqp_error'),
@@ -26,7 +26,7 @@ var debug = require('debug')('amqp10-test_sasl'),
 
     tu = require('./testing_utils');
 
-PolicyBase.connectPolicy.options.containerId = 'test';
+DefaultPolicy.connect.options.containerId = 'test';
 
 function MockSaslInitFrame() {
   return new SaslFrames.SaslInit({
@@ -53,18 +53,18 @@ describe('Sasl', function() {
         constants.saslVersion,
         new MockSaslInitFrame(),
         constants.amqpVersion,
-        new OpenFrame(PolicyBase.connectPolicy.options),
+        new OpenFrame(DefaultPolicy.connect.options),
         new CloseFrame()
       ], [
         constants.saslVersion,
         [ true, new SaslFrames.SaslMechanisms(['PLAIN']) ],
         new SaslFrames.SaslOutcome({code: constants.saslOutcomes.ok}),
         constants.amqpVersion,
-        new OpenFrame(PolicyBase.connectPolicy.options),
+        new OpenFrame(DefaultPolicy.connect.options),
         [ true, new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
       ]);
 
-      var connection = new Connection(PolicyBase.connectPolicy);
+      var connection = new Connection(DefaultPolicy.connect);
       server.setup(connection);
 
       var expected = [

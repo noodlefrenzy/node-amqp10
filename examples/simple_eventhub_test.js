@@ -12,8 +12,10 @@
 // Passing in a final argument of (send|receive) causes it to only execute one branch of that flow.
 //================================
 
+'use strict';
 //var AMQPClient = require('amqp10').Client;
-var AMQPClient  = require('../lib').Client;
+var AMQPClient  = require('../lib').Client,
+    Policy = require('../lib').Policy;
 
 // Set the offset for the EventHub - this is where it should start receiving from, and is typically different for each partition
 // Here, I'm setting a global offset, just to show you how it's done. See node-sbus-amqp10 for a wrapper library that will
@@ -92,7 +94,7 @@ if (process.argv.length < 3) {
     }
   };
 
-  var client = new AMQPClient(AMQPClient.policies.EventHubPolicy);
+  var client = new AMQPClient(Policy.EventHub);
   client.connect(uri).then(function () {
     if (sender) {
       client.send({

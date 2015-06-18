@@ -11,8 +11,10 @@
 // Passing in a final argument of (send|receive) causes it to only execute one branch of that flow.
 //================================
 
+'use strict';
 //var AMQPClient = require('amqp10').Client;
-var AMQPClient  = require('../lib').Client;
+var AMQPClient  = require('../lib').Client,
+    Policy = require('../lib').Policy;
 
 // Simple argument-checker, you can ignore.
 function argCheck(settings, options) {
@@ -76,7 +78,7 @@ if (process.argv.length < 3) {
     }
   };
 
-  var client = new AMQPClient(AMQPClient.policies.ServiceBusQueuePolicy);
+  var client = new AMQPClient(Policy.ServiceBusQueue);
   client.connect(uri).then(function () {
     if (sender) {
       client.send({"DataString": "From Node", "DataValue": msgVal}, queueName).then(function (state) {

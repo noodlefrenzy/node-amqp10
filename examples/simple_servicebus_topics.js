@@ -11,8 +11,10 @@
 // Will set up a receiver, then send a message and exit when that message is received.
 //================================
 
+'use strict';
 //var AMQPClient = require('amqp10').Client;
-var AMQPClient  = require('../lib').Client;
+var AMQPClient  = require('../lib').Client,
+    Policy = require('../lib').Policy;
 
 // Simple argument-checker, you can ignore.
 function argCheck(settings, options) {
@@ -47,7 +49,7 @@ if (process.argv.length < 3) {
 
   var uri = protocol + '://' + encodeURIComponent(sasName) + ':' + encodeURIComponent(sasKey) + '@' + serviceBusHost;
 
-  var client = new AMQPClient(AMQPClient.policies.ServiceBusTopicPolicy);
+  var client = new AMQPClient(Policy.ServiceBusTopic);
   client.connect(uri).then(function () {
     client.send({"DataString": "From Node", "DataValue": msgVal}, topicName).then(function (state) {
       client.createReceiver(topicName + '/Subscriptions/' + subscriptionName, function (rx_err, message) {

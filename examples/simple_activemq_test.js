@@ -1,3 +1,4 @@
+'use strict';
 //var AMQPClient = require('amqp10').Client;
 var AMQPClient  = require('../lib').Client;
 
