@@ -25,9 +25,12 @@ before_script:
   - npm install -g codeclimate-test-reporter
   - sudo add-apt-repository ppa:mcpierce/qpid-testing -y
   - sudo apt-get update -q
-  - sudo apt-get install qpidd
+  - sudo apt-get install qpidd qpid-tools
   - sudo sh -c 'echo "auth=no" >> /etc/qpid/qpidd.conf'
   - sudo /etc/init.d/qpidd restart
+
+  # remove these when we can specify link properties
+  - sudo qpid-config add queue test.disposition.queue
 
 script:
   - make coverage
