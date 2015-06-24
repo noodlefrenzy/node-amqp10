@@ -1,6 +1,6 @@
 'use strict';
 var AMQPClient = require('../../..').Client,
-    Message = require('../../../lib/types/message'),
+    c = require('../../../').Constants,
     Promise = require('bluebird'),
     config = require('./config'),
     expect = require('chai').expect,
@@ -19,6 +19,7 @@ describe('Disposition', function() {
     return test.client.disconnect().then(function() {
       test.client = undefined;
       test.broker = undefined;
+      test.receiverLink = undefined;
     });
   });
 
@@ -40,6 +41,51 @@ describe('Disposition', function() {
               done();
             });
         });
+      })
+      .then(function() {
+        return Promise.all([
+          test.client.send('first message', queueName),
+          test.client.send('second message', queueName)
+        ]);
+      });
+  });
+
+  it('should allow for manual disposition of received messages', function(done) {
+    var queueName = 'test.disposition.queue';
+    var messageCount = 0;
+
+    test.client.policy.receiverLink.options.receiverSettleMode =
+      c.receiverSettleMode.settleOnDisposition;
+    test.client.policy.receiverLink.credit = function(link) {
+      if (link.name === 'qmf.default.topic_RX') link.addCredits(1);
+    };
+
+    return test.client.connect(config.address)
+      .then(function() {
+        test.broker = new BrokerAgent(test.client);
+        return test.client.createReceiver(queueName, null, function(err, message) {
+          expect(err).to.not.exist;
+          messageCount++;
+
+          // send manual disposition
+          test.receiverLink.accept(message);
+
+          if (messageCount !== 2) {
+            // increment credits to receive next message
+            test.receiverLink.addCredits(1);
+            return;
+          }
+
+          test.broker.getQueue(queueName)
+            .then(function(queue) {
+              expect(queue.msgDepth.toNumber(true)).to.equal(0);
+              done();
+            });
+        });
+      })
+      .then(function(receiverLink) {
+        test.receiverLink = receiverLink;
+        test.receiverLink.addCredits(1);
       })
       .then(function() {
         return Promise.all([
