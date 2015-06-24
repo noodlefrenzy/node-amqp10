@@ -6,6 +6,7 @@ node-amqp10
 [![Code Climate](https://codeclimate.com/github/noodlefrenzy/node-amqp10/badges/gpa.svg)](https://codeclimate.com/github/noodlefrenzy/node-amqp10)
 [![Test Coverage](https://codeclimate.com/github/noodlefrenzy/node-amqp10/badges/coverage.svg)](https://codeclimate.com/github/noodlefrenzy/node-amqp10)
 [![npm version](https://badge.fury.io/js/amqp10.svg)](http://badge.fury.io/js/amqp10)
+[![Join the chat at https://gitter.im/noodlefrenzy/node-amqp10](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/noodlefrenzy/node-amqp10?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 AMQP 1.0-compliant Node.js client.  Since AMQP 1.0 is such a large departure from 0.9.1,
 I've started a new project rather than fork from [node-amqp](https://github.com/postwait/node-amqp) or [amqp.node](https://github.com/squaremo/amqp.node).
