@@ -35,7 +35,7 @@ describe('Client', function() {
         return test.client.createSender(config.defaultLink);
       })
       .then(function(senderLink) {
-        return senderLink.send('test', config.defaultLink);
+        return senderLink.send('test');
       })
       .catch(function(err) {
         expect(err).to.not.exist;
