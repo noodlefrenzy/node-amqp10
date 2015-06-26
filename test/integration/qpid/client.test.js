@@ -25,37 +25,36 @@ describe('Client', function() {
   it('should connect, send, and receive a message', function(done) {
     test.client.connect(config.address)
       .then(function() {
-        return test.client.createReceiver(config.defaultLink, null, function(err, message) {
-          expect(err).to.not.exist;
+        return Promise.all([
+          test.client.createReceiver(config.defaultLink),
+          test.client.createSender(config.defaultLink)
+        ]);
+      })
+      .spread(function(receiver, sender) {
+        receiver.on('message', function(message) {
           expect(message).to.exist;
           done();
         });
-      })
-      .then(function() {
-        return test.client.createSender(config.defaultLink);
-      })
-      .then(function(senderLink) {
-        return senderLink.send('test');
-      })
-      .catch(function(err) {
-        expect(err).to.not.exist;
+
+        return sender.send('test');
       });
   });
 
   it('should create sender links', function(done) {
     test.client.connect(config.address)
       .then(function() {
-        return test.client.createReceiver(config.defaultLink, null, function(err, message) {
-          expect(err).to.not.exist;
+        return Promise.all([
+          test.client.createReceiver(config.defaultLink),
+          test.client.createSender(config.defaultLink)
+        ]);
+      })
+      .spread(function(receiver, sender) {
+        receiver.on('message', function(message) {
           expect(message).to.exist;
           done();
         });
-      })
-      .then(function() {
-        return test.client.createSender(config.defaultLink);
-      })
-      .then(function(senderLink) {
-        return senderLink.send('testing');
+
+        return sender.send('testing');
       });
   });
 
@@ -90,9 +89,6 @@ describe('Client', function() {
       })
       .spread(function(receiver1, receiver2, senderLink) {
         return senderLink.send('TESTMESSAGE');
-      })
-      .catch(function(err) {
-        expect(err).to.not.exist;
       });
   });
 
@@ -173,15 +169,18 @@ describe('Client', function() {
       it('should send and receive ' + testCase.option + ' options', function(done) {
         test.client.connect(config.address)
           .then(function() {
-            return test.client.createReceiver(config.defaultLink, null, function(err, message) {
-              expect(err).to.not.exist;
+            return Promise.all([
+              test.client.createReceiver(config.defaultLink),
+              test.client.createSender(config.defaultLink)
+            ]);
+          })
+          .spread(function(receiver, sender) {
+            receiver.on('message', function(message) {
               expect(message).to.exist;
-
               var expected = new testCase.type(testCase.options[testCase.option]);
               if (testCase.option === 'header') {
                 // NOTE: this is flakey because the TTL will be decremented by
                 //       the server. So, pull it out, check that its close and delete
-
                 expect(message[testCase.option].ttl).to.be.closeTo(149, 5);
 
                 delete expected.ttl;
@@ -191,15 +190,8 @@ describe('Client', function() {
               expect(message[testCase.option]).to.eql(expected);
               done();
             });
-          })
-          .then(function() {
-            return test.client.createSender(config.defaultLink);
-          })
-          .then(function(senderLink) {
-            return senderLink.send('test-' + testCase.option, testCase.options);
-          })
-          .catch(function(err) {
-            expect(err).to.not.exist;
+
+            return sender.send('test-' + testCase.option, testCase.options);
           });
       });
     });
