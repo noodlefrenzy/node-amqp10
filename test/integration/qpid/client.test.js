@@ -3,7 +3,9 @@ var AMQPClient = require('../../..').Client,
     Message = require('../../../lib/types/message'),
     Promise = require('bluebird'),
     config = require('./config'),
-    expect = require('chai').expect;
+    expect = require('chai').expect,
+
+    M = require('../../../lib/types/message');
 
 var test = {};
 describe('QPID', function() {
@@ -30,10 +32,43 @@ describe('Client', function() {
         });
       })
       .then(function() {
-        return test.client.send('test', config.defaultLink);
+        return test.client.createSender(config.defaultLink);
+      })
+      .then(function(senderLink) {
+        return senderLink.send('test', config.defaultLink);
       })
       .catch(function(err) {
         expect(err).to.not.exist;
+      });
+  });
+
+  it('should create sender links', function(done) {
+    test.client.connect(config.address)
+      .then(function() {
+        return test.client.createReceiver(config.defaultLink, null, function(err, message) {
+          expect(err).to.not.exist;
+          expect(message).to.exist;
+          done();
+        });
+      })
+      .then(function() {
+        return test.client.createSender(config.defaultLink);
+      })
+      .then(function(senderLink) {
+        return senderLink.send('testing');
+      });
+  });
+
+  it('should return the same link when one sender link is attaching', function() {
+    return test.client.connect(config.address)
+      .then(function() {
+        return Promise.all([
+          test.client.createSender(config.defaultLink),
+          test.client.createSender(config.defaultLink)
+        ]);
+      })
+      .spread(function(first, second) {
+        expect(first).to.eql(second);
       });
   });
 
@@ -49,11 +84,12 @@ describe('Client', function() {
       .then(function() {
         return Promise.all([
           test.client.createReceiver(config.defaultLink, null, messageHandler),
-          test.client.createReceiver(config.defaultLink, null, messageHandler)
+          test.client.createReceiver(config.defaultLink, null, messageHandler),
+          test.client.createSender(config.defaultLink)
         ]);
       })
-      .then(function() {
-        return test.client.send('TESTMESSAGE', config.defaultLink);
+      .spread(function(receiver1, receiver2, senderLink) {
+        return senderLink.send('TESTMESSAGE');
       })
       .catch(function(err) {
         expect(err).to.not.exist;
@@ -157,7 +193,10 @@ describe('Client', function() {
             });
           })
           .then(function() {
-            return test.client.send('test-' + testCase.option, config.defaultLink, testCase.options);
+            return test.client.createSender(config.defaultLink);
+          })
+          .then(function(senderLink) {
+            return senderLink.send('test-' + testCase.option, testCase.options);
           })
           .catch(function(err) {
             expect(err).to.not.exist;

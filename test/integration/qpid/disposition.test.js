@@ -43,9 +43,12 @@ describe('Disposition', function() {
         });
       })
       .then(function() {
+        return test.client.createSender(queueName);
+      })
+      .then(function(senderLink) {
         return Promise.all([
-          test.client.send('first message', queueName),
-          test.client.send('second message', queueName)
+          senderLink.send('first message', queueName),
+          senderLink.send('second message', queueName)
         ]);
       });
   });
@@ -86,11 +89,12 @@ describe('Disposition', function() {
       .then(function(receiverLink) {
         test.receiverLink = receiverLink;
         test.receiverLink.addCredits(1);
+        return test.client.createSender(queueName);
       })
-      .then(function() {
+      .then(function(senderLink) {
         return Promise.all([
-          test.client.send('first message', queueName),
-          test.client.send('second message', queueName)
+          senderLink.send('first message', queueName),
+          senderLink.send('second message', queueName)
         ]);
       });
   });
