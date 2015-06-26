@@ -72,7 +72,7 @@ MockLink.prototype.canSend = function() {
   return this.capacity > 0;
 };
 
-MockLink.prototype.sendMessage = function(msg, options) {
+MockLink.prototype._sendMessage = function(msg, options) {
   this.curId++;
   this.messages.push({ id: this.curId, message: msg.body[0], options: options });
   this.emit('sendMessage-called', this, this.curId, msg, options);
