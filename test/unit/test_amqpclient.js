@@ -653,7 +653,7 @@ describe('AMQPClient', function() {
 
       s.on('attachLink-called', function(_s, _policy, _l) {
         called.attachLink++;
-        expect(_policy.options.source).to.eql({ address: queue, filter: undefined });
+        expect(_policy.options.source).to.eql({ address: queue });
         expect(_policy.options.role).to.eql(constants.linkRole.receiver);
         _s.emit(Session.LinkAttached, _l);
       });
@@ -712,7 +712,7 @@ describe('AMQPClient', function() {
 
       s.on('attachLink-called', function(_s, _policy, _l) {
         called.attachLink++;
-        expect(_policy.options.source).to.eql({ address: queue, filter: undefined });
+        expect(_policy.options.source).to.eql({ address: queue });
         expect(_policy.options.role).to.eql(constants.linkRole.receiver);
         _s.emit(Session.LinkAttached, _l);
       });
@@ -816,7 +816,7 @@ describe('AMQPClient', function() {
 
       s.on('attachLink-called', function(_s, _policy, _l) {
         called.attachLink++;
-        expect(_policy.options.source).to.eql({ address: queue, filter: undefined });
+        expect(_policy.options.source).to.eql({ address: queue });
         expect(_policy.options.role).to.eql(constants.linkRole.receiver);
         if (called.attachLink === 1) {
           process.nextTick(function() {
@@ -871,7 +871,7 @@ describe('AMQPClient', function() {
 
       s.on('attachLink-called', function(_s, _policy, _l) {
         called.attachLink++;
-        expect(_policy.options.source).to.eql({ address: queue, filter: undefined });
+        expect(_policy.options.source).to.eql({ address: queue });
         expect(_policy.options.role).to.eql(constants.linkRole.receiver);
         if (called.attachLink === 1) {
           process.nextTick(function() {
