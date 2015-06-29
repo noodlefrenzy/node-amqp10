@@ -58,17 +58,16 @@ describe('Disposition', function() {
     var queueName = 'test.disposition.queue';
     var messageCount = 0;
 
-    test.client.policy.receiverLink.options.receiverSettleMode =
-      c.receiverSettleMode.settleOnDisposition;
-    test.client.policy.receiverLink.credit = function(link) {
-      if (link.name === 'qmf.default.topic_RX') link.addCredits(1);
-    };
-
     return test.client.connect(config.address)
       .then(function() {
         test.broker = new BrokerAgent(test.client);
         return Promise.all([
-          test.client.createReceiver(queueName),
+          test.client.createReceiver(queueName, {
+            policy: {
+              receiverSettleMode: c.receiverSettleMode.settleOnDisposition,
+              credit: function(link) {}
+            }
+          }),
           test.client.createSender(queueName)
         ]);
       })
