@@ -19,7 +19,6 @@ describe('Disposition', function() {
     return test.client.disconnect().then(function() {
       test.client = undefined;
       test.broker = undefined;
-      test.receiverLink = undefined;
     });
   });
 
@@ -29,8 +28,14 @@ describe('Disposition', function() {
     return test.client.connect(config.address)
       .then(function() {
         test.broker = new BrokerAgent(test.client);
-        return test.client.createReceiver(queueName, null, function(err, message) {
-          expect(err).to.not.exist;
+
+        return Promise.all([
+          test.client.createReceiver(queueName),
+          test.client.createSender(queueName)
+        ]);
+      })
+      .spread(function(receiver, sender) {
+        receiver.on('message', function(message) {
           messageCount++;
           if (messageCount !== 2)
             return;
@@ -41,14 +46,10 @@ describe('Disposition', function() {
               done();
             });
         });
-      })
-      .then(function() {
-        return test.client.createSender(queueName);
-      })
-      .then(function(senderLink) {
+
         return Promise.all([
-          senderLink.send('first message', queueName),
-          senderLink.send('second message', queueName)
+          sender.send('first message', queueName),
+          sender.send('second message', queueName)
         ]);
       });
   });
@@ -66,16 +67,22 @@ describe('Disposition', function() {
     return test.client.connect(config.address)
       .then(function() {
         test.broker = new BrokerAgent(test.client);
-        return test.client.createReceiver(queueName, null, function(err, message) {
-          expect(err).to.not.exist;
+        return Promise.all([
+          test.client.createReceiver(queueName),
+          test.client.createSender(queueName)
+        ]);
+      })
+      .spread(function(receiver, sender) {
+        receiver.addCredits(1);
+        receiver.on('message', function(message) {
           messageCount++;
 
           // send manual disposition
-          test.receiverLink.accept(message);
+          receiver.accept(message);
 
           if (messageCount !== 2) {
             // increment credits to receive next message
-            test.receiverLink.addCredits(1);
+            receiver.addCredits(1);
             return;
           }
 
@@ -85,16 +92,10 @@ describe('Disposition', function() {
               done();
             });
         });
-      })
-      .then(function(receiverLink) {
-        test.receiverLink = receiverLink;
-        test.receiverLink.addCredits(1);
-        return test.client.createSender(queueName);
-      })
-      .then(function(senderLink) {
+
         return Promise.all([
-          senderLink.send('first message', queueName),
-          senderLink.send('second message', queueName)
+          sender.send('first message', queueName),
+          sender.send('second message', queueName)
         ]);
       });
   });
