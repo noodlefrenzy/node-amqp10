@@ -223,6 +223,10 @@ describe('Session', function() {
         session.on(Session.Mapped, function() {
           var opts = u.deepMerge({ options: { name: 'test', source: src(), target: tgt() } }, DefaultPolicy.senderLink);
           var link = session.attachLink(opts);
+          link.on('error', function(err) {
+            expect(err).to.eql(new AMQPError(AMQPError.LinkDetachForced, 'test', ''));
+          });
+
           link.linkSM.bind(tu.assertTransitions(expected.link, function(transitions) {
             assertMultipleTransitions('link', transitions);
           }));
