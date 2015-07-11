@@ -528,10 +528,17 @@ describe('Types', function() {
             ]),
             expectedOutput: '797ff043-11eb-11e1-80d6-510998755d10'
           },
+
+          // @todo: reenable this when we figure out how to mix Int64 with Dates
+          // {
+          //   name: 'ms64 (timestamp)',
+          //   value: buf([0x83, 0x00, 0x00, 0x00, 0x00, 0x55, 0x10, 0x7B, 0x38]),
+          //   expectedOutput: new Int64(1427143480)
+          // },
           {
             name: 'ms64 (timestamp)',
             value: buf([0x83, 0x00, 0x00, 0x00, 0x00, 0x55, 0x10, 0x7B, 0x38]),
-            expectedOutput: new Int64(1427143480)
+            expectedOutput: new Date(1427143480)
           },
           { name: 'vbin8', value: buf([0xa0, 0x01, 0x10]), expectedOutput: new Buffer([0x10]) },
           {

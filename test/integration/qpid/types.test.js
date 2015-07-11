@@ -39,5 +39,25 @@ describe('Types', function() {
       });
   });
 
+  it('should be able to send timestamps', function(done) {
+    var timestamp = { test: new Date() };
+
+    test.client.connect(config.address)
+      .then(function() {
+        return Promise.all([
+          test.client.createReceiver(config.defaultLink),
+          test.client.createSender(config.defaultLink)
+        ]);
+      })
+      .spread(function(receiver, sender) {
+        receiver.on('message', function(message) {
+          expect(message.body).to.eql(timestamp);
+          done();
+        });
+
+        return sender.send(timestamp);
+      });
+  });
+
 });
 });
