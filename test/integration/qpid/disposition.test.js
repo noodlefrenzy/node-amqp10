@@ -48,8 +48,8 @@ describe('Disposition', function() {
         });
 
         return Promise.all([
-          sender.send('first message', queueName),
-          sender.send('second message', queueName)
+          sender.send('first message'),
+          sender.send('second message')
         ]);
       });
   });
@@ -93,8 +93,8 @@ describe('Disposition', function() {
         });
 
         return Promise.all([
-          sender.send('first message', queueName),
-          sender.send('second message', queueName)
+          sender.send('first message'),
+          sender.send('second message')
         ]);
       });
   });
