@@ -100,7 +100,7 @@ describe('AMQPClient', function() {
 
       return client.connect(mock_uri)
         .then(function () {
-          return client.createSender(queue);
+          return client.createSender(queue, { name: 'queue_TX' });
         })
         .then(function (sender) {
           return Promise.all([
@@ -121,7 +121,7 @@ describe('AMQPClient', function() {
           expect(called.canSend).to.eql(2);
           expect(called.sendMessage).to.eql(1);
           expect(l.messages).to.not.be.empty;
-          expect(l.messages[0].message).to.eql({my: 'message'});
+          expect(l.messages[0].message).to.eql({ my: 'message' });
         });
     });
   });
@@ -187,16 +187,16 @@ describe('AMQPClient', function() {
       return client.connect(mock_uri)
         .then(function() {
           // create but don't wait so we can simulate an attaching link
-          client.createReceiver(queue, function(err, payload, annotations) {})
+          client.createReceiver(queue, { name: 'queue_RX' }, function(err, payload, annotations) {})
             .then(function(link) {
               originalLink = link;
             });
         })
         .then(function() {
           return Promise.all([
-            client.createReceiver(queue, function(err, payload, annotations) {}),
-            client.createReceiver(queue, function(err, payload, annotations) {}),
-            client.createReceiver(queue, function(err, payload, annotations) {})
+            client.createReceiver(queue, { name: 'queue_RX' }, function(err, payload, annotations) {}),
+            client.createReceiver(queue, { name: 'queue_RX' }, function(err, payload, annotations) {}),
+            client.createReceiver(queue, { name: 'queue_RX' }, function(err, payload, annotations) {})
           ]);
         })
         .spread(function(link1, link2, link3) {
@@ -244,7 +244,7 @@ describe('AMQPClient', function() {
 
       return client.connect(mock_uri)
         .then(function() {
-          return client.createReceiver(queue, function(err, payload, annotations) {});
+          return client.createReceiver(queue, { name: 'queue_RX' }, function(err, payload, annotations) {});
         })
         .then(function() {
           expect(c._created).to.eql(1);
@@ -298,8 +298,8 @@ describe('AMQPClient', function() {
       return client.connect(mock_uri)
         .then(function() {
           return Promise.all([
-            client.createReceiver('queue1', function(err, payload, annotations) {}),
-            client.createReceiver('queue2', function(err, payload, annotations) {})
+            client.createReceiver('queue1', { name: 'queue1_RX' }, function(err, payload, annotations) {}),
+            client.createReceiver('queue2', { name: 'queue2_RX' }, function(err, payload, annotations) {})
           ]);
         })
         .then(function() {
@@ -354,7 +354,7 @@ describe('AMQPClient', function() {
 
       return client.connect(mock_uri)
         .then(function() {
-          return client.createReceiver(queue, function() {});
+          return client.createReceiver(queue, { name: 'queue_RX' }, function() {});
         })
         .then(function() {
           process.nextTick(function() {
@@ -409,7 +409,7 @@ describe('AMQPClient', function() {
 
       return client.connect(mock_uri)
         .then(function() {
-          return client.createReceiver(queue, function() {});
+          return client.createReceiver(queue, { name: 'queue_RX' }, function() {});
         })
         .then(function() {
           process.nextTick(function() {
