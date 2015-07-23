@@ -1,10 +1,12 @@
 'use strict';
 var SenderLink = require('../../../lib/sender_link'),
+    putils = require('../../../lib/policies/policy_utilities'),
     util = require('util');
 
 function MockSenderLink(session, options) {
   MockSenderLink.super_.call(this, session, null, {
-    encoder: function(body) { return body; }
+    encoder: function(body) { return body; },
+    callback: putils.SenderCallbackPolicies.OnSent
   });
 
   this._created = 0;
@@ -23,7 +25,7 @@ MockSenderLink.prototype.canSend = function() {
 MockSenderLink.prototype._sendMessage = function(msg, options) {
   var self = this;
   self.curId++;
-  self.messages.push({ id: self.curId, message: msg.body[0], options: options });
+  self.messages.push({ id: self.curId, message: msg.body, options: options });
   self.emit('sendMessage-called', self, self.curId, msg, options);
   return self.curId;
 };

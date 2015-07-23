@@ -13,7 +13,6 @@ var debug = require('debug')('amqp10-test_amqpclient'),
     Link = require('../../lib/link'),
 
     Mock = require('./mocks'),
-
     u = require('../../lib/utilities'),
     tu = require('./testing_utils');
 
@@ -97,19 +96,6 @@ describe('AMQPClient', function() {
 
       l.on('sendMessage-called', function (_l, id, msg, opts) {
         called.sendMessage++;
-        expect(client._pendingSends[_l.name]).to.not.be.empty;
-        process.nextTick(function () {
-          _l.capacity = 100;
-          _l.emit(Link.CreditChange, _l);
-        });
-        process.nextTick(function () {
-          s.emit(Session.DispositionReceived, {
-            settled: true,
-            state: {},
-            first: id,
-            last: null
-          });
-        });
       });
 
       return client.connect(mock_uri)
@@ -117,7 +103,13 @@ describe('AMQPClient', function() {
           return client.createSender(queue);
         })
         .then(function (sender) {
-          return sender.send({ my: 'message' });
+          return Promise.all([
+            sender.send({ my: 'message' }),
+            process.nextTick(function() {
+              sender.capacity = 100;
+              sender._dispatchPendingSends();
+            })
+          ]);
         })
         .then(function () {
           expect(c._created).to.eql(1);
@@ -126,7 +118,7 @@ describe('AMQPClient', function() {
           expect(called.open).to.eql(1);
           expect(called.begin).to.eql(1);
           expect(called.attachLink).to.eql(1);
-          expect(called.canSend).to.eql(1);
+          expect(called.canSend).to.eql(2);
           expect(called.sendMessage).to.eql(1);
           expect(l.messages).to.not.be.empty;
           expect(l.messages[0].message).to.eql({my: 'message'});
