@@ -30,11 +30,12 @@ describe('Disposition', function() {
         test.broker = new BrokerAgent(test.client);
 
         return Promise.all([
+          test.broker.initialize(),
           test.client.createReceiver(queueName),
           test.client.createSender(queueName)
         ]);
       })
-      .spread(function(receiver, sender) {
+      .spread(function(brokerAgent, receiver, sender) {
         receiver.on('message', function(message) {
           messageCount++;
           if (messageCount !== 2)
@@ -62,6 +63,7 @@ describe('Disposition', function() {
       .then(function() {
         test.broker = new BrokerAgent(test.client);
         return Promise.all([
+          test.broker.initialize(),
           test.client.createReceiver(queueName, {
             policy: {
               receiverSettleMode: c.receiverSettleMode.settleOnDisposition,
@@ -71,7 +73,7 @@ describe('Disposition', function() {
           test.client.createSender(queueName)
         ]);
       })
-      .spread(function(receiver, sender) {
+      .spread(function(brokerAgent, receiver, sender) {
         receiver.addCredits(1);
         receiver.on('message', function(message) {
           messageCount++;
