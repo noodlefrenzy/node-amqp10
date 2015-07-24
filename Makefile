@@ -1,6 +1,7 @@
 REPORTER ?= spec
 UNIT_TESTS = $(shell find ./test/unit -name "test_*.js")
 QPID_INTEGRATION_TESTS = $(shell find ./test/integration/qpid -name "*.test.js")
+SERVICEBUS_INTEGRATION_TESTS = $(shell find ./test/integration/servicebus -name "*.test.js")
 NPM_BIN = ./node_modules/.bin
 
 jshint:
@@ -29,6 +30,13 @@ test-qpid:
 		make jshint && $(NPM_BIN)/mocha --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) $(QPID_INTEGRATION_TESTS); \
 	fi
 
-test: test-unit test-qpid
+test-servicebus:
+	@if [ "$$GREP" ]; then \
+		make jshint && $(NPM_BIN)/mocha --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) -g "$$GREP" $(SERVICEBUS_INTEGRATION_TESTS); \
+	else \
+		make jshint && $(NPM_BIN)/mocha --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) $(SERVICEBUS_INTEGRATION_TESTS); \
+	fi
+
+test: test-unit test-qpid test-servicebus
 
 .PHONY: jshint fixjsstyle coverage codeclimate-send test

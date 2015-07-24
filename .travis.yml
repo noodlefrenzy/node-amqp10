@@ -1,39 +1,28 @@
 language: node_js
-
 node_js:
-  - "0.10"
-  - "0.12"
-
+- '0.10'
+- '0.12'
 cache:
   directories:
-    - node_modules
-
+  - node_modules
 branches:
   except:
-    - gh-pages
-
-# addons:
-#   apt:
-#     sources:
-#       - rabbitmq-testing
-#       - qpid-testing
-#     packages:
-#       - rabbitmq-server
-#       - qpidd
-
+  - gh-pages
 before_script:
-  - npm install -g codeclimate-test-reporter
-  - sudo add-apt-repository ppa:mcpierce/qpid-testing -y
-  - sudo apt-get update -q
-  - sudo apt-get install qpidd qpid-tools
-  - sudo sh -c 'echo "auth=no" >> /etc/qpid/qpidd.conf'
-  - sudo /etc/init.d/qpidd restart
-
-  # remove these when we can specify link properties
-  - sudo qpid-config add queue test.disposition.queue
-
+- npm install -g codeclimate-test-reporter
+- sudo add-apt-repository ppa:mcpierce/qpid-testing -y
+- sudo apt-get update -q
+- sudo apt-get install qpidd qpid-tools
+- sudo sh -c 'echo "auth=no" >> /etc/qpid/qpidd.conf'
+- sudo /etc/init.d/qpidd restart
+- sudo qpid-config add queue test.disposition.queue
 script:
-  - make coverage
-
+- make coverage
 after_script:
-  - make codeclimate-send
+- make codeclimate-send
+env:
+  global:
+  - secure: p9mwBczWwRjsxI8XdvXfe/XPc6o45eBGRvOXpQ1l4d5scrzyGL+YcVt4Ut0KmTo1kwxvwR3CGJIJLyzLRaa+91OM5opMVW5qBaXtoZsCFv1T7ZxmUfcGEAK9uFsMrR/GB+UEHy6T43hjBW9iuhYjtqxYD5kJThBVY8VgNpL3k/w=
+  - secure: itkYDR87keW8Y78dQbgMt76l4pO/j9q5yNORXNKcsvZcCAznGExje8gozvpC5CaCZPiPN/Ao71GBsh8aMVFPrubYpNzcYOa+hYFBDIlohTjt5z4Xj5nzBVhFJ46yZdKqO2TVG3UnP9q3unbwlAe5IetSEfq4n6W39XUa0S3UaHE=
+  - secure: TNGx6+Iv9f6Vz/2EOF+8xxYv2Snc+dkZv0YhnUMk0k3Q0UzO+MhFYJC4GX/p0+A3pYHKbGpVU14BFdVLcNmfI9nQScC39zqaOOjdVkqCzc+fA3wqw9sLz5Sgh5qEOhAVuOHSAMfSIpdvVkILDZh66kfne82jWtnd5F5LhZeCUkE=
+  - secure: sAvVte3MzdsCKPx2G3mDaveJuwC5zu3i7zXEo1plmm1LEb0WWbBKhSHaDbbqNOfjZi4Yi0Xj0TXYVaVC5Bj7ttOKqo+/GoN1yi/t+AzwZ9a4K/ZIctO7FKovF3yXI9+WWEt54PVeJhtJ8iuESCkeDaWMtI++jPN6Sh+F5lWDfeI=
