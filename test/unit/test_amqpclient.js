@@ -12,6 +12,7 @@ var debug = require('debug')('amqp10-test_amqpclient'),
     Session = require('../../lib/session'),
     Link = require('../../lib/link'),
 
+    Mock = require('./mocks'),
     u = require('../../lib/utilities'),
     tu = require('./testing_utils');
 
@@ -20,116 +21,12 @@ chai.config.includeStack = true; // turn on stack trace
 
 var mock_uri = 'amqp://localhost/';
 
-function MockConnection() {
-  this._created = 0;
-}
-
-util.inherits(MockConnection, EventEmitter);
-
-MockConnection.prototype.open = function(addr, sasl) {
-  this.emit('open-called', this, addr, sasl);
-};
-
-MockConnection.prototype.close = function() {
-  this.emit('close-called', this);
-};
-
-function MockSession(conn) {
-  this._created = 0;
-  this._conn = conn;
-  this._mockLinks = {};
-}
-
-util.inherits(MockSession, EventEmitter);
-
-MockSession.prototype.begin = function(policy) {
-  this.emit('begin-called', this, policy);
-};
-
-MockSession.prototype.attachLink = function(policy) {
-  var link = this._mockLinks[policy.options.name];
-  expect(link).to.exist;
-  link._created++;
-  link._clearState();
-  this.emit('attachLink-called', this, policy, link);
-};
-
-MockSession.prototype._addMockLink = function(link) {
-  this._mockLinks[link.name] = link;
-};
-
-function MockLink(session, options) {
-  this._created = 0;
-  this._session = session;
-  this.options = options;
-  this._clearState();
-}
-
-util.inherits(MockLink, EventEmitter);
-
-MockLink.prototype.canSend = function() {
-  this.emit('canSend-called', this);
-  return this.capacity > 0;
-};
-
-MockLink.prototype._sendMessage = function(msg, options) {
-  this.curId++;
-  this.messages.push({ id: this.curId, message: msg.body[0], options: options });
-  this.emit('sendMessage-called', this, this.curId, msg, options);
-  return this.curId;
-};
-
-MockLink.prototype._clearState = function() {
-  this.name = this.options.name;
-  this.isSender = this.options.isSender || false;
-  this.capacity = this.options.capacity || 0;
-  this.messages = [];
-  this.curId = 0;
-};
-
-function MakeMockClient(c, s) {
-  var client = new AMQPClient();
-  client._newConnection = function() {
-    client._clearState();
-    c._created++;
-    return c;
-  };
-
-  client._newSession = function(conn) {
-    for (var lname in s._mockLinks) {
-      var l = s._mockLinks[lname];
-      [Link.MessageReceived, Link.ErrorReceived, Link.CreditChange, Link.Detached].forEach(l.removeAllListeners);
-    }
-    expect(c).to.equal(conn);
-    s._created++;
-    return s;
-  };
-
-  client._clearState = function() {
-    var connEvts = [Connection.Connected, Connection.Disconnected];
-    var sessEvts = [Session.Mapped, Session.Unmapped, Session.ErrorReceived, Session.LinkAttached, Session.LinkDetached, Session.DispositionReceived];
-    var idx, e;
-    for (idx in connEvts) {
-      e = connEvts[idx];
-      c.removeAllListeners(e);
-      expect(EventEmitter.listenerCount(c, e)).to.eql(0);
-    }
-    for (idx in sessEvts) {
-      e = sessEvts[idx];
-      s.removeAllListeners(e);
-      expect(EventEmitter.listenerCount(s, e)).to.eql(0);
-    }
-  };
-
-  return client;
-}
-
 describe('AMQPClient', function() {
   describe('#connect()', function() {
     it('should set up connection and session', function() {
-      var c = new MockConnection();
-      var s = new MockSession(c);
-      var client = new MakeMockClient(c, s);
+      var c = new Mock.Connection();
+      var s = new Mock.Session(c);
+      var client = new Mock.Client(c, s);
       var called = {open: 0, begin: 0};
       c.on('open-called', function(_c, _addr, _sasl) {
         expect(_addr).to.eql(u.parseAddress(mock_uri));
@@ -153,136 +50,68 @@ describe('AMQPClient', function() {
   });
 
   describe('#send()', function() {
-    it('should throw an error if not connected', function() {
-      var client = new MakeMockClient();
-      expect(function() { client.send(); }).to.throw(Error);
+    it('should throw an error if not connected', function () {
+      var client = new Mock.Client();
+      expect(function () {
+        client.send();
+      }).to.throw(Error);
     });
 
-    it('should create connection, session, and link on send with full address', function() {
-      var c = new MockConnection();
-      var s = new MockSession(c);
-      var l = new MockLink(s, {
-        name: 'queue_TX',
-        isSender: true,
-        capacity: 100
-      });
-
-      s._addMockLink(l);
-      var client = new MakeMockClient(c, s);
-      var queue = 'queue';
-      var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
-      c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(mock_uri));
-        expect(_sasl).to.be.null;
-        called.open++;
-        _c.emit(Connection.Connected, _c);
-      });
-
-      s.on('begin-called', function(_s, _policy) {
-        called.begin++;
-        _s.emit(Session.Mapped, _s);
-      });
-
-      s.on('attachLink-called', function(_s, _policy, _l) {
-        called.attachLink++;
-        expect(_policy.options.target).to.eql({ address: queue });
-        expect(_policy.options.role).to.eql(constants.linkRole.sender);
-        _s.emit(Session.LinkAttached, _l);
-      });
-
-      l.on('canSend-called', function() {
-        called.canSend++;
-      });
-
-      l.on('sendMessage-called', function(_l, id, msg, opts) {
-        called.sendMessage++;
-        process.nextTick(function() {
-          s.emit(Session.DispositionReceived, {
-            settled: true,
-            state: { },
-            first: id,
-            last: null
-          });
-        });
-      });
-
-      return client.connect(mock_uri)
-        .then(function() {
-          return client.send({ my: 'message' }, queue);
-        })
-        .then(function() {
-          expect(c._created).to.eql(1);
-          expect(s._created).to.eql(1);
-          expect(l._created).to.eql(1);
-          expect(called.open).to.eql(1);
-          expect(called.begin).to.eql(1);
-          expect(called.attachLink).to.eql(1);
-          expect(called.canSend).to.eql(1);
-          expect(called.sendMessage).to.eql(1);
-          expect(l.messages).to.not.be.empty;
-          expect(l.messages[0].message).to.eql({ my: 'message' });
-        });
-    });
-
-    it('should wait for capacity before sending', function() {
-      var c = new MockConnection();
-      var s = new MockSession(c);
-      var l = new MockLink(s, {
+    it('should wait for capacity before sending', function () {
+      var c = new Mock.Connection();
+      var s = new Mock.Session(c);
+      var l = new Mock.SenderLink(s, {
         name: 'queue_TX',
         isSender: true,
         capacity: 0
       });
 
       s._addMockLink(l);
-      var client = new MakeMockClient(c, s);
+      var client = new Mock.Client(c, s);
       var queue = 'queue';
-      var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
-      c.on('open-called', function(_c, _addr, _sasl) {
+      var called = {open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0};
+      c.on('open-called', function (_c, _addr, _sasl) {
         expect(_addr).to.eql(u.parseAddress(mock_uri));
         expect(_sasl).to.not.exist;
         called.open++;
         _c.emit(Connection.Connected, _c);
       });
 
-      s.on('begin-called', function(_s, _policy) {
+      s.on('begin-called', function (_s, _policy) {
         called.begin++;
         _s.emit(Session.Mapped, _s);
       });
 
-      s.on('attachLink-called', function(_s, _policy, _l) {
+      s.on('attachLink-called', function (_s, _policy, _l) {
         called.attachLink++;
-        expect(client._pendingSends[_l.name]).to.not.be.empty;
-        expect(_policy.options.target).to.eql({ address: queue });
+        expect(_policy.options.target).to.eql({address: queue});
         expect(_policy.options.role).to.eql(constants.linkRole.sender);
-        process.nextTick(function() {
-          _l.capacity = 100;
-          _l.emit(Link.CreditChange, _l);
-        });
 
         _s.emit(Session.LinkAttached, _l);
       });
 
-      l.on('canSend-called', function() {
+      l.on('canSend-called', function () {
         called.canSend++;
       });
 
-      l.on('sendMessage-called', function(_l, id, msg, opts) {
+      l.on('sendMessage-called', function (_l, id, msg, opts) {
         called.sendMessage++;
-        process.nextTick(function() {
-          s.emit(Session.DispositionReceived, {
-            settled: true,
-            state: { },
-            first: id,
-            last: null
-          });
-        });
       });
 
       return client.connect(mock_uri)
-        .then(function() {
-          return client.send({ my: 'message' }, queue);
+        .then(function () {
+          return client.createSender(queue);
         })
-        .then(function() {
+        .then(function (sender) {
+          return Promise.all([
+            sender.send({ my: 'message' }),
+            process.nextTick(function() {
+              sender.capacity = 100;
+              sender._dispatchPendingSends();
+            })
+          ]);
+        })
+        .then(function () {
           expect(c._created).to.eql(1);
           expect(s._created).to.eql(1);
           expect(l._created).to.eql(1);
@@ -292,325 +121,21 @@ describe('AMQPClient', function() {
           expect(called.canSend).to.eql(2);
           expect(called.sendMessage).to.eql(1);
           expect(l.messages).to.not.be.empty;
-          expect(l.messages[0].message).to.eql({ my: 'message' });
-        });
-    });
-
-    it('should only create a single connection, session, link for multiple sends', function() {
-      var c = new MockConnection();
-      var s = new MockSession(c);
-      var l = new MockLink(s, {
-        name: 'queue_TX',
-        isSender: true,
-        capacity: 100
-      });
-
-      s._addMockLink(l);
-      var client = new MakeMockClient(c, s);
-      var queue = 'queue';
-      var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
-      c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(mock_uri));
-        expect(_sasl).to.not.exist;
-        called.open++;
-        _c.emit(Connection.Connected, _c);
-      });
-
-      s.on('begin-called', function(_s, _policy) {
-        called.begin++;
-        _s.emit(Session.Mapped, _s);
-      });
-
-      s.on('attachLink-called', function(_s, _policy, _l) {
-        called.attachLink++;
-        expect(_policy.options.target).to.eql({ address: queue });
-        expect(_policy.options.role).to.eql(constants.linkRole.sender);
-        _s.emit(Session.LinkAttached, _l);
-      });
-
-      l.on('canSend-called', function() {
-        called.canSend++;
-      });
-
-      l.on('sendMessage-called', function(_l, id, msg, opts) {
-        called.sendMessage++;
-        process.nextTick(function() {
-          s.emit(Session.DispositionReceived, {
-            settled: true,
-            state: { },
-            first: id,
-            last: null
-          });
-        });
-      });
-
-      return client.connect(mock_uri)
-        .then(function() {
-          var promises = [];
-          for (var idx = 0; idx < 5; idx++)
-            promises.push(client.send({my: 'message'}, queue));
-          return Promise.all(promises);
-        })
-        .then(function() {
-          expect(c._created).to.eql(1);
-          expect(s._created).to.eql(1);
-          expect(l._created).to.eql(1);
-          expect(called.open).to.eql(1);
-          expect(called.begin).to.eql(1);
-          expect(called.attachLink).to.eql(1);
-          expect(called.canSend).to.eql(5);
-          expect(called.sendMessage).to.eql(5);
-          expect(l.messages.length).to.eql(5);
-        });
-    });
-
-    it('should re-establish send link on detach, on next send', function() {
-      var c = new MockConnection();
-      var s = new MockSession(c);
-      var l = new MockLink(s, {
-        name: 'queue_TX',
-        isSender: true,
-        capacity: 100
-      });
-
-      s._addMockLink(l);
-      var client = new MakeMockClient(c, s);
-      var queue = 'queue';
-      var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
-      c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(mock_uri));
-        expect(_sasl).to.not.exist;
-        called.open++;
-        _c.emit(Connection.Connected, _c);
-      });
-
-      s.on('begin-called', function(_s, _policy) {
-        called.begin++;
-        _s.emit(Session.Mapped, _s);
-      });
-
-      s.on('attachLink-called', function(_s, _policy, _l) {
-        called.attachLink++;
-        expect(_policy.options.target).to.eql({ address: queue });
-        expect(_policy.options.role).to.eql(constants.linkRole.sender);
-        if (called.attachLink === 1) {
-          process.nextTick(function() {
-            _l.emit(Link.Detached);
-            _s.emit(Session.LinkDetached, _l);
-          });
-        }
-        _s.emit(Session.LinkAttached, _l);
-      });
-
-      l.on('canSend-called', function() {
-        called.canSend++;
-      });
-
-      l.on('sendMessage-called', function(_l, id, msg, opts) {
-        called.sendMessage++;
-        process.nextTick(function() {
-          s.emit(Session.DispositionReceived, {
-            settled: true,
-            state: { },
-            first: id,
-            last: null
-          });
-        });
-      });
-
-      return client.connect(mock_uri)
-        .then(function() {
-          return client.send({my: 'message'}, queue);
-        })
-        .then(function() {
-          process.nextTick(function() {
-            return client.send({my: 'message'}, queue);
-          });
-        })
-        .then(function() {
-          process.nextTick(function() {
-            expect(c._created).to.eql(1);
-            expect(s._created).to.eql(1);
-            expect(l._created).to.eql(2);
-            expect(called.open).to.eql(1);
-            expect(called.begin).to.eql(1);
-            expect(called.attachLink).to.eql(2);
-            expect(called.canSend).to.eql(2);
-            expect(called.sendMessage).to.eql(2);
-            expect(l.messages).to.not.be.empty;
-          });
-        });
-    });
-
-    it('should re-establish connection on disconnect, on next send', function() {
-      var c = new MockConnection();
-      var s = new MockSession(c);
-      var l = new MockLink(s, {
-        name: 'queue_TX',
-        isSender: true,
-        capacity: 100
-      });
-
-      s._addMockLink(l);
-      var client = new MakeMockClient(c, s);
-      var queue = 'queue';
-      var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
-      c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(mock_uri));
-        expect(_sasl).to.not.exist;
-        called.open++;
-        _c.emit(Connection.Connected, _c);
-      });
-
-      s.on('begin-called', function(_s, _policy) {
-        called.begin++;
-        _s.emit(Session.Mapped, _s);
-      });
-
-      s.on('attachLink-called', function(_s, _policy, _l) {
-        called.attachLink++;
-        expect(_policy.options.target).to.eql({ address: queue });
-        expect(_policy.options.role).to.eql(constants.linkRole.sender);
-        if (called.attachLink === 1) {
-          process.nextTick(function() {
-            c.emit(Connection.Disconnected);
-          });
-        }
-        _s.emit(Session.LinkAttached, _l);
-      });
-
-      l.on('canSend-called', function() {
-        called.canSend++;
-      });
-
-      l.on('sendMessage-called', function(_l, id, msg, opts) {
-        called.sendMessage++;
-        process.nextTick(function() {
-          s.emit(Session.DispositionReceived, {
-            settled: true,
-            state: { },
-            first: id,
-            last: null
-          });
-        });
-      });
-
-      return client.connect(mock_uri)
-        .then(function() {
-          client.send({ my: 'message' }, queue);
-        })
-        .tap(function() {
-          process.nextTick(function() {
-            return client.send({ my: 'message' }, queue);
-          });
-        })
-        .then(function() {
-          process.nextTick(function() {
-            expect(c._created).to.eql(2);
-            expect(s._created).to.eql(2);
-            expect(l._created).to.eql(2);
-            expect(called.open).to.eql(2);
-            expect(called.begin).to.eql(2);
-            expect(called.attachLink).to.eql(2);
-            expect(called.canSend).to.eql(2);
-            expect(called.sendMessage).to.eql(2);
-            expect(l.messages).to.not.be.empty;
-          });
-      });
-    });
-
-    it('should re-establish connection on disconnect, if send is pending', function() {
-      var c = new MockConnection();
-      var s = new MockSession(c);
-      var l = new MockLink(s, {
-        name: 'queue_TX',
-        isSender: true,
-        capacity: 0
-      });
-
-      s._addMockLink(l);
-      var client = new MakeMockClient(c, s);
-      var queue = 'queue';
-      var called = { open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0 };
-      c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(mock_uri));
-        expect(_sasl).to.not.exist;
-
-        called.open++;
-        _c.emit(Connection.Connected, _c);
-      });
-
-      s.on('begin-called', function(_s, _policy) {
-        called.begin++;
-        _s.emit(Session.Mapped, _s);
-      });
-
-      s.on('attachLink-called', function(_s, _policy, _l) {
-        called.attachLink++;
-        expect(client._pendingSends[_l.name]).to.not.be.empty;
-        expect(_policy.options.target).to.eql({ address: queue });
-        expect(_policy.options.role).to.eql(constants.linkRole.sender);
-        if (called.attachLink === 1) {
-          process.nextTick(function() {
-            c.emit(Connection.Disconnected);
-          });
-        } else {
-          process.nextTick(function() {
-            _l.capacity = 100;
-            _l.emit(Link.CreditChange, _l);
-          });
-        }
-        _s.emit(Session.LinkAttached, _l);
-      });
-
-      l.on('canSend-called', function() {
-        called.canSend++;
-      });
-
-      l.on('sendMessage-called', function(_l, id, msg, opts) {
-        called.sendMessage++;
-        process.nextTick(function() {
-          s.emit(Session.DispositionReceived, {
-            settled: true,
-            state: { },
-            first: id,
-            last: null
-          });
-        });
-      });
-
-      return client.connect(mock_uri)
-        .then(function() {
-          return client.send({ my: 'message' }, queue);
-        })
-        .then(function() {
-          // NOTE: reverted to setTimeout, but nextTick -should- work...
-          setTimeout(function() {
-            expect(c._created).to.eql(2);
-            expect(s._created).to.eql(2);
-            expect(l._created).to.eql(2);
-            expect(called.open).to.eql(2);
-            expect(called.begin).to.eql(2);
-            expect(called.attachLink).to.eql(2);
-            expect(called.canSend).to.eql(3);
-            expect(called.sendMessage).to.eql(1);
-            expect(l.messages).to.not.be.empty;
-          }, 1);
+          expect(l.messages[0].message).to.eql({my: 'message'});
         });
     });
   });
 
   describe('#receive()', function() {
     it('should throw an error if not connected', function() {
-      var client = new MakeMockClient();
+      var client = new Mock.Client();
       expect(function() { client.createReceiver(); }).to.throw(Error);
     });
 
-
     function DelayedAttachMockSession(conn) {
-      MockSession.call(this);
+      Mock.Session.call(this);
     }
-    util.inherits(DelayedAttachMockSession, MockSession);
+    util.inherits(DelayedAttachMockSession, Mock.Session);
 
     DelayedAttachMockSession.prototype.attachLink = function(policy) {
       var link = this._mockLinks[policy.options.name];
@@ -626,16 +151,16 @@ describe('AMQPClient', function() {
     };
 
     it('should return cached receiver links upon multiple createReceive calls', function() {
-      var c = new MockConnection();
+      var c = new Mock.Connection();
       var s = new DelayedAttachMockSession(c);
-      var l = new MockLink(s, {
+      var l = new Mock.ReceiverLink(s, {
         name: 'queue_RX',
         isSender: false,
         capacity: 100
       });
 
       s._addMockLink(l);
-      var client = new MakeMockClient(c, s);
+      var client = new Mock.Client(c, s);
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
@@ -685,16 +210,16 @@ describe('AMQPClient', function() {
 
 
     it('should create connection, session, and link on receive with full address', function() {
-      var c = new MockConnection();
-      var s = new MockSession(c);
-      var l = new MockLink(s, {
+      var c = new Mock.Connection();
+      var s = new Mock.Session(c);
+      var l = new Mock.ReceiverLink(s, {
         name: 'queue_RX',
         isSender: false,
         capacity: 100
       });
 
       s._addMockLink(l);
-      var client = new MakeMockClient(c, s);
+      var client = new Mock.Client(c, s);
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
@@ -732,15 +257,15 @@ describe('AMQPClient', function() {
     });
 
     it('should only create a single connection, session, multiple links for multiple receives', function() {
-      var c = new MockConnection();
-      var s = new MockSession(c);
-      var l1 = new MockLink(s, {
+      var c = new Mock.Connection();
+      var s = new Mock.Session(c);
+      var l1 = new Mock.ReceiverLink(s, {
         name: 'queue1_RX',
         isSender: false,
         capacity: 100
       });
 
-      var l2 = new MockLink(s, {
+      var l2 = new Mock.ReceiverLink(s, {
         name: 'queue2_RX',
         isSender: false,
         capacity: 100
@@ -749,7 +274,7 @@ describe('AMQPClient', function() {
       s._addMockLink(l1);
       s._addMockLink(l2);
 
-      var client = new MakeMockClient(c, s);
+      var client = new Mock.Client(c, s);
       var called = { open: 0, begin: 0, attachLink: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
         expect(_addr).to.eql(u.parseAddress(mock_uri));
@@ -789,16 +314,16 @@ describe('AMQPClient', function() {
     });
 
     it('should re-establish receive link on detach, automatically', function() {
-      var c = new MockConnection();
-      var s = new MockSession(c);
-      var l = new MockLink(s, {
+      var c = new Mock.Connection();
+      var s = new Mock.Session(c);
+      var l = new Mock.ReceiverLink(s, {
         name: 'queue_RX',
         isSender: false,
         capacity: 100
       });
 
       s._addMockLink(l);
-      var client = new MakeMockClient(c, s);
+      var client = new Mock.Client(c, s);
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
@@ -844,16 +369,16 @@ describe('AMQPClient', function() {
     });
 
     it('should re-establish connection on disconnect, automatically', function() {
-      var c = new MockConnection();
-      var s = new MockSession(c);
-      var l = new MockLink(s, {
+      var c = new Mock.Connection();
+      var s = new Mock.Session(c);
+      var l = new Mock.ReceiverLink(s, {
         name: 'queue_RX',
         isSender: false,
         capacity: 100
       });
 
       s._addMockLink(l);
-      var client = new MakeMockClient(c, s);
+      var client = new Mock.Client(c, s);
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {

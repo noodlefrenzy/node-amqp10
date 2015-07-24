@@ -11,6 +11,7 @@
     "bl": "^0.9.4",
     "bluebird": "^2.9.25",
     "debug": "^2.0.0",
+    "depd": "^1.0.1",
     "lodash": "^3.3.0",
     "node-amqp-encoder": "^0.0.2",
     "node-int64": "^0.4.0",
