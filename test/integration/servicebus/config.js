@@ -3,7 +3,7 @@ module.exports = {
 
   protocol: 'amqps',
   serviceBusHost: process.env.SB_NAMESPACE,
-  queueName: process.env.SB_QUEUENAME,
+  defaultLink: process.env.SB_QUEUENAME,
   sasKeyName: process.env.SB_KEYNAME,
   sasKey: process.env.SB_KEY,
   address: 'amqps' + '://' + encodeURIComponent(process.env.SB_KEYNAME) + ':' + encodeURIComponent(process.env.SB_KEY) + '@' + process.env.SB_NAMESPACE + '.servicebus.windows.net'

@@ -28,8 +28,8 @@ describe('ServiceBus', function() {
       test.client.connect(config.address)
         .then(function() {
           return Promise.all([
-            test.client.createReceiver(config.queueName),
-            test.client.createSender(config.queueName)
+            test.client.createReceiver(config.defaultLink),
+            test.client.createSender(config.defaultLink)
           ]);
         })
         .spread(function(receiver, sender) {

@@ -11,6 +11,15 @@ branches:
   except:
     - gh-pages
 
+# addons:
+#   apt:
+#     sources:
+#       - rabbitmq-testing
+#       - qpid-testing
+#     packages:
+#       - rabbitmq-server
+#       - qpidd
+
 before_script:
   - npm install -g codeclimate-test-reporter
   - sudo add-apt-repository ppa:mcpierce/qpid-testing -y
@@ -18,6 +27,8 @@ before_script:
   - sudo apt-get install qpidd qpid-tools
   - sudo sh -c 'echo "auth=no" >> /etc/qpid/qpidd.conf'
   - sudo /etc/init.d/qpidd restart
+
+  # remove these when we can specify link properties
   - sudo qpid-config add queue test.disposition.queue
 
 script:
