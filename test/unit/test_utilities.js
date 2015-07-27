@@ -142,104 +142,86 @@ describe('Utilities', function() {
   });
 
   describe('#parseAddress()', function() {
-
-    it('should match amqp(|s) no port no route', function() {
-      var addr = 'amqp://localhost';
-      var result = u.parseAddress(addr);
-      expect(result.protocol).to.eql('amqp');
-      expect(result.host).to.eql('localhost');
-      expect(result.port).to.eql(5672);
-      expect(result.path).to.eql('/');
-
-      addr = 'amqps://127.0.0.1';
-      result = u.parseAddress(addr);
-      expect(result).to.eql({
-        protocol: 'amqps',
-        host: '127.0.0.1',
-        port: 5671,
-        rootUri: 'amqps://127.0.0.1:5671',
-        path: '/'
+    [
+      {
+        description: 'amqp no port no route',
+        address: 'amqp://127.0.0.1',
+        expected: {
+          protocol: 'amqp', host: '127.0.0.1', port: 5672, path: '/',
+          rootUri: 'amqp://127.0.0.1:5672'
+        }
+      },
+      {
+        description: 'amqps no port no route',
+        address: 'amqps://localhost',
+        expected: {
+          protocol: 'amqps', host: 'localhost', port: 5671, path: '/',
+          rootUri: 'amqps://localhost:5671'
+        }
+      },
+      {
+        description: 'should match with port and with/without route (1)',
+        address: 'amqp://localhost:1234',
+        expected: {
+          protocol: 'amqp', host: 'localhost', port: 1234, path: '/',
+          rootUri: 'amqp://localhost:1234'
+        }
+      },
+      {
+        description: 'should match with port and with/without route (2)',
+        address: 'amqps://mq.myhost.com:1235/myroute?with=arguments&multiple=arguments',
+        expected: {
+          protocol: 'amqps', host: 'mq.myhost.com', port: 1235,
+          path: '/myroute?with=arguments&multiple=arguments',
+          rootUri: 'amqps://mq.myhost.com:1235'
+        }
+      },
+      {
+        description: 'should match ip + port',
+        address: 'amqp://10.42.1.193:8118/testqueue',
+        expected: {
+          protocol: 'amqp', host: '10.42.1.193', port: 8118, path: '/testqueue',
+          rootUri: 'amqp://10.42.1.193:8118'
+        }
+      },
+      {
+        description: 'should match credentials no port no route',
+        address: 'amqp://username:password@my.amqp.server',
+        expected: {
+          protocol: 'amqp', host: 'my.amqp.server', port: 5672, path: '/',
+          user: 'username', pass: 'password',
+          rootUri: 'amqp://username:password@my.amqp.server:5672'
+        }
+      },
+      {
+        description: 'should match credentials with port and route',
+        address: 'amqps://username:password@192.168.1.1:1234/myroute',
+        expected: {
+          protocol: 'amqps', host: '192.168.1.1', port: 1234, path: '/myroute',
+          user: 'username', pass: 'password',
+          rootUri: 'amqps://username:password@192.168.1.1:1234'
+        }
+      }
+    ].forEach(function(testCase) {
+      it('should match ' + testCase.description, function() {
+        var result = u.parseAddress(testCase.address);
+        expect(result).to.eql(testCase.expected);
       });
     });
 
-    it('should match with port and with/without route', function() {
-      var addr = 'amqp://localhost:1234';
-      var result = u.parseAddress(addr);
-      expect(result).to.eql({
-        protocol: 'amqp',
-        host: 'localhost',
-        port: 1234,
-        rootUri: 'amqp://localhost:1234',
-        path: '/'
-      });
+    [
+      { address: 'invalid://localhost', error: 'Should validate protocol' },
+      { address: 'amqp://host:non-numeric', error: 'Should validate port' },
+      { address: 'amqp://host:123:what-is-this?', error: 'Bad regex match' },
 
-      addr = 'amqps://mq.myhost.com:1235/myroute?with=arguments&multiple=arguments';
-      result = u.parseAddress(addr);
-      expect(result).to.eql({
-        protocol: 'amqps',
-        host: 'mq.myhost.com',
-        port: 1235,
-        rootUri: 'amqps://mq.myhost.com:1235',
-        path: '/myroute?with=arguments&multiple=arguments'
+    ].forEach(function(testCase, idx) {
+      it('should throw error on invalid address (' + (idx+1) + ')', function() {
+        expect(function() {
+          u.parseAddress(testCase.address);
+        }).to.throw(Error, null, testCase.error);
       });
     });
 
-    it('should match ip + port', function() {
-      var addr = 'amqp://10.42.1.193:5672/testqueue';
-      var result = u.parseAddress(addr);
-      expect(result).to.eql({
-        protocol: 'amqp',
-        host: '10.42.1.193',
-        port: 5672,
-        rootUri: 'amqp://10.42.1.193:5672',
-        path: '/testqueue'
-      });
-    });
-
-    it('should match credentials no port no route', function() {
-      var addr = 'amqp://username:password@my.amqp.server';
-      var result = u.parseAddress(addr);
-      expect(result).to.eql({
-        protocol: 'amqp',
-        host: 'my.amqp.server',
-        port: 5672,
-        path: '/',
-        user: 'username',
-        pass: 'password',
-        rootUri: 'amqp://username:password@my.amqp.server:5672'
-      });
-    });
-
-    it('should match credentials with port and route', function() {
-      var addr = 'amqps://username:password@192.168.1.1:1234/myroute';
-      var result = u.parseAddress(addr);
-      expect(result).to.eql({
-        protocol: 'amqps',
-        user: 'username',
-        pass: 'password',
-        host: '192.168.1.1',
-        port: 1234,
-        path: '/myroute',
-        rootUri: 'amqps://username:password@192.168.1.1:1234'
-      });
-    });
-
-    it('should throw error on invalid address', function() {
-      var addr = 'invalid://localhost';
-      expect(function() {
-        u.parseAddress(addr);
-      }).to.throw(Error, null, 'Should validate protocol');
-
-      addr = 'amqp://host:non-numeric';
-      expect(function() {
-        u.parseAddress(addr);
-      }).to.throw(Error, null, 'Should validate port');
-
-      addr = 'amqp://host:123:what-is-this?';
-      expect(function() {
-        u.parseAddress(addr);
-      }).to.throw(Error, null, 'Bad regex match');
-    });
   });
 
   describe('#generateTimeouts', function() {
