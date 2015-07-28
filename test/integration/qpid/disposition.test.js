@@ -1,10 +1,14 @@
 'use strict';
-var AMQPClient = require('../../..').Client,
+var Promise = require('bluebird'),
+    AMQPClient = require('../../..').Client,
+    BrokerAgent = require('qmf2'),
+
+    Session = require('../../../lib/session'),
+
     c = require('../../../').Constants,
-    Promise = require('bluebird'),
+
     config = require('./config'),
-    expect = require('chai').expect,
-    BrokerAgent = require('qmf2');
+    expect = require('chai').expect;
 
 var test = {};
 describe('QPID', function() {
@@ -98,6 +102,29 @@ describe('Disposition', function() {
           sender.send('first message'),
           sender.send('second message')
         ]);
+      });
+  });
+
+  it('should forward disposition frames by link role', function(done) {
+    var queueName = 'test.disposition.queue';
+    var called = { receiver: false, sender: false };
+    return test.client.connect(config.address)
+      .then(function() {
+        return Promise.all([
+          test.client.createReceiver(queueName),
+          test.client.createSender(queueName)
+        ]);
+      })
+      .spread(function(receiver, sender) {
+        receiver._dispositionReceived = function(d) { called.receiver = true; };
+        sender._dispositionReceived = function(d) { called.sender = true; };
+
+        test.client._session.on(Session.DispositionReceived, function(d) {
+          expect(called).to.eql({ receiver: false, sender: true });
+          done();
+        });
+
+        return sender.send('test message');
       });
   });
 
