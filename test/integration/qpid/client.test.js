@@ -73,7 +73,7 @@ describe('Client', function() {
 
   it('should be able to create multiple receivers for same link', function(done) {
     var receviedCount = 0;
-    var messageHandler = function(err, message) {
+    var messageHandler = function(message) {
       expect(message.body).to.equal('TESTMESSAGE');
       receviedCount++;
       if (receviedCount === 2) done();
@@ -82,12 +82,14 @@ describe('Client', function() {
     test.client.connect(config.address)
       .then(function() {
         return Promise.all([
-          test.client.createReceiver(config.defaultLink, null, messageHandler),
-          test.client.createReceiver(config.defaultLink, null, messageHandler),
+          test.client.createReceiver(config.defaultLink),
+          test.client.createReceiver(config.defaultLink),
           test.client.createSender(config.defaultLink)
         ]);
       })
       .spread(function(receiver1, receiver2, senderLink) {
+        receiver1.on('message', messageHandler);
+        receiver2.on('message', messageHandler);
         return senderLink.send('TESTMESSAGE');
       });
   });
