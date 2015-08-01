@@ -12,17 +12,18 @@ function MockSession(conn) {
 util.inherits(MockSession, EventEmitter);
 
 MockSession.prototype.begin = function(policy) {
-  this.mapped = true;
   this.emit('begin-called', this, policy);
 };
 
 MockSession.prototype.attachLink = function(policy) {
   var link = this._mockLinks[policy.options.name];
   expect(link).to.exist;
+
   link._created++;
   link._clearState();
   link.attached = true;
   this.emit('attachLink-called', this, policy, link);
+  return link;
 };
 
 MockSession.prototype._addMockLink = function(link) {
