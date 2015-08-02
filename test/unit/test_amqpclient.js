@@ -37,6 +37,8 @@ describe('AMQPClient', function() {
 
       s.on('begin-called', function(_s, _policy) {
         called.begin++;
+
+        _s.mapped = true;
         _s.emit(Session.Mapped, _s);
       });
 
@@ -79,6 +81,8 @@ describe('AMQPClient', function() {
 
       s.on('begin-called', function (_s, _policy) {
         called.begin++;
+
+        _s.mapped = true;
         _s.emit(Session.Mapped, _s);
       });
 
@@ -87,7 +91,10 @@ describe('AMQPClient', function() {
         expect(_policy.options.target).to.eql({address: queue});
         expect(_policy.options.role).to.eql(constants.linkRole.sender);
 
-        _s.emit(Session.LinkAttached, _l);
+        process.nextTick(function() {
+          _l.emit(Link.Attached, _l);
+          _s.emit(Session.LinkAttached, _l);
+        });
       });
 
       l.on('canSend-called', function () {
@@ -148,6 +155,8 @@ describe('AMQPClient', function() {
       setTimeout(function() {
         self.emit('attachLink-called', self, policy, link);
       }, 100);
+
+      return link;
     };
 
     it('should return cached receiver links upon multiple createReceive calls', function() {
@@ -173,6 +182,8 @@ describe('AMQPClient', function() {
 
       s.on('begin-called', function(_s, _policy) {
         called.begin++;
+
+        _s.mapped = true;
         _s.emit(Session.Mapped, _s);
       });
 
@@ -180,7 +191,11 @@ describe('AMQPClient', function() {
         called.attachLink++;
         expect(_policy.options.source).to.eql({ address: queue });
         expect(_policy.options.role).to.eql(constants.linkRole.receiver);
-        _s.emit(Session.LinkAttached, _l);
+
+        process.nextTick(function() {
+          _l.emit(Link.Attached, _l);
+          _s.emit(Session.LinkAttached, _l);
+        });
       });
 
       var originalLink;
@@ -232,6 +247,8 @@ describe('AMQPClient', function() {
 
       s.on('begin-called', function(_s, _policy) {
         called.begin++;
+
+        _s.mapped = true;
         _s.emit(Session.Mapped, _s);
       });
 
@@ -239,7 +256,11 @@ describe('AMQPClient', function() {
         called.attachLink++;
         expect(_policy.options.source).to.eql({ address: queue });
         expect(_policy.options.role).to.eql(constants.linkRole.receiver);
-        _s.emit(Session.LinkAttached, _l);
+
+        process.nextTick(function() {
+          _l.emit(Link.Attached, _l);
+          _s.emit(Session.LinkAttached, _l);
+        });
       });
 
       return client.connect(mock_uri)
@@ -286,13 +307,19 @@ describe('AMQPClient', function() {
 
       s.on('begin-called', function(_s, _policy) {
         called.begin++;
+
+        _s.mapped = true;
         _s.emit(Session.Mapped, _s);
       });
 
       s.on('attachLink-called', function(_s, _policy, _l) {
         called.attachLink++;
         expect(_policy.options.role).to.eql(constants.linkRole.receiver);
-        _s.emit(Session.LinkAttached, _l);
+
+        process.nextTick(function() {
+          _l.emit(Link.Attached, _l);
+          _s.emit(Session.LinkAttached, _l);
+        });
       });
 
       return client.connect(mock_uri)
@@ -336,6 +363,8 @@ describe('AMQPClient', function() {
 
       s.on('begin-called', function(_s, _policy) {
         called.begin++;
+
+        _s.mapped = true;
         _s.emit(Session.Mapped, _s);
       });
 
@@ -349,7 +378,11 @@ describe('AMQPClient', function() {
             _s.emit(Session.LinkDetached, _l);
           });
         }
-        _s.emit(Session.LinkAttached, _l);
+
+        process.nextTick(function() {
+          _l.emit(Link.Attached, _l);
+          _s.emit(Session.LinkAttached, _l);
+        });
       });
 
       return client.connect(mock_uri)
@@ -391,6 +424,8 @@ describe('AMQPClient', function() {
 
       s.on('begin-called', function(_s, _policy) {
         called.begin++;
+
+        _s.mapped = true;
         _s.emit(Session.Mapped, _s);
       });
 
@@ -404,7 +439,10 @@ describe('AMQPClient', function() {
           });
         }
 
-        _s.emit(Session.LinkAttached, _l);
+        process.nextTick(function() {
+          _l.emit(Link.Attached, _l);
+          _s.emit(Session.LinkAttached, _l);
+        });
       });
 
       return client.connect(mock_uri)

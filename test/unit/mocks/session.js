@@ -18,10 +18,12 @@ MockSession.prototype.begin = function(policy) {
 MockSession.prototype.attachLink = function(policy) {
   var link = this._mockLinks[policy.options.name];
   expect(link).to.exist;
+
   link._created++;
   link._clearState();
   link.attached = true;
   this.emit('attachLink-called', this, policy, link);
+  return link;
 };
 
 MockSession.prototype._addMockLink = function(link) {
