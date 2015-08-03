@@ -106,7 +106,7 @@ describe('AMQPClient', function() {
 
       return client.connect(mock_uri)
         .then(function () {
-          return client.createSender(queue);
+          return client.createSender(queue, { name: 'queue_TX' });
         })
         .then(function (sender) {
           return Promise.all([
@@ -200,16 +200,16 @@ describe('AMQPClient', function() {
       return client.connect(mock_uri)
         .then(function() {
           // create but don't wait so we can simulate an attaching link
-          client.createReceiver(queue)
+          client.createReceiver(queue, { name: 'queue_RX' })
             .then(function(link) {
               originalLink = link;
             });
         })
         .then(function() {
           return Promise.all([
-            client.createReceiver(queue),
-            client.createReceiver(queue),
-            client.createReceiver(queue)
+            client.createReceiver(queue, { name: 'queue_RX' }),
+            client.createReceiver(queue, { name: 'queue_RX' }),
+            client.createReceiver(queue, { name: 'queue_RX' })
           ]);
         })
         .spread(function(link1, link2, link3) {
@@ -262,7 +262,7 @@ describe('AMQPClient', function() {
 
       return client.connect(mock_uri)
         .then(function() {
-          return client.createReceiver(queue);
+          return client.createReceiver(queue, { name: 'queue_RX' });
         })
         .then(function() {
           expect(c._created).to.eql(1);
@@ -321,8 +321,8 @@ describe('AMQPClient', function() {
       return client.connect(mock_uri)
         .then(function() {
           return Promise.all([
-            client.createReceiver('queue1'),
-            client.createReceiver('queue2')
+            client.createReceiver('queue1', { name: 'queue1_RX' }),
+            client.createReceiver('queue2', { name: 'queue2_RX' })
           ]);
         })
         .then(function() {
@@ -382,7 +382,7 @@ describe('AMQPClient', function() {
 
       return client.connect(mock_uri)
         .then(function() {
-          return client.createReceiver(queue);
+          return client.createReceiver(queue, { name: 'queue_RX' });
         })
         .then(function() {
           process.nextTick(function() {
@@ -441,7 +441,7 @@ describe('AMQPClient', function() {
 
       return client.connect(mock_uri)
         .then(function() {
-          return client.createReceiver(queue);
+          return client.createReceiver(queue, { name: 'queue_RX' });
         })
         .then(function() {
           process.nextTick(function() {
