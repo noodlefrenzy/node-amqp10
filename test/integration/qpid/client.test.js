@@ -58,19 +58,6 @@ describe('Client', function() {
       });
   });
 
-  it('should return the same link when one sender link is attaching', function() {
-    return test.client.connect(config.address)
-      .then(function() {
-        return Promise.all([
-          test.client.createSender(config.defaultLink),
-          test.client.createSender(config.defaultLink)
-        ]);
-      })
-      .spread(function(first, second) {
-        expect(first).to.eql(second);
-      });
-  });
-
   it('should be able to create multiple receivers for same link', function(done) {
     var receviedCount = 0;
     var messageHandler = function(message) {
