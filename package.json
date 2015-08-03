@@ -23,8 +23,8 @@
     "istanbul": "^0.3.6",
     "jshint": "^2.6.0",
     "mocha": "^2.1.0",
-    "stream-buffers": "2.1.0",
-    "qmf2": "^0.0.5"
+    "qmf2": "^0.0.5",
+    "stream-buffers": "2.1.0"
   },
   "scripts": {},
   "author": {
