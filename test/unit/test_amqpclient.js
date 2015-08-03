@@ -92,8 +92,7 @@ describe('AMQPClient', function() {
         expect(_policy.options.role).to.eql(constants.linkRole.sender);
 
         process.nextTick(function() {
-          _l.emit(Link.Attached, _l);
-          _s.emit(Session.LinkAttached, _l);
+          _l.simulateAttaching();
         });
       });
 
@@ -193,8 +192,7 @@ describe('AMQPClient', function() {
         expect(_policy.options.role).to.eql(constants.linkRole.receiver);
 
         process.nextTick(function() {
-          _l.emit(Link.Attached, _l);
-          _s.emit(Session.LinkAttached, _l);
+          _l.simulateAttaching();
         });
       });
 
@@ -258,8 +256,7 @@ describe('AMQPClient', function() {
         expect(_policy.options.role).to.eql(constants.linkRole.receiver);
 
         process.nextTick(function() {
-          _l.emit(Link.Attached, _l);
-          _s.emit(Session.LinkAttached, _l);
+          _l.simulateAttaching();
         });
       });
 
@@ -317,8 +314,7 @@ describe('AMQPClient', function() {
         expect(_policy.options.role).to.eql(constants.linkRole.receiver);
 
         process.nextTick(function() {
-          _l.emit(Link.Attached, _l);
-          _s.emit(Session.LinkAttached, _l);
+          _l.simulateAttaching();
         });
       });
 
@@ -380,8 +376,7 @@ describe('AMQPClient', function() {
         }
 
         process.nextTick(function() {
-          _l.emit(Link.Attached, _l);
-          _s.emit(Session.LinkAttached, _l);
+          _l.simulateAttaching();
         });
       });
 
@@ -440,8 +435,7 @@ describe('AMQPClient', function() {
         }
 
         process.nextTick(function() {
-          _l.emit(Link.Attached, _l);
-          _s.emit(Session.LinkAttached, _l);
+          _l.simulateAttaching();
         });
       });
 

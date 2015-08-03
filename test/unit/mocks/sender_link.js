@@ -1,5 +1,7 @@
 'use strict';
-var SenderLink = require('../../../lib/sender_link'),
+var Link = require('../../../lib/link'),
+    SenderLink = require('../../../lib/sender_link'),
+
     putils = require('../../../lib/policies/policy_utilities'),
     util = require('util');
 
@@ -36,6 +38,13 @@ MockSenderLink.prototype._clearState = function() {
   this.capacity = this.options.capacity || 0;
   this.messages = [];
   this.curId = 0;
+};
+
+MockSenderLink.prototype.simulateAttaching = function() {
+  this.linkSM.sendAttach();
+  this.linkSM.attachReceived();
+  this.emit(Link.Attached, this);
+  this._resolveAttachPromises(null, this);
 };
 
 module.exports = MockSenderLink;
