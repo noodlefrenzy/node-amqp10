@@ -1,21 +1,24 @@
 'use strict';
-var EventEmitter = require('events').EventEmitter,
+var Session = require('../../../lib/session'),
+
     expect = require('chai').expect,
     util = require('util');
 
 function MockSession(conn) {
+  MockSession.super_.call(this);
+
   this._created = 0;
   this.connection = conn;
   this._mockLinks = {};
 }
 
-util.inherits(MockSession, EventEmitter);
+util.inherits(MockSession, Session);
 
 MockSession.prototype.begin = function(policy) {
   this.emit('begin-called', this, policy);
 };
 
-MockSession.prototype.attachLink = function(policy) {
+MockSession.prototype.createLink = function(policy) {
   var link = this._mockLinks[policy.options.name];
   expect(link).to.exist;
 

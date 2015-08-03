@@ -206,8 +206,9 @@ describe('Session', function() {
       var actual = {};
       var assertMultipleTransitions = function(name, transitions) {
         actual[name] = transitions;
-        if (_.isEqual(expected, actual))
+        if (_.isEqual(expected, actual)) {
           done();
+        }
       };
 
       connection.connSM.bind(tu.assertTransitions(expected.connection, function(transitions) {
@@ -222,8 +223,8 @@ describe('Session', function() {
 
         session.on(Session.Mapped, function() {
           var opts = u.deepMerge({ options: { name: 'test', source: src(), target: tgt() } }, DefaultPolicy.senderLink);
-          var link = session.attachLink(opts);
-          link.on('error', function(err) {
+          var link = session.createLink(opts);
+          link.on('errorReceived', function(err) {
             expect(err).to.eql(new AMQPError(AMQPError.LinkDetachForced, 'test', ''));
           });
 
