@@ -224,6 +224,26 @@ describe('Utilities', function() {
 
   });
 
+  describe('#parseLinkAddress', function() {
+    [
+      {
+        description: 'a simple link name',
+        address: 'amq.topic',
+        expected: { name: 'amq.topic' }
+      },
+      {
+        description: 'link name with subject',
+        address: 'amq.topic/news',
+        expected: { name: 'amq.topic', subject: 'news' }
+      }
+    ].forEach(function(testCase) {
+      it('should match ' + testCase.description, function() {
+        var result = u.parseLinkAddress(testCase.address);
+        expect(result).to.eql(testCase.expected);
+      });
+    });
+  });
+
   describe('#generateTimeouts', function() {
     it('should generate a fibonacci sequence of timeouts', function() {
       var options = {
