@@ -2,6 +2,9 @@ REPORTER ?= spec
 TESTS = test
 NPM_BIN = .\node_modules\.bin
 _MOCHA = node_modules\mocha\bin\_mocha
+UNIT_TESTS = .\test\unit
+QPID_INTEGRATION_TESTS = .\test\integration\qpid
+SERVICEBUS_INTEGRATION_TESTS = .\test\integration\servicebus
 
 jshint:
 	$(NPM_BIN)\jshint lib test tools
@@ -16,9 +19,17 @@ coverage-report: jshint
 	$(NPM_BIN)\istanbul.cmd cover $(_MOCHA) -- -t 10000 --ui tdd $(TESTS)
 
 codeclimate-send:
-	CODECLIMATE_REPO_TOKEN=2612b6d4b7bed06760320154f22eba4e348e53055c0eaf9a9a00e3b05ef3b37d codeclimate < coverage/lcov.info
+	CODECLIMATE_REPO_TOKEN=2612b6d4b7bed06760320154f22eba4e348e53055c0eaf9a9a00e3b05ef3b37d codeclimate < coverage\lcov.info
 
-test: jshint
-	$(NPM_BIN)\mocha --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) $(TESTS)
+test-unit: jshint
+	$(NPM_BIN)\mocha --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) $(UNIT_TESTS)
+
+test-qpid: jshint
+	$(NPM_BIN)\mocha --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) $(QPID_INTEGRATION_TESTS)
+
+test-servicebus: jshint
+	$(NPM_BIN)\mocha --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) $(SERVICEBUS_INTEGRATION_TESTS)
+
+test: test-unit test-qpid test-servicebus
 
 .PHONY: jshint fixjsstyle coverage codeclimate-send test

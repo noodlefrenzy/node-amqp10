@@ -25,6 +25,8 @@ describe('ServiceBus', function() {
     });
 
     it('should connect, send, and receive a message', function(done) {
+      var msgVal = Math.floor(Math.random() * 1000000);
+      expect(config.serviceBusHost, 'Required environment variables').to.exist;
       test.client.connect(config.address)
         .then(function() {
           return Promise.all([
@@ -35,10 +37,14 @@ describe('ServiceBus', function() {
         .spread(function(receiver, sender) {
           receiver.on('message', function(message) {
             expect(message).to.exist;
-            done();
+            expect(message.body).to.exist;
+            // Ignore messages that aren't from us.
+            if (!!message.body.DataValue && message.body.DataValue === msgVal) {
+              done();
+            }
           });
 
-          return sender.send({"DataString": "From Node v2"});
+          return sender.send({"DataString": "From Node v2", "DataValue": msgVal});
         });
     });
 /*
