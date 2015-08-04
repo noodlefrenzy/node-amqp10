@@ -21,11 +21,13 @@ var AMQPClient  = require('../lib').Client,
 // Here, I'm setting a global offset, just to show you how it's done. See node-sbus-amqp10 for a wrapper library that will
 // take care of this for you.
 var filterOffset; // example filter offset value might be: 43350;
-var filter;
+var filterOption;
 if (filterOffset) {
-  filter = {
-    'apache.org:selector-filter:string': AMQPClient.adapters.Translator(
-      ['described', ['symbol', 'apache.org:selector-filter:string'], ['string', "amqp.annotation.x-opt-offset > '" + filterOffset + "'"]])
+  filterOption = {
+    filter: {
+      'apache.org:selector-filter:string': AMQPClient.adapters.Translator(
+        ['described', ['symbol', 'apache.org:selector-filter:string'], ['string', "amqp.annotation.x-opt-offset > '" + filterOffset + "'"]])
+    }
   };
 }
 
@@ -62,63 +64,45 @@ if (process.argv.length < 3) {
 
   var msgVal = Math.floor(Math.random() * 1000000);
 
-  var sender = true;
-  var receiver = true;
-  if (process.argv.length > 3) {
-    if (process.argv[3] === 'send') receiver = false;
-    else if (process.argv[3] === 'receive') sender = false;
-    else throw new Error('Unknown action.');
-  }
+  var errorHandler = function(myIdx, rx_err) {
+    console.warn('==> RX ERROR: ', rx_err);
+  };
 
-  var receiveCB = function (myIdx, err, msg) {
-    if (err) {
-      console.log('ERROR: ');
-      console.log(err);
-    } else {
-      console.log('Recv(' + myIdx + '): ');
-      console.log(msg.body);
-      if (msg.annotations) {
-        console.log('Annotations:');
-        console.log(msg.annotations);
-      }
-      console.log('');
-      if (sender) {
-        // If not a sender, no use checking for value.
-        if (msg.body.DataValue === msgVal) {
-          client.disconnect().then(function () {
-            console.log("Disconnected, when we saw the value we'd inserted.");
-            process.exit(0);
-          });
-        }
-      }
+  var messageHandler = function (myIdx, msg) {
+    console.log('Recv(' + myIdx + '): ');
+    console.log(msg.body);
+    if (msg.annotations) {
+      console.log('Annotations:');
+      console.log(msg.annotations);
+    }
+    console.log('');
+    if (msg.body.DataValue === msgVal) {
+      client.disconnect().then(function () {
+        console.log("Disconnected, when we saw the value we'd inserted.");
+        process.exit(0);
+      });
     }
   };
 
   var client = new AMQPClient(Policy.EventHub);
   client.connect(uri).then(function () {
-    if (sender) {
-      client.send({
-        "DataString": "From Node",
-        "DataValue": msgVal
-      }, sendAddr, {'x-opt-partition-key': 'pk' + msgVal}).then(function (state) {
-        if (receiver) {
-          for (var idx = 0; idx < numPartitions; ++idx) {
-            var curIdx = idx;
-            var curRcvAddr = recvAddr + curIdx;
-            client.createReceiver(curRcvAddr, filter, receiveCB.bind(null, curIdx));
-          }
-        } else {
-          console.log('Send message with value ' + msgVal + '.  Not receiving, so exiting');
-          process.exit(0);
-        }
-      });
-    } else if (receiver) {
-      for (var idx = 0; idx < numPartitions; ++idx) {
-        var curIdx = idx;
-        var curRcvAddr = recvAddr + curIdx;
-        client.createReceiver(curRcvAddr, filter, receiveCB.bind(null, curIdx));
-      }
+    for (var idx = 0; idx < numPartitions; ++idx) {
+      var curIdx = idx;
+      var curRcvAddr = recvAddr + curIdx;
+      client.createReceiver(curRcvAddr, filterOption).then(function (receiver) {
+        receiver.on('message', messageHandler.bind(null, curIdx));
+        receiver.on('errorReceived', errorHandler.bind(null, curIdx));
+      })
     }
+    // {'x-opt-partition-key': 'pk' + msgVal}
+    client.createSender(sendAddr).then(function (sender) {
+      sender.on('errorReceived', function (tx_err) {
+        console.warn('===> TX ERROR: ', tx_err);
+      });
+      sender.send({ "DataString": "From Node", "DataValue": msgVal }, { annotations: {'x-opt-partition-key': 'pk' + msgVal} }).then(function (state) {
+        console.log('State: ', state);
+      });
+    });
   }).catch(function (e) {
     console.warn('Failed to send due to ', e);
   });

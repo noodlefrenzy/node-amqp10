@@ -51,7 +51,7 @@ if (process.argv.length < 3) {
   client.connect(uri).then(function () {
     client.createSender(topicName).then(function (sender) {
       sender.on('errorReceived', function(tx_err) {
-        console.warn('===> TX ERROR: ' + tx_err);
+        console.warn('===> TX ERROR: ', tx_err);
       });
       client.createReceiver(topicName + '/Subscriptions/' + subscriptionName).then(function (receiver) {
         receiver.on('message', function(message) {
@@ -70,7 +70,7 @@ if (process.argv.length < 3) {
           }
         });
         receiver.on('errorReceived', function(rx_err) {
-          console.warn('===> RX ERROR: ' + rx_err);
+          console.warn('===> RX ERROR: ', rx_err);
         });
         sender.send({"DataString": "From Node", "DataValue": msgVal}).then(function (state) {
           console.log('State: ', state);
