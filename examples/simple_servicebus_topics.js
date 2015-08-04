@@ -27,8 +27,6 @@ function argCheck(settings, options) {
   }
 }
 
-var msgVal = Math.floor(Math.random() * 10000);
-
 if (process.argv.length < 3) {
     console.warn('Usage: node '+process.argv[1]+' <settings json file>');
 } else {
@@ -51,12 +49,12 @@ if (process.argv.length < 3) {
 
   var client = new AMQPClient(Policy.ServiceBusTopic);
   client.connect(uri).then(function () {
-    client.send({"DataString": "From Node", "DataValue": msgVal}, topicName).then(function (state) {
-      client.createReceiver(topicName + '/Subscriptions/' + subscriptionName, function (rx_err, message) {
-        if (rx_err) {
-          console.log('Error Receiving: ');
-          console.log(rx_err);
-        } else {
+    client.createSender(topicName).then(function (sender) {
+      sender.on('errorReceived', function(tx_err) {
+        console.warn('===> TX ERROR: ' + tx_err);
+      });
+      client.createReceiver(topicName + '/Subscriptions/' + subscriptionName).then(function (receiver) {
+        receiver.on('message', function(message) {
           console.log('Recv: ');
           console.log(message.body);
           if (message.annotations) {
@@ -67,11 +65,20 @@ if (process.argv.length < 3) {
           if (message.body.DataValue === msgVal) {
             client.disconnect().then(function () {
               console.log("Disconnected, when we saw the value we'd inserted.");
+              process.exit(0);
             });
           }
-        }
-      });
+        });
+        receiver.on('errorReceived', function(rx_err) {
+          console.warn('===> RX ERROR: ' + rx_err);
+        });
+        sender.send({"DataString": "From Node", "DataValue": msgVal}).then(function (state) {
+          console.log('State: ', state);
+        });
+      })
     });
+  }).catch(function (e) {
+    console.warn('Error send/receive: ', e);
   });
 }
 
