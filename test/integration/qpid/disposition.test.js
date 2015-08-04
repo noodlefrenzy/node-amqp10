@@ -82,7 +82,7 @@ describe('Disposition', function() {
           receivedCount++;
 
           // send manual disposition
-          receiver.accept(message);
+          this.accept(message);
           if (receivedCount !== messageCount) {
             return;
           }
