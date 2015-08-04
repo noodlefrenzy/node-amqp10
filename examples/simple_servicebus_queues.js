@@ -54,26 +54,21 @@ if (process.argv.length < 3) {
     else throw new Error('Unknown action.');
   }
 
-  var receiveCB = function (rx_err, message) {
-    if (rx_err) {
-      console.log('Error Receiving: ');
-      console.log(rx_err);
-    } else {
-      console.log('Recv: ');
-      console.log(message.body);
-      if (message.annotations) {
-        console.log('Annotations:');
-        console.log(message.annotations);
-      }
-      console.log('');
-      if (sender) {
-        // If we aren't a sender, no value to look for.
-        if (message.body.DataValue === msgVal) {
-          client.disconnect().then(function () {
-            console.log("Disconnected, when we saw the value we'd inserted.");
-            process.exit(0);
-          });
-        }
+  var receiveCB = function (message) {
+    console.log('Recv: ');
+    console.log(message.body);
+    if (message.annotations) {
+      console.log('Annotations:');
+      console.log(message.annotations);
+    }
+    console.log('');
+    if (sender) {
+      // If we aren't a sender, no value to look for.
+      if (message.body.DataValue === msgVal) {
+        client.disconnect().then(function () {
+          console.log("Disconnected, when we saw the value we'd inserted.");
+          process.exit(0);
+        });
       }
     }
   };
@@ -81,17 +76,23 @@ if (process.argv.length < 3) {
   var client = new AMQPClient(Policy.ServiceBusQueue);
   client.connect(uri).then(function () {
     if (sender) {
-      client.send({"DataString": "From Node", "DataValue": msgVal}, queueName).then(function (state) {
-        console.log('State: ', state);
-        if (receiver) {
-          client.createReceiver(queueName, receiveCB);
-        } else {
-          console.log('Sent message with value ' + msgVal + '.  Not receiving, so exiting');
-          process.exit(0);
-        }
+      client.createSender(queueName).then(function (sender) {
+        sender.send({"DataString": "From Node", "DataValue": msgVal}).then(function (state) {
+          console.log('State: ', state);
+          if (receiver) {
+            client.createReceiver(queueName).then(function (receiver) {
+              receiver.on('message', receiveCB);
+            })
+          } else {
+            console.log('Sent message with value ' + msgVal + '.  Not receiving, so exiting');
+            process.exit(0);
+          }
+        });
       });
     } else {
-      client.createReceiver(queueName, receiveCB);
+      client.createReceiver(queueName).then(function (receiver) {
+        receiver.on('message', receiveCB);
+      })
     }
   }).catch(function (e) {
     console.warn('Error send/receive: ', e);
