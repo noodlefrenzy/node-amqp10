@@ -61,7 +61,7 @@ describe('Disposition', function() {
 
   it('should allow for manual disposition of received messages', function(done) {
     var queueName = 'test.disposition.queue';
-    var messageCount = 0;
+    var messageCount = 5, receivedCount = 0;
 
     return test.client.connect(config.address)
       .then(function() {
@@ -71,23 +71,19 @@ describe('Disposition', function() {
           test.client.createReceiver(queueName, {
             policy: {
               receiverSettleMode: c.receiverSettleMode.settleOnDisposition,
-              credit: function(link) {}
+              creditQuantum: 1
             }
           }),
           test.client.createSender(queueName)
         ]);
       })
       .spread(function(brokerAgent, receiver, sender) {
-        receiver.addCredits(1);
         receiver.on('message', function(message) {
-          messageCount++;
+          receivedCount++;
 
           // send manual disposition
           receiver.accept(message);
-
-          if (messageCount !== 2) {
-            // increment credits to receive next message
-            receiver.addCredits(1);
+          if (receivedCount !== messageCount) {
             return;
           }
 
@@ -98,10 +94,10 @@ describe('Disposition', function() {
             });
         });
 
-        return Promise.all([
-          sender.send('first message'),
-          sender.send('second message')
-        ]);
+        var promises = [];
+        for (var i = 0; i < messageCount; i++)
+          promises.push(sender.send('message'));
+        return Promise.all(promises);
       });
   });
 
