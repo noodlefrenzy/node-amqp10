@@ -130,6 +130,7 @@ describe('AMQPClient', function() {
           expect(l.messages[0].message).to.eql({my: 'message'});
         });
     });
+
   });
 
   describe('#receive()', function() {
