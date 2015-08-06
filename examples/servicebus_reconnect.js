@@ -82,6 +82,8 @@ function sendReceiveAndQuit(policy, minutesUntilSend) {
           remaining--;
           if (remaining === 0) {
             clearInterval(interval);
+            // Note that if you create the receiver at the same time as the sender,
+            //  it doesn't seem to trigger the behavior (i.e. an active receiver link stops the auto-detach).
             client.createReceiver(queueName).then(function (receiver) {
               receiver.on('errorReceived', function (rx_err) {
                 console.warn('===> RX ERROR: ', rx_err);
