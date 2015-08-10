@@ -8,7 +8,7 @@ var AMQPClient = require('../../..').Client,
 var test = {};
 describe('QPID', function() {
 
-describe('ReceiverLink', function() {
+describe('SenderLink', function() {
   beforeEach(function() {
     if (!!test.client) test.client = undefined;
     test.client = new AMQPClient();
@@ -26,7 +26,7 @@ describe('ReceiverLink', function() {
         return Promise.all([
           test.client.createReceiver('amq.topic/not-news'),
           test.client.createReceiver('amq.topic/news'),
-          test.client.createSender('amq.topic')
+          test.client.createSender('amq.topic/news')
         ]);
       })
       .spread(function(receiverWithoutSubject, receiverWithSubject, sender) {
@@ -38,7 +38,7 @@ describe('ReceiverLink', function() {
           done();
         });
 
-        return sender.send('test message', { properties: { subject: 'news' } });
+        return sender.send('test message');
       });
   });
 
