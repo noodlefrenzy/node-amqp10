@@ -70,7 +70,9 @@ describe('Disposition', function() {
           test.broker.initialize(),
           test.client.createReceiver(queueName, {
             policy: {
-              receiverSettleMode: c.receiverSettleMode.settleOnDisposition,
+              options: {
+                receiverSettleMode: c.receiverSettleMode.settleOnDisposition
+              },
               creditQuantum: 1
             }
           }),
