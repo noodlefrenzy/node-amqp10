@@ -131,46 +131,43 @@ describe('AMQPClient', function() {
         });
     });
 
-  });
-
-  describe('#receive()', function() {
-    it('should throw an error if not connected', function() {
-      var client = new Mock.Client();
-      expect(function() { client.createReceiver(); }).to.throw(Error);
-    });
-
-    it('should create connection, session, and link on receive with full address', function() {
+    it('should re-establish sender link on detach, automatically', function() {
       var c = new Mock.Connection();
       var s = new Mock.Session(c);
-      var l = new Mock.ReceiverLink(s, {
-        name: 'queue_RX',
-        isSender: false,
+      var l = new Mock.SenderLink(s, {
+        name: 'queue_TX',
+        isSender: true,
         capacity: 100
       });
 
       s._addMockLink(l);
       var client = new Mock.Client(c, s);
       var queue = 'queue';
-      var called = { open: 0, begin: 0, attachLink: 0 };
-      c.on('open-called', function(_c, _addr, _sasl) {
+      var called = {open: 0, begin: 0, attachLink: 0};
+      c.on('open-called', function (_c, _addr, _sasl) {
         expect(_addr).to.eql(u.parseAddress(mock_uri));
         expect(_sasl).to.not.exist;
-
         called.open++;
         _c.emit(Connection.Connected, _c);
       });
 
-      s.on('begin-called', function(_s, _policy) {
+      s.on('begin-called', function (_s, _policy) {
         called.begin++;
 
         _s.mapped = true;
         _s.emit(Session.Mapped, _s);
       });
 
-      s.on('attachLink-called', function(_s, _policy, _l) {
+      s.on('attachLink-called', function (_s, _policy, _l) {
         called.attachLink++;
-        expect(_policy.options.source).to.eql({ address: queue });
-        expect(_policy.options.role).to.eql(constants.linkRole.receiver);
+        expect(_policy.options.target).to.eql({address: queue});
+        expect(_policy.options.role).to.eql(constants.linkRole.sender);
+        if (called.attachLink === 1) {
+          process.nextTick(function() {
+            _l.emit(Link.Detached);
+            _s.emit(Session.LinkDetached, _l);
+          });
+        }
 
         process.nextTick(function() {
           _l.simulateAttaching();
@@ -178,17 +175,35 @@ describe('AMQPClient', function() {
       });
 
       return client.connect(mock_uri)
-        .then(function() {
-          return client.createReceiver(queue, { name: 'queue_RX' });
+        .then(function () {
+          return client.createSender(queue, { name: 'queue_TX' });
         })
-        .then(function() {
-          expect(c._created).to.eql(1);
-          expect(s._created).to.eql(1);
-          expect(l._created).to.eql(1);
-          expect(called.open).to.eql(1);
-          expect(called.begin).to.eql(1);
-          expect(called.attachLink).to.eql(1);
+        .then(function (sender) {
+          return Promise.all([
+            sender.send({ my: 'message' }),
+            process.nextTick(function() {
+              sender.capacity = 100;
+              sender._dispatchPendingSends();
+            })
+          ]);
+        })
+        .then(function () {
+          process.nextTick(function() {
+            expect(c._created).to.eql(1);
+            expect(s._created).to.eql(1);
+            expect(l._created).to.eql(1);
+            expect(called.open).to.eql(1);
+            expect(called.begin).to.eql(1);
+            expect(called.attachLink).to.eql(2);
+          });
         });
+    });
+  });
+
+  describe('#receive()', function() {
+    it('should throw an error if not connected', function() {
+      var client = new Mock.Client();
+      expect(function() { client.createReceiver(); }).to.throw(Error);
     });
 
     it('should only create a single connection, session, multiple links for multiple receives', function() {
