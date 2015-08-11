@@ -10,10 +10,6 @@ UNIT_TESTS = .\test\unit
 QPID_INTEGRATION_TESTS = .\test\integration\qpid
 SERVICEBUS_INTEGRATION_TESTS = .\test\integration\servicebus
 
-info:
-	@echo "Platform information:"
-	@echo "Path Sep: $(PATH_SEPARATOR_CHAR)"
-
 jshint:
 	$(NPM_BIN)\jshint lib test tools
 
