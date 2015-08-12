@@ -25,8 +25,8 @@ var debug = require('debug')('amqp10-test_connection'),
     MockServer = require('./mock_amqp');
 
 DefaultPolicy.connect.options.containerId = 'test';
-DefaultPolicy.senderLink.options.name = 'sender';
-DefaultPolicy.receiverLink.options.name = 'receiver';
+DefaultPolicy.senderLink.attach.name = 'sender';
+DefaultPolicy.receiverLink.attach.name = 'receiver';
 
 function MockBeginFrame(options, channel) {
   var begin = new BeginFrame(u.deepMerge(options, DefaultPolicy.session.options));
@@ -39,8 +39,8 @@ function tgt() { return { address: 'test-tgt' }; }
 
 function MockAttachFrame(options, channel) {
   var defaults = options.role === constants.linkRole.sender ?
-      DefaultPolicy.senderLink.options :
-      DefaultPolicy.receiverLink.options;
+      DefaultPolicy.senderLink.attach :
+      DefaultPolicy.receiverLink.attach;
 
   var opts = u.deepMerge({
     name: 'test',
@@ -222,7 +222,7 @@ describe('Session', function() {
         }));
 
         session.on(Session.Mapped, function() {
-          var opts = u.deepMerge({ options: { name: 'test', source: src(), target: tgt() } }, DefaultPolicy.senderLink);
+          var opts = u.deepMerge({ attach: { name: 'test', source: src(), target: tgt() } }, DefaultPolicy.senderLink);
           var link = session.createLink(opts);
           link.on('errorReceived', function(err) {
             expect(err).to.eql(new AMQPError(AMQPError.LinkDetachForced, 'test', ''));

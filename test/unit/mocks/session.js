@@ -19,12 +19,13 @@ MockSession.prototype.begin = function(policy) {
 };
 
 MockSession.prototype.createLink = function(policy) {
-  var link = this._mockLinks[policy.options.name];
+  var link = this._mockLinks[policy.attach.name];
   expect(link).to.exist;
 
   link._created++;
   link._clearState();
   link.attached = true;
+  link.handle = policy.attach.handle;
   this.emit('attachLink-called', this, policy, link);
   return link;
 };

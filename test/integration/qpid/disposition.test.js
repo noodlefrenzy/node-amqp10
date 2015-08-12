@@ -69,7 +69,7 @@ describe('Disposition', function() {
         return Promise.all([
           test.broker.initialize(),
           test.client.createReceiver(queueName, {
-            options: {
+            attach: {
               receiverSettleMode: c.receiverSettleMode.settleOnDisposition
             },
             creditQuantum: 1
