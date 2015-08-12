@@ -106,7 +106,7 @@ describe('AMQPClient', function() {
 
       return client.connect(mock_uri)
         .then(function () {
-          return client.createSender(queue, { options: { name: 'queue_TX' } });
+          return client.createSender(queue, { name: 'queue_TX' });
         })
         .then(function (sender) {
           return Promise.all([
@@ -176,7 +176,7 @@ describe('AMQPClient', function() {
 
       return client.connect(mock_uri)
         .then(function () {
-          return client.createSender(queue, { options: { name: 'queue_TX' } });
+          return client.createSender(queue, { name: 'queue_TX' });
         })
         .then(function (sender) {
           return Promise.all([
@@ -253,8 +253,8 @@ describe('AMQPClient', function() {
       return client.connect(mock_uri)
         .then(function() {
           return Promise.all([
-            client.createReceiver('queue1', { options: { name: 'queue1_RX' } }),
-            client.createReceiver('queue2', { options: { name: 'queue2_RX' } })
+            client.createReceiver('queue1', { name: 'queue1_RX' }),
+            client.createReceiver('queue2', { name: 'queue2_RX' })
           ]);
         })
         .then(function() {
@@ -314,7 +314,7 @@ describe('AMQPClient', function() {
 
       return client.connect(mock_uri)
         .then(function() {
-          return client.createReceiver(queue, { options: { name: 'queue_RX' } });
+          return client.createReceiver(queue, { name: 'queue_RX' });
         })
         .then(function() {
           process.nextTick(function() {
@@ -373,7 +373,7 @@ describe('AMQPClient', function() {
 
       return client.connect(mock_uri)
         .then(function() {
-          return client.createReceiver(queue, { options: { name: 'queue_RX' } });
+          return client.createReceiver(queue, { name: 'queue_RX' });
         })
         .then(function() {
           process.nextTick(function() {
