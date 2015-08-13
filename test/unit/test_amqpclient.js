@@ -88,8 +88,8 @@ describe('AMQPClient', function() {
 
       s.on('attachLink-called', function (_s, _policy, _l) {
         called.attachLink++;
-        expect(_policy.options.target).to.eql({address: queue});
-        expect(_policy.options.role).to.eql(constants.linkRole.sender);
+        expect(_policy.attach.target).to.eql({address: queue});
+        expect(_policy.attach.role).to.eql(constants.linkRole.sender);
 
         process.nextTick(function() {
           _l.simulateAttaching();
@@ -160,8 +160,8 @@ describe('AMQPClient', function() {
 
       s.on('attachLink-called', function (_s, _policy, _l) {
         called.attachLink++;
-        expect(_policy.options.target).to.eql({address: queue});
-        expect(_policy.options.role).to.eql(constants.linkRole.sender);
+        expect(_policy.attach.target).to.eql({address: queue});
+        expect(_policy.attach.role).to.eql(constants.linkRole.sender);
         if (called.attachLink === 1) {
           process.nextTick(function() {
             _l.emit(Link.Detached);
@@ -243,7 +243,7 @@ describe('AMQPClient', function() {
 
       s.on('attachLink-called', function(_s, _policy, _l) {
         called.attachLink++;
-        expect(_policy.options.role).to.eql(constants.linkRole.receiver);
+        expect(_policy.attach.role).to.eql(constants.linkRole.receiver);
 
         process.nextTick(function() {
           _l.simulateAttaching();
@@ -298,8 +298,8 @@ describe('AMQPClient', function() {
 
       s.on('attachLink-called', function(_s, _policy, _l) {
         called.attachLink++;
-        expect(_policy.options.source).to.eql({ address: queue });
-        expect(_policy.options.role).to.eql(constants.linkRole.receiver);
+        expect(_policy.attach.source).to.eql({ address: queue });
+        expect(_policy.attach.role).to.eql(constants.linkRole.receiver);
         if (called.attachLink === 1) {
           process.nextTick(function() {
             _l.emit(Link.Detached);
@@ -358,8 +358,8 @@ describe('AMQPClient', function() {
 
       s.on('attachLink-called', function(_s, _policy, _l) {
         called.attachLink++;
-        expect(_policy.options.source).to.eql({ address: queue });
-        expect(_policy.options.role).to.eql(constants.linkRole.receiver);
+        expect(_policy.attach.source).to.eql({ address: queue });
+        expect(_policy.attach.role).to.eql(constants.linkRole.receiver);
         if (called.attachLink === 1) {
           process.nextTick(function() {
             c.emit(Connection.Disconnected);
