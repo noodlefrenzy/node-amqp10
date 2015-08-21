@@ -18,9 +18,10 @@ describe('ServiceBus', function() {
       test.client = new AMQPClient(Policy.ServiceBusQueue);
     });
 
-    afterEach(function() {
+    afterEach(function(done) {
       return test.client.disconnect().then(function() {
         test.client = undefined;
+        done();
       });
     });
 
