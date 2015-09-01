@@ -1,13 +1,14 @@
 'use strict';
-var AMQPClient = require('../../..').Client,
-  Policy = require('../../../lib').Policy,
-  Message = require('../../../lib/types/message'),
+var AMQPClient = require('../../../../lib/index.js').Client,
+  Policy = require('../../../../lib/index').Policy,
+  Message = require('../../../../lib/types/message'),
   Promise = require('bluebird'),
   config = require('./config'),
   expect = require('chai').expect,
+  uuid = require('uuid'),
   debug = require('debug')('amqp10:test:servicebus:queues'),
 
-  M = require('../../../lib/types/message');
+  M = require('../../../../lib/types/message');
 
 var test = {};
 describe('ServiceBus', function() {
@@ -25,7 +26,7 @@ describe('ServiceBus', function() {
     });
 
     it('should connect, send, and receive a message', function(done) {
-      var msgVal = Math.floor(Math.random() * 1000000);
+      var msgVal = uuid.v4();
       expect(config.serviceBusHost, 'Required environment variables').to.exist;
       test.client.connect(config.address)
         .then(function() {
