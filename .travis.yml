@@ -22,7 +22,7 @@ branches:
 
 before_script:
   - npm install -g codeclimate-test-reporter
-  - sudo add-apt-repository ppa:mcpierce/qpid-testing -y
+  - sudo add-apt-repository ppa:qpid/testing -y
   - sudo apt-get update -q
   - sudo apt-get install qpidd qpid-tools
   - sudo sh -c 'echo "auth=no" >> /etc/qpid/qpidd.conf'

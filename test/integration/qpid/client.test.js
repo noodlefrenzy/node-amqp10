@@ -81,6 +81,16 @@ describe('Client', function() {
       });
   });
 
+  it('should be able to detach a link', function() {
+    return test.client.connect(config.address)
+      .then(function() {
+        return test.client.createSender(config.defaultLink);
+      })
+      .then(function(sender) {
+        return sender.detach();
+      });
+  });
+
   describe('Messages', function() {
     [
       {
