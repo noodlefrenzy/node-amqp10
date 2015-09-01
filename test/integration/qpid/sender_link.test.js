@@ -42,5 +42,30 @@ describe('SenderLink', function() {
       });
   });
 
+  it('should accept messages as the first parameter', function(done) {
+    return test.client.connect(config.address)
+      .then(function() {
+        return Promise.all([
+          test.client.createReceiver('test.disposition.queue'),
+          test.client.createSender('test.disposition.queue')
+        ]);
+      })
+      .spread(function(receiver, sender) {
+        var receivedCount = 0;
+        receiver.on('message', function(message) {
+          expect(message.body).to.eql({ a: 'message' });
+          expect(message.properties.replyTo).to.eql('somewhere');
+          receivedCount++;
+          if (receivedCount === 2) return done();
+          return sender.send(message);
+        });
+
+        return sender.send({
+          properties: { replyTo: 'somewhere' },
+          body: { a: 'message' }
+        });
+      });
+  });
+
 });
 });
