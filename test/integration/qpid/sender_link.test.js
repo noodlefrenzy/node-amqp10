@@ -67,5 +67,28 @@ describe('SenderLink', function() {
       });
   });
 
+  function CustomType(eventType) {
+    this.event = eventType;
+  }
+
+  it('should send custom types', function(done) {
+    return test.client.connect(config.address)
+      .then(function() {
+        return Promise.all([
+          test.client.createReceiver(config.defaultLink),
+          test.client.createSender(config.defaultLink)
+        ]);
+      })
+      .spread(function(receiver, sender) {
+        var receivedCount = 0;
+        receiver.on('message', function(message) {
+          expect(message.body).to.eql({ event: 'finished' });
+          done();
+        });
+
+        return sender.send(new CustomType('finished'));
+      });
+  });
+
 });
 });
