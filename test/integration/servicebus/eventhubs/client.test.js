@@ -31,10 +31,10 @@ describe('ServiceBus', function() {
       expect(config.senderLink, 'Required environment variables').to.exist;
       test.client.connect(config.address)
         .then(function() {
-          return Promise.all([
-            Promise.map(_.range(config.partitionCount), function(partition) { return test.client.createReceiver(config.receiverLinkPrefix + partition); }),
-            test.client.createSender(config.senderLink)
-            ]);
+          return Promise.all(
+            _.range(config.partitionCount).map(function(partition) { return test.client.createReceiver(config.receiverLinkPrefix + partition); }).
+            concat(test.client.createSender(config.senderLink))
+            );
         })
         .then(function(links) {
           var sender = links.pop();

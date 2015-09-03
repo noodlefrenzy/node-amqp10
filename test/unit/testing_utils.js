@@ -1,13 +1,13 @@
 'use strict';
 
-var builder = require('buffer-builder'),
+var Builder = require('buffer-builder'),
     BufferList = require('bl'),
     expect = require('chai').expect,
     _ = require('lodash'),
     sb = require('stream-buffers');
 
 function buildBuffer(contents) {
-  var bufb = new builder();
+  var bufb = new Builder();
   for (var idx = 0; idx < contents.length; idx++) {
     var cur = contents[idx];
     if (typeof cur === 'function') {
@@ -31,7 +31,7 @@ module.exports.newBuffer = newBuffer;
 
 function shouldBufEql(expected, actual, msg) {
   msg = msg ? msg + ': ' : '';
-  if (actual instanceof builder) {
+  if (actual instanceof Builder) {
     actual = actual.get();
   }
   if (expected instanceof Array) {
