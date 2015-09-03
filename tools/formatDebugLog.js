@@ -2,7 +2,7 @@
 
 var fs = require('fs'),
   util = require('util'),
-  int64 = require('node-int64'),
+  Int64 = require('node-int64'),
   constants = require('../lib/constants');
 
 if (process.argv.length < 3) {
@@ -148,7 +148,7 @@ function parseHex(hexstr) {
     var lengthstr = body.substr(0, 8);
     if (checkLength(body, 16)) {
       body = body.substr(16);
-      var frameLength64 = new int64(new Buffer('00000000' + lengthstr, 'hex'));
+      var frameLength64 = new Int64(new Buffer('00000000' + lengthstr, 'hex'));
       var frameLength = frameLength64.valueOf() * 2 - (8*2);
       if (checkLength(body, frameLength)) {
         var frame = body.substr(0, frameLength);
