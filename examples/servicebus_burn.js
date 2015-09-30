@@ -1,14 +1,3 @@
-///
-/// A simple example showing ServiceBus' disconnect behavior:
-/// - It seems to drop unused send links at around 10 minutes, despite heartbeat frames.
-/// - It then drops the connection entirely at around 20 minutes.
-///
-/// The Link has logic to deal with re-attaching for this detach at 10 minutes, and
-///  the connection has logic to deal with re-connecting and re-establishing links.
-///
-/// The code below demonstrates both.
-///
-
 'use strict';
 //var AMQPClient = require('amqp10').Client;
 var AMQPClient  = require('../lib').Client,
@@ -45,10 +34,54 @@ var queueName = settings.queueName;
 
 var uri = protocol + '://' + encodeURIComponent(sasName) + ':' + encodeURIComponent(sasKey) + '@' + serviceBusHost;
 
-function sendReceiveAndQuit(policy, minutesUntilSend) {
+function sendReceiveMore(previous, minutesUntilSend) {
   var msgVal = Math.floor(Math.random() * 1000000);
   var min = 60 * 1000;
   var remaining = minutesUntilSend;
+
+  return new Promise(function (resolve, reject) {
+    var client = previous.client;
+    var sender = previous.sender;
+    var interval = setInterval(function() {
+      remaining--;
+      if (remaining === 0) {
+        clearInterval(interval);
+        // Note that if you create the receiver at the same time as the sender,
+        //  it doesn't seem to trigger the behavior (i.e. an active receiver link stops the auto-detach).
+        client.createReceiver(queueName).then(function (receiver) {
+          receiver.on('errorReceived', function (rx_err) {
+            console.warn('===> RX ERROR: ', rx_err);
+          });
+          receiver.on('detached', function () {
+            console.warn('===> RX DETACHED');
+          });
+          receiver.on('message', function (msg) {
+            if (msg.body && msg.body.DataValue && msg.body.DataValue === msgVal) {
+              receiver.detach().then(function () {
+                console.log("\n=================\nExpected Value Seen\n==================\n");
+                resolve({client: client, sender: sender});
+              });
+            }
+          });
+          sender.send({"DataString": "From Node", "DataValue": msgVal}).then(function (state) {
+            console.log('State: ', state);
+          }).catch(function (eSend) {
+            console.warn('===> TX SEND FAILURE: ', eSend);
+          });
+        });
+      } else {
+        console.log('===> ' + remaining + ' minutes remaining until sending.');
+      }
+    }, min);
+
+  });
+}
+
+function sendReceive(policy, minutesUntilSend) {
+  var msgVal = Math.floor(Math.random() * 1000000);
+  var min = 60 * 1000;
+  var remaining = minutesUntilSend;
+
   return new Promise(function (resolve, reject) {
     var client = new AMQPClient(policy);
     client.on('client:errorReceived', function (err) {
@@ -73,11 +106,6 @@ function sendReceiveAndQuit(policy, minutesUntilSend) {
         sender.session.on('errorReceived', function(err) {
           console.warn('===> SESSION ERROR: ', err);
         });
-        setTimeout(function() {
-          client.disconnect().then(function() {
-            reject('Message not seen in ' + (minutesUntilSend + 1) + ' minutes');
-          });
-        }, (minutesUntilSend + 1) * min);
         var interval = setInterval(function() {
           remaining--;
           if (remaining === 0) {
@@ -93,9 +121,9 @@ function sendReceiveAndQuit(policy, minutesUntilSend) {
               });
               receiver.on('message', function (msg) {
                 if (msg.body && msg.body.DataValue && msg.body.DataValue === msgVal) {
-                  client.disconnect().then(function () {
+                  receiver.detach().then(function () {
                     console.log("\n=================\nExpected Value Seen\n==================\n");
-                    resolve();
+                    resolve({client: client, sender: sender});
                   });
                 }
               });
@@ -116,17 +144,14 @@ function sendReceiveAndQuit(policy, minutesUntilSend) {
 var noReattach = Policy.merge({ senderLink: { reattach: null }, receiverLink: { reattach: null } }, Policy.ServiceBusQueue);
 var reattach = Policy.ServiceBusQueue;
 
-var minutesUntilServiceBusDropsLink = 10;
 var minutesUntilServiceBusDropsConnection = 20;
-var festerMinutes = 60;
-
-sendReceiveAndQuit(noReattach, festerMinutes).then(function() {
-  console.log("\n==================\nComplete\n==================");
-});
-/*
-sendReceiveAndQuit(reattach, minutesUntilServiceBusDropsLink+ 1).then(function() {
-  sendReceiveAndQuit(noReattach, minutesUntilServiceBusDropsConnection + 1).then(function() {
-    console.log("\n==================\nComplete\n==================");
+sendReceive(noReattach, minutesUntilServiceBusDropsConnection + 1).then(function(state) {
+  console.log('==============> COMPLETED FIRST <==================');
+  sendReceiveMore(state, minutesUntilServiceBusDropsConnection + 1).then(function () {
+    console.log('==============> COMPLETED SECOND <==================');
+    sendReceiveMore(state, minutesUntilServiceBusDropsConnection).then(function() {
+      console.log('==============> COMPLETED ALL <==================');
+    })
   });
 });
-*/
+
