@@ -17,7 +17,7 @@ fixjsstyle:
 	fixjsstyle -r lib -r test --strict --jslint_error=all
 
 coverage: jshint
-	$(NPM_BIN)\istanbul.cmd cover $(_MOCHA) --recursive --report lcovonly -- -t 10000 --ui tdd $(TESTS)
+	$(NPM_BIN)\istanbul.cmd cover $(_MOCHA) --report lcovonly -- --recursive -t 10000 --ui tdd $(TESTS)
 
 coverage-report: jshint
 	$(NPM_BIN)\istanbul.cmd cover $(_MOCHA) -- -t 10000 --ui tdd $(TESTS)
