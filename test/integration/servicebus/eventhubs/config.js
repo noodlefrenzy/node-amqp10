@@ -4,6 +4,7 @@ module.exports = {
   protocol: 'amqps',
   serviceBusHost: process.env.ServiceBusNamespace,
   senderLink: process.env.EventHubName,
+  partitionSenderLinkPrefix: process.env.EventHubName + '/Partitions/',
   receiverLinkPrefix: process.env.EventHubName + '/ConsumerGroups/$default/Partitions/',
   partitionCount: process.env.EventHubPartitionCount,
   sasKeyName: process.env.EventHubKeyName,
