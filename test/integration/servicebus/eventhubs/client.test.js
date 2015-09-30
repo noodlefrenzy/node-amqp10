@@ -152,7 +152,7 @@ describe('ServiceBus', function() {
                     }
                   });
                   return sender.send({"DataString": "From Node v2", "DataValue": msgVal2});
-                })
+                });
               });
             }
           });
