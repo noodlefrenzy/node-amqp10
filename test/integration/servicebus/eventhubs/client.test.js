@@ -27,7 +27,7 @@ describe('ServiceBus', function() {
     });
 
     it('should connect, send, and receive a message', function (done) {
-      expect(config.senderLink, 'Required environment variables').to.exist;
+      expect(config.senderLink, 'Required env vars not found in ' + Object.keys(process.env)).to.exist;
       var msgVal = uuid.v4();
       test.client.connect(config.address)
         .then(function() {
@@ -54,7 +54,7 @@ describe('ServiceBus', function() {
     });
 
     it('should create receiver with date-based x-header', function (done) {
-      expect(config.senderLink, 'Required environment variables').to.exist;
+      expect(config.senderLink, 'Required env vars not found in ' + Object.keys(process.env)).to.exist;
       var msgVal = uuid.v4();
       var now = Date.now() - (1000 * 5); // 5 seconds ago
       var filterOptions = {
