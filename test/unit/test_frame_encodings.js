@@ -192,7 +192,7 @@ describe('TransferFrame', function() {
     });
     transfer.channel = 1;
     transfer.message = new M.Message();
-    transfer.message.body.push(new ForcedType('uint', 10));
+    transfer.message.body = new ForcedType('uint', 10);
     var actual = tu.convertFrameToBuffer(transfer);
     var payloadSize = 12;
     var listSize = 1 + 2 + 2 + 3 + 5 + 1 + 1 + 2 + 1 + 1 + 1 + 1;

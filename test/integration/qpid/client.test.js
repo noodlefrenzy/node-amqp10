@@ -81,6 +81,16 @@ describe('Client', function() {
       });
   });
 
+  it('should be able to detach a link', function() {
+    return test.client.connect(config.address)
+      .then(function() {
+        return test.client.createSender(config.defaultLink);
+      })
+      .then(function(sender) {
+        return sender.detach();
+      });
+  });
+
   describe('Messages', function() {
     [
       {
@@ -139,9 +149,7 @@ describe('Client', function() {
             durable: true,
             priority: 2,
             ttl: 150,
-            firstAcquirer: true,
-            deliveryCount: 0  // this is the default, qpid doesn't seem to do
-                              // anything when I send a value
+            firstAcquirer: true
           }
         }
       },

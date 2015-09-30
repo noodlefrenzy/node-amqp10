@@ -27,15 +27,14 @@ describe('ServiceBus', function() {
     });
 
     it('should connect, send, and receive a message', function (done) {
-      var msgVal = uuid.v4();
       expect(config.senderLink, 'Required environment variables').to.exist;
+      var msgVal = uuid.v4();
       test.client.connect(config.address)
-        .then(function () {
-          return Promise.all(_.range(config.partitionCount).
-            map(function (partition) {
-              return test.client.createReceiver(config.receiverLinkPrefix + partition);
-            }).
-            concat(test.client.createSender(config.senderLink)));
+        .then(function() {
+          return Promise.all(
+            _.range(config.partitionCount).map(function(partition) { return test.client.createReceiver(config.receiverLinkPrefix + partition); }).
+              concat(test.client.createSender(config.senderLink))
+          );
         })
         .then(function (links) {
           var sender = links.pop();
@@ -54,16 +53,37 @@ describe('ServiceBus', function() {
         });
     });
 
-    it('should return the same link when one sender link is attaching', function () {
-      return test.client.connect(config.address)
-        .then(function () {
-          return Promise.all([
-            test.client.createSender(config.defaultLink),
-            test.client.createSender(config.defaultLink)
-          ]);
+    it('should create receiver with date-based x-header', function (done) {
+      expect(config.senderLink, 'Required environment variables').to.exist;
+      var msgVal = uuid.v4();
+      var now = Date.now() - (1000 * 5); // 5 seconds ago
+      var filterOptions = {
+        filter: {
+          'apache.org:selector-filter:string': AMQPClient.adapters.Translator(
+            ['described', ['symbol', 'apache.org:selector-filter:string'], ['string', "amqp.annotation.x-opt-enqueuedtimeutc > " + now]])
+        }
+      };
+      test.client.connect(config.address)
+        .then(function() {
+          return Promise.all(
+            _.range(config.partitionCount).map(function(partition) { return test.client.createReceiver(config.receiverLinkPrefix + partition, filterOptions); }).
+              concat(test.client.createSender(config.senderLink))
+          );
         })
-        .spread(function (first, second) {
-          expect(first).to.eql(second);
+        .then(function (links) {
+          var sender = links.pop();
+          _.each(links, function (receiver) {
+            receiver.on('message', function (message) {
+              expect(message).to.exist;
+              expect(message.body).to.exist;
+              // Ignore messages that aren't from us.
+              if (!!message.body.DataValue && message.body.DataValue === msgVal) {
+                done();
+              }
+            });
+          });
+
+          return sender.send({"DataString": "From Node v2", "DataValue": msgVal});
         });
     });
   });

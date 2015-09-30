@@ -21,7 +21,7 @@ var AMQPClient  = require('../lib').Client,
 // Here, I'm setting a global offset, just to show you how it's done. See node-sbus-amqp10 for a wrapper library that will
 // take care of this for you.
 var filterOffset; // example filter offset value might be: 43350;
-var filterOption;
+var filterOption; // todo:: need a x-opt-offset per partition.
 if (filterOffset) {
   filterOption = {
     filter: {
@@ -83,16 +83,18 @@ if (process.argv.length < 3) {
       });
     }
   };
-
-  var client = new AMQPClient(Policy.EventHub);
-  client.connect(uri).then(function () {
-    for (var idx = 0; idx < numPartitions; ++idx) {
-      var curIdx = idx;
-      var curRcvAddr = recvAddr + curIdx;
-      client.createReceiver(curRcvAddr, filterOption).then(function (receiver) {
+  
+  var setupReceiver = function(curIdx, curRcvAddr, filterOption) {
+    client.createReceiver(curRcvAddr, filterOption)
+      .then(function (receiver) {
         receiver.on('message', messageHandler.bind(null, curIdx));
         receiver.on('errorReceived', errorHandler.bind(null, curIdx));
       })
+  }
+  var client = new AMQPClient(Policy.EventHub);
+  client.connect(uri).then(function () {
+    for (var idx = 0; idx < numPartitions; ++idx) {
+      setupReceiver(idx, recvAddr + idx, filterOption) // TODO:: filterOption-> checkpoints are per partition.
     }
     // {'x-opt-partition-key': 'pk' + msgVal}
     client.createSender(sendAddr).then(function (sender) {
