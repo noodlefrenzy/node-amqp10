@@ -174,5 +174,90 @@ describe('Connection', function() {
 
       connection.open({ protocol: 'amqp', host: 'localhost', port: server.port });
     });
+    
+    it('should error when header received is invalid', function(done) {
+      server = new MockServer();
+      server.setSequence([
+        constants.amqpVersion,
+        new OpenFrame(DefaultPolicy.connect.options),
+        new CloseFrame()
+      ], [
+        'BOGUS_HEADER',
+        new OpenFrame(DefaultPolicy.connect.options),
+        [ true, new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
+      ]);
+
+      var connection = new Connection(DefaultPolicy.connect);
+      server.setup(connection);
+
+      var events = [];
+      connection.on(Connection.Connected, function() { events.push(Connection.Connected); });
+      connection.on(Connection.Disconnected, function() { events.push(Connection.Disconnected); });
+      connection.on(Connection.FrameReceived, function(frame) { events.push([Connection.FrameReceived, frame]); });
+      connection.on(Connection.ErrorReceived, function(err) { events.push([Connection.ErrorReceived, err]); });
+
+      var expected = [
+        'DISCONNECTED', 'START', 'HDR_SENT', 'DISCONNECTING', 'DISCONNECTED'
+      ];
+
+      connection.connSM.bind(tu.assertTransitions(expected, function(actual) {
+        // NOTE: need to wait a tick for the event emitter, consider reordering
+        //       event emission in Connection.prototype._processCloseFrame
+        
+        process.nextTick(function() {
+          expect(events).to.have.length(3);
+          expect(events[0][0]).to.eql(Connection.ErrorReceived);
+          expect(events[0][1]).to.include('Invalid AMQP version');
+          expect(events[1]).to.eql(Connection.Disconnected);
+          expect(events[2]).to.eql(Connection.Disconnected);
+          done();
+        });
+      }));
+
+      connection.open({ protocol: 'amqp', host: 'localhost', port: server.port });
+    });
+    
+    it('should inform when credentials are expected', function(done) {
+      server = new MockServer();
+      server.setSequence([
+        constants.amqpVersion,
+        new OpenFrame(DefaultPolicy.connect.options),
+        new CloseFrame()
+      ], [
+        constants.saslVersion,
+        new OpenFrame(DefaultPolicy.connect.options),
+        [ true, new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
+      ]);
+
+      var connection = new Connection(DefaultPolicy.connect);
+      server.setup(connection);
+
+      var events = [];
+      connection.on(Connection.Connected, function() { events.push(Connection.Connected); });
+      connection.on(Connection.Disconnected, function() { events.push(Connection.Disconnected); });
+      connection.on(Connection.FrameReceived, function(frame) { events.push([Connection.FrameReceived, frame]); });
+      connection.on(Connection.ErrorReceived, function(err) { events.push([Connection.ErrorReceived, err]); });
+
+      var expected = [
+        'DISCONNECTED', 'START', 'HDR_SENT', 'DISCONNECTING', 'DISCONNECTED'
+      ];
+
+      connection.connSM.bind(tu.assertTransitions(expected, function(actual) {
+        // NOTE: need to wait a tick for the event emitter, consider reordering
+        //       event emission in Connection.prototype._processCloseFrame
+        
+        process.nextTick(function() {
+          expect(events).to.have.length(3);
+          expect(events[0][0]).to.eql(Connection.ErrorReceived);
+          expect(events[0][1]).to.include('Credentials Expected');
+          expect(events[1]).to.eql(Connection.Disconnected);
+          expect(events[2]).to.eql(Connection.Disconnected);
+          done();
+        });
+      }));
+
+      connection.open({ protocol: 'amqp', host: 'localhost', port: server.port });
+    });
+    
   });
 });
