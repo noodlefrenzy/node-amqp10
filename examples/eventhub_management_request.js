@@ -17,25 +17,25 @@ var AMQPClient  = require('../lib').Client,
   Policy = require('../lib').Policy,
   Promise = require('bluebird');
 
-// Simple argument-checker, you can ignore.
-function argCheck(settings, options) {
-  var missing = [];
-  for (var idx in options) {
-    if (settings[options[idx]] === undefined) missing.push(options[idx]);
-  }
-  if (missing.length > 0) {
-    throw new Error('Required settings ' + (missing.join(', ')) + ' missing.');
-  }
+var settingsFile = process.argv[2];
+var settings = {};
+if (settingsFile) {
+  settings = require('./' + settingsFile);
+} else {
+  settings = {
+    serviceBusHost: process.env.ServiceBusNamespace,
+    eventHubName: process.env.EventHubName,
+    partitions: process.env.EventHubPartitionCount,
+    SASKeyName: process.env.EventHubKeyName,
+    SASKey: process.env.EventHubKey
+  };
 }
 
-if (process.argv.length < 3) {
-  console.warn('Usage: node ' + process.argv[1] + ' <settings json file>');
+if (!settings.serviceBusHost || !settings.eventHubName || !settings.SASKeyName || !settings.SASKey || !settings.partitions) {
+  console.warn('Must provide either settings json file or appropriate environment variables.');
   process.exit(1);
 }
 
-var settingsFile = process.argv[2];
-var settings = require('./' + settingsFile);
-argCheck(settings, ['serviceBusHost', 'SASKeyName', 'SASKey', 'eventHubName', 'partitions']);
 var protocol = settings.protocol || 'amqps';
 var serviceBusHost = settings.serviceBusHost + '.servicebus.windows.net';
 if (settings.serviceBusHost.indexOf(".") !== -1) {
@@ -69,7 +69,7 @@ client.connect(uri).then(function () {
     client.disconnect().then(function() {
       console.log('=== Disconnected ===');
       process.exit(0);
-    })
+    });
   });
   sender.on('errorReceived', function (tx_err) {
     console.warn('===> TX ERROR: ', tx_err);

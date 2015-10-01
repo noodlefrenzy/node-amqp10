@@ -11,7 +11,7 @@ QPID_INTEGRATION_TESTS = .\test\integration\qpid
 SERVICEBUS_INTEGRATION_TESTS = .\test\integration\servicebus
 
 jshint:
-	$(NPM_BIN)\jshint.cmd lib test tools
+	$(NPM_BIN)\jshint.cmd lib test tools examples
 
 fixjsstyle:
 	fixjsstyle -r lib -r test --strict --jslint_error=all

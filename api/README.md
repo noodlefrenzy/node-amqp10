@@ -148,41 +148,44 @@ Differs from <em>??</em> by operating <em>only</em> on undefined, and not on nul
 <a name="AMQPClient"></a>
 ## AMQPClient
 **Kind**: global class  
-
-* [AMQPClient](#AMQPClient)
-  * [new AMQPClient([policy])](#new_AMQPClient_new)
-  * [.constants](#AMQPClient.constants)
-  * [.adapters](#AMQPClient.adapters)
-
 <a name="new_AMQPClient_new"></a>
 ### new AMQPClient([policy])
-AMQPClient is the top-level class for interacting with node-amqp10.  Instantiate this class, connect, and then send/receiveas needed and behind the scenes it will do the appropriate work to setup and teardown connections, sessions, and links and manage flow.The code does its best to avoid exposing AMQP-specific types and attempts to convert them where possible, but on the off-chance youneed to speak AMQP-specific (e.g. to set a filter to a described-type), you can use node-amqp-encoder and theAMQPClient.adapters.Translator adapter to convert it to our internal types.  See simple_eventhub_test.js for an example.Configuring AMQPClient is done through a Policy class.  By default, DefaultPolicy will be used - it assumes AMQP defaults whereverpossible, and for values with no spec-defined defaults it tries to assume something reasonable (e.g. timeout, max message size).To define a new policy, you can merge your values into an existing one by calling AMQPClient.policies.merge(yourPolicy, existingPolicy).This does a deep-merge, allowing you to only replace values you need.  For instance, if you wanted the default sender settle policy to be auto-settle instead of mixed,you could just use
+AMQPClient is the top-level class for interacting with node-amqp10.  Instantiate this class, connect, and then send/receive
+as needed and behind the scenes it will do the appropriate work to setup and teardown connections, sessions, and links and manage flow.
+The code does its best to avoid exposing AMQP-specific types and attempts to convert them where possible, but on the off-chance you
+need to speak AMQP-specific (e.g. to set a filter to a described-type), you can use node-amqp-encoder and the
+translator adapter to convert it to our internal types.  See simple_eventhub_test.js for an example.
+
+Configuring AMQPClient is done through a Policy class.  By default, DefaultPolicy will be used - it assumes AMQP defaults wherever
+possible, and for values with no spec-defined defaults it tries to assume something reasonable (e.g. timeout, max message size).
+
+To define a new policy, you can merge your values into an existing one by calling AMQPClient.policies.merge(yourPolicy, existingPolicy).
+This does a deep-merge, allowing you to only replace values you need.  For instance, if you wanted the default sender settle policy to be auto-settle instead of mixed,
+you could just use
+
  <pre>
- var AMQPClient = require('amqp10').Client;
- var client = new AMQPClient(AMQPClient.policies.merge({
+ var AMQP = require('amqp10');
+ var client = new AMQP.Client(AMQP.Policy.merge({
    senderLink: {
      attach: {
-       senderSettleMode: AMQPClient.constants.senderSettleMode.settled
+       senderSettleMode: AMQP.Constants.senderSettleMode.settled
      }
    }
  });
- </pre>Obviously, setting some of these options requires some in-depth knowledge of AMQP, so I've tried to define specific policies where I can.For instance, for Azure EventHub connections, you can use the pre-build EventHubPolicy.Also, within the policy, see the encoder and decoder defined in the send/receive policies.  These define what to do with the messagesent/received, and by default do a simple pass-through, leaving the encoding to/decoding from AMQP-specific types up to the library whichdoes a best-effort job.  See EventHubPolicy for a more complicated example, turning objects into UTF8-encoded buffers of JSON-strings.If, on construction, you provide a uri and a callback, I will immediately attempt to connect, allowing you to go directly frominstantiation to sending messages.
+ </pre>
+
+Obviously, setting some of these options requires some in-depth knowledge of AMQP, so I've tried to define specific policies where I can.
+For instance, for Azure EventHub connections, you can use the pre-build EventHubPolicy.
+
+Also, within the policy, see the encoder and decoder defined in the send/receive policies.  These define what to do with the message
+sent/received, and by default do a simple pass-through, leaving the encoding to/decoding from AMQP-specific types up to the library which
+does a best-effort job.  See EventHubPolicy for a more complicated example, turning objects into UTF8-encoded buffers of JSON-strings.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
 | [policy] | <code>DefaultPolicy</code> | Policy to use for connection, sessions, links, etc.  Defaults to DefaultPolicy. |
 
-<a name="AMQPClient.constants"></a>
-### AMQPClient.constants
-Exposes various AMQP-related constants, for use in policy overrides.
-
-**Kind**: static property of <code>[AMQPClient](#AMQPClient)</code>  
-<a name="AMQPClient.adapters"></a>
-### AMQPClient.adapters
-Map of various adapters from other AMQP-reliant libraries to the interface herein.Of primary interest in Translator, which allows you to translate from node-amqp-encoder'd values into theinternal types used in this library.  (e.g. [ 'symbol', 'symval' ] => Symbol('symval') ).
-
-**Kind**: static property of <code>[AMQPClient](#AMQPClient)</code>  
 <a name="Codec"></a>
 ## Codec
 **Kind**: global class  
@@ -938,7 +941,9 @@ Actual AMQP Message, which as defined by the spec looks like:
 
 <a name="connect"></a>
 ## connect(url) ⇒ <code>Promise</code>
-Connects to a given AMQP server endpoint. Sets the default queue, so e.g.amqp://my-activemq-host/my-queue-name would set the default queue tomy-queue-name for future send/receive calls.
+Connects to a given AMQP server endpoint. Sets the default queue, so e.g.
+amqp://my-activemq-host/my-queue-name would set the default queue to
+my-queue-name for future send/receive calls.
 
 **Kind**: global function  
 
@@ -960,7 +965,9 @@ Creates a sender link for the given address, with optional link policy
 
 <a name="createReceiver"></a>
 ## createReceiver(address, [policyOverrides]) ⇒ <code>Promise</code>
-Creates a receiver link for the given address, with optional link policy. Thepromise returned resolves to a link that is an EventEmitter, which can beused to listen for 'message' events.
+Creates a receiver link for the given address, with optional link policy. The
+promise returned resolves to a link that is an EventEmitter, which can be
+used to listen for 'message' events.
 
 **Kind**: global function  
 
@@ -972,7 +979,8 @@ Creates a receiver link for the given address, with optional link policy. Thepr
 
 <a name="disconnect"></a>
 ## disconnect() ⇒ <code>Promise</code>
-Disconnect tears down any existing connection with appropriate Closeperformatives and TCP socket teardowns.
+Disconnect tears down any existing connection with appropriate Close
+performatives and TCP socket teardowns.
 
 **Kind**: global function  
 <a name="send"></a>

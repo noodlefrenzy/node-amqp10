@@ -21,7 +21,7 @@ client.connect(uri).then(function () {
         } else {
             console.log('Recv: ');
             console.log(message.body);
-            if (annotations) {
+            if (message.annotations) {
                 console.log('Annotations:');
                 console.log(message.annotations);
             }

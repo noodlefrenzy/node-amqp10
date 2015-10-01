@@ -9,7 +9,7 @@ SERVICEBUS_INTEGRATION_TESTS = ./test/integration/servicebus
 NPM_BIN = ./node_modules/.bin
 
 jshint:
-	$(NPM_BIN)/jshint lib test tools
+	$(NPM_BIN)/jshint lib test tools examples
 
 fixjsstyle:
 	fixjsstyle -r lib -r test --strict --jslint_error=all
