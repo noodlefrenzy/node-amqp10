@@ -24,10 +24,10 @@ var filterOffset; // example filter offset value might be: 43350;
 var filterOption; // todo:: need a x-opt-offset per partition.
 if (filterOffset) {
   filterOption = {
-    filter: {
+    attach: { source: { filter: {
       'apache.org:selector-filter:string': AMQPClient.adapters.Translator(
         ['described', ['symbol', 'apache.org:selector-filter:string'], ['string', "amqp.annotation.x-opt-offset > '" + filterOffset + "'"]])
-    }
+    } } }
   };
 }
 

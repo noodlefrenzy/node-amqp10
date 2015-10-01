@@ -27,7 +27,7 @@ describe('ServiceBus', function() {
 
     it('should connect, send, and receive a message', function(done) {
       var msgVal = uuid.v4();
-      expect(config.serviceBusHost, 'Required environment variables').to.exist;
+      expect(config.serviceBusHost, 'Required env vars not found in ' + Object.keys(process.env)).to.exist;
       test.client.connect(config.address)
         .then(function() {
           return Promise.all([
