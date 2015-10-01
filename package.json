@@ -21,6 +21,7 @@
   "devDependencies": {
     "chai": "^2.0.0",
     "istanbul": "^0.3.6",
+    "jsdoc-to-markdown": "^1.2.0",
     "jshint": "^2.6.0",
     "mocha": "^2.1.0",
     "qmf2": "^0.0.5",

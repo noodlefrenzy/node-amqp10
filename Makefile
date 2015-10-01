@@ -31,4 +31,7 @@ test-servicebus: jshint
 
 test: test-unit test-qpid test-servicebus
 
+apidoc: jshint
+	$(NPM_BIN)/jsdoc2md --src lib/**/*.js > api/README.md
+
 .PHONY: jshint fixjsstyle coverage codeclimate-send test
