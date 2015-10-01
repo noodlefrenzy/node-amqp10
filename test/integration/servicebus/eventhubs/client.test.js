@@ -140,14 +140,14 @@ describe('ServiceBus', function() {
                   } } }
                 };
                 test.client.createReceiver(config.receiverLinkPrefix + partition, filterOptions).then(function (receiver2) {
-                  receiver2.on('message', function(message) {
-                    expect(message).to.exist;
-                    expect(message.body).to.exist;
-                    // Ignore messages that aren't from us.
-                    if (!!message.body.DataValue) {
-                      //expect(message.annotations.value['x-opt-enqueued-time'].getTime()).to.be.above(timestamp);
-                      expect(message.body.DataValue).to.not.eql(msgVal1);
-                      expect(message.body.DataValue).to.eql(msgVal2);
+                  receiver2.on('message', function(msg) {
+                    expect(msg).to.exist;
+                    expect(msg.body).to.exist;
+                    // Ignore messages that aren't from this test run.
+                    if (!!msg.body.DataValue && (msg.body.DataValue === msgVal1 || msg.body.DataValue === msgVal2)) {
+                      expect(msg.annotations.value['x-opt-enqueued-time'].getTime()).to.be.above(timestamp);
+                      expect(msg.body.DataValue).to.not.eql(msgVal1);
+                      expect(msg.body.DataValue).to.eql(msgVal2);
                       done();
                     }
                   });
