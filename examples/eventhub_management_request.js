@@ -49,20 +49,6 @@ var numPartitions = settings.partitions;
 var uri = protocol + '://' + encodeURIComponent(sasName) + ':' + encodeURIComponent(sasKey) + '@' + serviceBusHost;
 var managementEndpoint = '$management';
 
-var errorHandler = function(myIdx, rx_err) {
-  console.warn('==> RX ERROR: ', rx_err);
-};
-
-var messageHandler = function (myIdx, msg) {
-  console.log('Recv(' + myIdx + '): ');
-  console.log(msg.body);
-  if (msg.annotations) {
-    console.log('Annotations:');
-    console.log(msg.annotations);
-  }
-  console.log('');
-};
-
 var rxName = 'client-temp-node';
 var rxOptions = { attach: { target: { address: rxName } } };
 var client = new AMQPClient(Policy.EventHub);
@@ -89,9 +75,10 @@ client.connect(uri).then(function () {
     console.warn('===> TX ERROR: ', tx_err);
   });
   var request = { body: "stub", properties: { messageId: 'request1', replyTo: rxName }, applicationProperties: { operation: "READ", name: eventHubName, type: "com.microsoft:eventhub" } };
-  sender.send(request).then(function (state) {
-    console.log('State: ', state);
-  });
+  return sender.send(request);
+})
+.then(function (state) {
+  console.log('State: ', state);
 })
 .catch(function (e) {
   console.warn('Failed to send due to ', e);
