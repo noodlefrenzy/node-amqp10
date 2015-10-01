@@ -15,7 +15,8 @@
 'use strict';
 //var AMQPClient = require('amqp10').Client;
 var AMQPClient  = require('../lib').Client,
-    Policy = require('../lib').Policy;
+    Policy = require('../lib').Policy,
+    Translator = require('../lib').Translator;
 
 // Set the offset for the EventHub - this is where it should start receiving from, and is typically different for each partition
 // Here, I'm setting a global offset, just to show you how it's done. See node-sbus-amqp10 for a wrapper library that will
@@ -25,7 +26,7 @@ var filterOption; // todo:: need a x-opt-offset per partition.
 if (filterOffset) {
   filterOption = {
     attach: { source: { filter: {
-      'apache.org:selector-filter:string': AMQPClient.adapters.Translator(
+      'apache.org:selector-filter:string': Translator(
         ['described', ['symbol', 'apache.org:selector-filter:string'], ['string', "amqp.annotation.x-opt-offset > '" + filterOffset + "'"]])
     } } }
   };
