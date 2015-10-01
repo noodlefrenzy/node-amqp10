@@ -16,68 +16,68 @@
 var AMQPClient  = require('../lib').Client,
     Policy = require('../lib').Policy;
 
-// Simple argument-checker, you can ignore.
-function argCheck(settings, options) {
-  var missing = [];
-  for (var idx in options) {
-    if (settings[options[idx]] === undefined) missing.push(options[idx]);
-  }
-  if (missing.length > 0) {
-    throw new Error('Required settings ' + (missing.join(', ')) + ' missing.');
-  }
+var settingsFile = process.argv[2];
+var settings = {};
+if (settingsFile) {
+  settings = require('./' + settingsFile);
+} else {
+  settings = {
+    serviceBusHost: process.env.ServiceBusNamespace,
+    queueName: process.env.ServiceBusQueueName,
+    SASKeyName: process.env.ServiceBusQueueKeyName,
+    SASKey: process.env.ServiceBusQueueKey
+  };
 }
 
-if (process.argv.length < 3) {
-  console.warn('Usage: node ' + process.argv[1] + ' <settings json file>');
-} else {
-  var settingsFile = process.argv[2];
-  var settings = require('./' + settingsFile);
-  argCheck(settings, ['serviceBusHost', 'SASKeyName', 'SASKey', 'queueName']);
-  var protocol = settings.protocol || 'amqps';
-  var serviceBusHost = settings.serviceBusHost + '.servicebus.windows.net';
-  if (settings.serviceBusHost.indexOf(".") !== -1) {
-    serviceBusHost = settings.serviceBusHost;
-  }
-  var sasName = settings.SASKeyName;
-  var sasKey = settings.SASKey;
-  var queueName = settings.queueName;
+if (!settings.serviceBusHost || !settings.queueName || !settings.SASKeyName || !settings.SASKey) {
+  console.warn('Must provide either settings json file or appropriate environment variables.');
+  process.exit(1);
+}
 
-  var msgVal = Math.floor(Math.random() * 1000000);
+var protocol = settings.protocol || 'amqps';
+var serviceBusHost = settings.serviceBusHost + '.servicebus.windows.net';
+if (settings.serviceBusHost.indexOf(".") !== -1) {
+  serviceBusHost = settings.serviceBusHost;
+}
+var sasName = settings.SASKeyName;
+var sasKey = settings.SASKey;
+var queueName = settings.queueName;
 
-  var uri = protocol + '://' + encodeURIComponent(sasName) + ':' + encodeURIComponent(sasKey) + '@' + serviceBusHost;
+var msgVal = Math.floor(Math.random() * 1000000);
 
-  var client = new AMQPClient(Policy.ServiceBusQueue);
-  client.connect(uri).then(function () {
-    client.createSender(queueName).then(function (sender) {
-      sender.on('errorReceived', function(tx_err) {
-        console.warn('===> TX ERROR: ', tx_err);
+var uri = protocol + '://' + encodeURIComponent(sasName) + ':' + encodeURIComponent(sasKey) + '@' + serviceBusHost;
+
+var client = new AMQPClient(Policy.ServiceBusQueue);
+client.connect(uri).then(function () {
+  client.createSender(queueName).then(function (sender) {
+    sender.on('errorReceived', function(tx_err) {
+      console.warn('===> TX ERROR: ', tx_err);
+    });
+    client.createReceiver(queueName).then(function (receiver) {
+      receiver.on('message', function (message) {
+        console.log('Recv: ');
+        console.log(message.body);
+        if (message.annotations) {
+          console.log('Annotations:');
+          console.log(message.annotations);
+        }
+        console.log('');
+        if (message.body.DataValue === msgVal) {
+          client.disconnect().then(function () {
+            console.log("Disconnected, when we saw the value we'd inserted.");
+            process.exit(0);
+          });
+        }
       });
-      client.createReceiver(queueName).then(function (receiver) {
-        receiver.on('message', function (message) {
-          console.log('Recv: ');
-          console.log(message.body);
-          if (message.annotations) {
-            console.log('Annotations:');
-            console.log(message.annotations);
-          }
-          console.log('');
-          if (message.body.DataValue === msgVal) {
-            client.disconnect().then(function () {
-              console.log("Disconnected, when we saw the value we'd inserted.");
-              process.exit(0);
-            });
-          }
-        });
-        receiver.on('errorReceived', function(rx_err) {
-          console.warn('===> RX ERROR: ', rx_err);
-        });
-        sender.send({"DataString": "From Node", "DataValue": msgVal}).then(function (state) {
-          console.log('State: ', state);
-        });
+      receiver.on('errorReceived', function(rx_err) {
+        console.warn('===> RX ERROR: ', rx_err);
+      });
+      sender.send({"DataString": "From Node", "DataValue": msgVal}).then(function (state) {
+        console.log('State: ', state);
       });
     });
-  }).catch(function (e) {
-    console.warn('Error send/receive: ', e);
   });
-}
+}).catch(function (e) {
+  console.warn('Error send/receive: ', e);
+});
 

@@ -17,25 +17,24 @@ var AMQPClient  = require('../lib').Client,
     Policy = require('../lib').Policy,
     util = require('util');
 
-// Simple argument-checker, you can ignore.
-function argCheck(settings, options) {
-  var missing = [];
-  for (var idx in options) {
-    if (settings[options[idx]] === undefined) missing.push(options[idx]);
-  }
-  if (missing.length > 0) {
-    throw new Error('Required settings ' + (missing.join(', ')) + ' missing.');
-  }
-}
-
-if (process.argv.length < 3) {
-  console.warn('Usage: node '+process.argv[1]+' <settings json file>');
-  return process.exit(0);
-}
-
 var settingsFile = process.argv[2];
-var settings = require('./' + settingsFile);
-argCheck(settings, ['serviceBusHost', 'SASKeyName', 'SASKey', 'topicName', 'subscriptionName']);
+var settings = {};
+if (settingsFile) {
+  settings = require('./' + settingsFile);
+} else {
+  settings = {
+    serviceBusHost: process.env.ServiceBusNamespace,
+    topicName: process.env.ServiceBusTopicName,
+    subscriptionName: process.env.ServiceBusTopicSubscriptionName,
+    SASKeyName: process.env.ServiceBusTopicKeyName,
+    SASKey: process.env.ServiceBusTopicKey
+  };
+}
+
+if (!settings.serviceBusHost || !settings.topicName || !settings.subscriptionName || !settings.SASKeyName || !settings.SASKey) {
+  console.warn('Must provide either settings json file or appropriate environment variables.');
+  process.exit(1);
+}
 
 var protocol = settings.protocol || 'amqps';
 var serviceBusHost = settings.serviceBusHost + '.servicebus.windows.net';

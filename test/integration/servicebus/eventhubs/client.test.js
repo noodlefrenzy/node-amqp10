@@ -1,7 +1,7 @@
 'use strict';
 var AMQPClient = require('../../../../lib/index.js').Client,
   Policy = require('../../../../lib/index').Policy,
-  Translator = require('../../../../lib/index').Translator,
+  translator = require('../../../../lib/index').translator,
   Message = require('../../../../lib/types/message'),
   Promise = require('bluebird'),
   config = require('./config'),
@@ -60,7 +60,7 @@ describe('ServiceBus', function() {
       var now = Date.now() - (1000 * 5); // 5 seconds ago
       var filterOptions = {
         attach: { source: { filter: {
-          'apache.org:selector-filter:string': Translator(
+          'apache.org:selector-filter:string': translator(
             ['described', ['symbol', 'apache.org:selector-filter:string'], ['string', "amqp.annotation.x-opt-enqueuedtimeutc > " + now]])
         } } }
       };
@@ -136,7 +136,7 @@ describe('ServiceBus', function() {
               receiver.detach().then(function() {
                 var filterOptions = {
                   attach: { source: { filter: {
-                    'apache.org:selector-filter:string': Translator(
+                    'apache.org:selector-filter:string': translator(
                       ['described', ['symbol', 'apache.org:selector-filter:string'], ['string', "amqp.annotation.x-opt-offset > '" + offset + "'"]])
                   } } }
                 };

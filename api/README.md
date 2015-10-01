@@ -154,7 +154,7 @@ AMQPClient is the top-level class for interacting with node-amqp10.  Instantiate
 as needed and behind the scenes it will do the appropriate work to setup and teardown connections, sessions, and links and manage flow.
 The code does its best to avoid exposing AMQP-specific types and attempts to convert them where possible, but on the off-chance you
 need to speak AMQP-specific (e.g. to set a filter to a described-type), you can use node-amqp-encoder and the
-Translator adapter to convert it to our internal types.  See simple_eventhub_test.js for an example.
+translator adapter to convert it to our internal types.  See simple_eventhub_test.js for an example.
 
 Configuring AMQPClient is done through a Policy class.  By default, DefaultPolicy will be used - it assumes AMQP defaults wherever
 possible, and for values with no spec-defined defaults it tries to assume something reasonable (e.g. timeout, max message size).
