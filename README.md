@@ -20,20 +20,27 @@ See `simple_eventhub_test.js` or `simple_activemq_test.js` for examples.
 The basic usage is to require the module, new up a client with the appropriate policy for the server you're connecting against,
 connect, and then send/receive as necessary.  So a simple example for a local ActiveMQ server would look like:
 
-    var AMQPClient = require('amqp10').Client;
+    var AMQPClient = require('amqp10').Client,
+        Promise = require('bluebird');
+
     var client = new AMQPClient(); // Uses PolicyBase default policy
-    client.connect('amqp://localhost/myqueue')
+    client.connect('amqp://localhost')
       .then(function() {
-        client.receive(function (rx_err, message) {
-          // ... check for errors ...
-          console.log('Rx message: ');
-          console.log(JSON.parse(message.body));
+        return Promise.all([
+          client.createReceiver('amq.topic'),
+          client.createSender('amq.topic')
+        ]);
+      })
+      .spread(function(receiver, sender) {
+        receiver.on('errorReceived', function(err) { // check for errors });
+        receiver.on('message', function(message) {
+          console.log('Rx message: ', message.body);
         });
 
-        return client.send(JSON.stringify({ key: "Value" }));
+        return sender.send({ key: "Value" });
       })
       .catch(function(err) {
-        console.log("error: " + err);
+        console.log("error: ", err);
       });
 
 
@@ -58,16 +65,17 @@ all through policy overrides.  See [PolicyBase](https://github.com/noodlefrenzy/
 
 ## Supported Servers ##
 
-We are currently actively running against the following servers:
+We are currently actively running integration tests against the following servers:
 
 1. Azure EventHubs
 1. Azure ServiceBus Queues and Topics
+1. Apache Qpid C++ broker (qpidd)
 
 We have been tested against the following servers, but not exhaustively so issues may remain:
 
 1. ActiveMQ (open issue related to ActiveMQ ignoring the auto-settle setting and disposition frames may cause messages to re-deliver or stop sending after a certain period)
 1. RabbitMQ with the amqp 1.0 experimental extension
-1. QPID server
+1. Apache Qpid Java broker
 
 If you find any issues, please report them via GitHub.
 
@@ -76,8 +84,7 @@ If you find any issues, please report them via GitHub.
 I'm trying to manage my remaining work items via Github issues, but they aren't always kept up to date.  If you'd like to contribute,
 feel free to send me an email or pull request.  Below is a high-level list of known open issues:
 
-1. Disposition frames are not dealt with properly, and thus message lifecycles aren't tracked correctly.  Specifically, we don't
-   send disposition frames on receipt, and we don't send proper "unsettled" information when re-attaching links.
+1. Disposition support is incomplete in that we don't send proper "unsettled" information when re-attaching links.
 1. There are some AMQP types we don't process - notably the Decimal23/64/128 types.  These are unused by the protocol, and no-one seems to
    be using them to convey information in messages, so ignoring them is likely safe.
 
