@@ -5,8 +5,8 @@ var AMQPClient = require('../../lib').Client,
 
     constants = require('../../lib/constants'),
 
-    SaslFrames = require('../../lib/frames/sasl_frame'),
     OpenFrame = require('../../lib/frames/open_frame'),
+    BeginFrame = require('../../lib/frames/begin_frame'),
     CloseFrame = require('../../lib/frames/close_frame'),
 
     DefaultPolicy = require('../../lib/policies/default_policy'),
@@ -15,7 +15,6 @@ var AMQPClient = require('../../lib').Client,
     test = require('./test-fixture');
 
 DefaultPolicy.connect.options.containerId = 'test';
-
 
 describe('Client', function() {
   describe('#connect()', function() {
@@ -38,17 +37,15 @@ describe('Client', function() {
 
     it('should connect then disconnect', function() {
       test.server.setResponseSequence([
-        constants.saslVersion,
-        [
-          new SaslFrames.SaslMechanisms(['PLAIN']),
-          new SaslFrames.SaslOutcome({code: constants.saslOutcomes.ok})
-        ],
         constants.amqpVersion,
         new OpenFrame(DefaultPolicy.connect.options),
+        new BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0, incomingWindow: 2147483647, outgoingWindow: 2147483647, handleMax: 4294967295
+        }),
         new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test'))
       ]);
 
-      return test.client.connect(test.config.address)
+      return test.client.connect(test.server.address())
         .then(function() {
           return test.client.disconnect();
         });

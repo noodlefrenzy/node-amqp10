@@ -10,17 +10,22 @@ var _ = require('lodash'),
 
     tu = require('../testing_utils');
 
-
 function MockServer(options) {
   this._server = null;
   this._client = null;
   this._responses = [];
 
   _.defaults(this, options, {
+    hostname: '0.0.0.0',
     port: 4321,
     serverGoesFirst: false
   });
 }
+
+MockServer.prototype.address = function() {
+  if (!this.server) throw new Error('no server');
+  return 'amqp://' + this.server.address().address + ':' + this.server.address().port;
+};
 
 MockServer.prototype.setup = function() {
   var self = this;
@@ -47,7 +52,7 @@ MockServer.prototype.setup = function() {
       reject(err);
     });
 
-    self.server.listen(self.port, function() {
+    self.server.listen(self.port, self.hostname, function() {
       debug('server listening on ' + self.port);
       resolve();
     });
@@ -86,7 +91,7 @@ MockServer.prototype.setResponseSequence = function(responses) {
 
 MockServer.prototype._sendNextResponse = function() {
   var self = this,
-      response = this._responses.unshift();
+      response = this._responses.shift();
 
   if (Array.isArray(response)) {
     response.forEach(function(r) { self._sendResponse(r); });
@@ -102,7 +107,9 @@ MockServer.prototype._sendResponse = function(response) {
   }
 
   if (typeof response !== 'string') {
-    this._client.write(response);
+    this._client.write(response, function() {
+      debug('wrote: ', response.toString('hex'));
+    });
     return;
   }
 
