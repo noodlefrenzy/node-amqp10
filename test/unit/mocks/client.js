@@ -1,7 +1,6 @@
 'use strict';
 var EventEmitter = require('events').EventEmitter,
     AMQPClient = require('../../../lib/amqp_client'),
-    constants = require('../../../lib/constants'),
     Connection = require('../../../lib/connection'),
     Session = require('../../../lib/session'),
     Link = require('../../../lib/link'),

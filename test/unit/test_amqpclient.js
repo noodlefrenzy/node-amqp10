@@ -1,20 +1,15 @@
 'use strict';
 
-var debug = require('debug')('amqp10-test_amqpclient'),
-    expect = require('chai').expect,
-    util = require('util'),
-    EventEmitter = require('events').EventEmitter,
+var expect = require('chai').expect,
     Promise = require('bluebird'),
 
-    AMQPClient = require('../../lib/amqp_client'),
     constants = require('../../lib/constants'),
     Connection = require('../../lib/connection'),
     Session = require('../../lib/session'),
     Link = require('../../lib/link'),
 
     Mock = require('./mocks'),
-    u = require('../../lib/utilities'),
-    tu = require('./testing_utils');
+    u = require('../../lib/utilities');
 
 var chai = require('chai');
 chai.config.includeStack = true; // turn on stack trace

@@ -1,7 +1,6 @@
 'use strict';
 
-var debug = require('debug')('amqp10-test_connection'),
-    expect = require('chai').expect,
+var expect = require('chai').expect,
 
     constants = require('../../lib/constants'),
 
@@ -9,30 +8,19 @@ var debug = require('debug')('amqp10-test_connection'),
 
     MockServer = require('./mock_amqp'),
     AMQPError = require('../../lib/types/amqp_error'),
-    Source = require('../../lib/types/source_target').Source,
-    Target = require('../../lib/types/source_target').Target,
-    M = require('../../lib/types/message'),
 
     CloseFrame = require('../../lib/frames/close_frame'),
-    FlowFrame = require('../../lib/frames/flow_frame'),
     OpenFrame = require('../../lib/frames/open_frame'),
 
     Connection = require('../../lib/connection'),
-    Session = require('../../lib/session'),
-    Link = require('../../lib/link'),
 
-    _ = require('lodash'),
     tu = require('./testing_utils');
 
 DefaultPolicy.connect.options.containerId = 'test';
 
 describe('Connection', function() {
   describe('#_open()', function() {
-    var linkName = 'test4';
-    var addr = 'testtgt4';
-
     var server = null;
-
     afterEach(function(done) {
       if (server) {
         server.teardown();
@@ -174,7 +162,7 @@ describe('Connection', function() {
 
       connection.open({ protocol: 'amqp', host: 'localhost', port: server.port });
     });
-    
+
     it('should error when header received is invalid', function(done) {
       server = new MockServer();
       server.setSequence([
@@ -203,7 +191,7 @@ describe('Connection', function() {
       connection.connSM.bind(tu.assertTransitions(expected, function(actual) {
         // NOTE: need to wait a tick for the event emitter, consider reordering
         //       event emission in Connection.prototype._processCloseFrame
-        
+
         process.nextTick(function() {
           expect(events).to.have.length(3);
           expect(events[0][0]).to.eql(Connection.ErrorReceived);
@@ -216,7 +204,7 @@ describe('Connection', function() {
 
       connection.open({ protocol: 'amqp', host: 'localhost', port: server.port });
     });
-    
+
     it('should inform when credentials are expected', function(done) {
       server = new MockServer();
       server.setSequence([
@@ -245,7 +233,7 @@ describe('Connection', function() {
       connection.connSM.bind(tu.assertTransitions(expected, function(actual) {
         // NOTE: need to wait a tick for the event emitter, consider reordering
         //       event emission in Connection.prototype._processCloseFrame
-        
+
         process.nextTick(function() {
           expect(events).to.have.length(3);
           expect(events[0][0]).to.eql(Connection.ErrorReceived);
@@ -258,6 +246,6 @@ describe('Connection', function() {
 
       connection.open({ protocol: 'amqp', host: 'localhost', port: server.port });
     });
-    
+
   });
 });

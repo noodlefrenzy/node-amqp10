@@ -1,18 +1,12 @@
 'use strict';
 
-var Int64 = require('node-int64'),
-    debug = require('debug')('amqp10-test_frame_encodings'),
-    builder = require('buffer-builder'),
+var builder = require('buffer-builder'),
 
-    codec = require('../../lib/codec'),
     constants = require('../../lib/constants'),
 
-    AMQPError = require('../../lib/types/amqp_error'),
-    DescribedType = require('../../lib/types/described_type'),
     ForcedType = require('../../lib/types/forced_type'),
     Source = require('../../lib/types/source_target').Source,
     Target = require('../../lib/types/source_target').Target,
-    Delivery = require('../../lib/types/delivery_state'),
     M = require('../../lib/types/message'),
 
     AttachFrame = require('../../lib/frames/attach_frame'),

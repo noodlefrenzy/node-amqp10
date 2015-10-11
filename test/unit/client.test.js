@@ -12,7 +12,6 @@ var AMQPClient = require('../../lib').Client,
     DefaultPolicy = require('../../lib/policies/default_policy'),
     AMQPError = require('../../lib/types/amqp_error'),
 
-    expect = require('chai').expect,
     test = require('./test-fixture');
 
 DefaultPolicy.connect.options.containerId = 'test';

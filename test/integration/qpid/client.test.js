@@ -3,9 +3,7 @@ var AMQPClient = require('../../..').Client,
     Message = require('../../../lib/types/message'),
     Promise = require('bluebird'),
     config = require('./config'),
-    expect = require('chai').expect,
-
-    M = require('../../../lib/types/message');
+    expect = require('chai').expect;
 
 var test = {};
 describe('QPID', function() {

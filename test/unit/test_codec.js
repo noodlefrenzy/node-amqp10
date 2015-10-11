@@ -2,7 +2,6 @@
 
 var Int64 = require('node-int64'),
     expect = require('chai').expect,
-    debug = require('debug')('amqp10-test-codec'),
     Builder = require('buffer-builder'),
 
     codec = require('../../lib/codec'),

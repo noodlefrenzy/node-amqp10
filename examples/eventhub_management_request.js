@@ -44,7 +44,6 @@ if (settings.serviceBusHost.indexOf(".") !== -1) {
 var sasName = settings.SASKeyName;
 var sasKey = settings.SASKey;
 var eventHubName = settings.eventHubName;
-var numPartitions = settings.partitions;
 
 var uri = protocol + '://' + encodeURIComponent(sasName) + ':' + encodeURIComponent(sasKey) + '@' + serviceBusHost;
 var managementEndpoint = '$management';

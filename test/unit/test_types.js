@@ -1,12 +1,10 @@
 'use strict';
 
-var debug = require('debug')('amqp10-test-types'),
-    expect = require('chai').expect,
+var expect = require('chai').expect,
     builder = require('buffer-builder'),
     BufferBuilder = require('buffer-builder'),
     Int64 = require('node-int64'),
 
-    types = require('../../lib/types'),
     codec = require('../../lib/codec'),
     ForcedType = require('../../lib/types/forced_type'),
 

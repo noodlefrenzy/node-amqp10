@@ -3,15 +3,12 @@
 var BufferList = require('bl'),
     debug = require('debug')('amqp10-MockServer'),
     net = require('net'),
-    StateMachine = require('stately.js'),
     expect = require('chai').expect,
 
     FrameBase = require('../../lib/frames/frame'),
     SaslFrame = require('../../lib/frames/sasl_frame').SaslFrame,
 
-    tu = require('./testing_utils'),
-    constants = require('../../lib/constants'),
-    utils = require('../../lib/utilities');
+    tu = require('./testing_utils');
 
 var MockServer = function(port) {
   this.server = null;

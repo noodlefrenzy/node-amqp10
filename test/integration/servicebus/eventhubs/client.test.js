@@ -2,15 +2,11 @@
 var AMQPClient = require('../../../../lib/index.js').Client,
   Policy = require('../../../../lib/index').Policy,
   translator = require('../../../../lib/index').translator,
-  Message = require('../../../../lib/types/message'),
   Promise = require('bluebird'),
   config = require('./config'),
   expect = require('chai').expect,
   uuid = require('uuid'),
-  debug = require('debug')('amqp10:test:servicebus:queues'),
-  _ = require('lodash'),
-
-  M = require('../../../../lib/types/message');
+  _ = require('lodash');
 
 var test = {};
 describe('ServiceBus', function() {

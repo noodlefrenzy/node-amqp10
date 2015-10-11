@@ -1,7 +1,6 @@
 'use strict';
 
-var debug = require('debug')('amqp10-test_connection'),
-    expect = require('chai').expect,
+var expect = require('chai').expect,
 
     constants = require('../../lib/constants'),
     u = require('../../lib/utilities'),

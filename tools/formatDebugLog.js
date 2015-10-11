@@ -1,9 +1,8 @@
 'use strict';
 
 var fs = require('fs'),
-  util = require('util'),
-  Int64 = require('node-int64'),
-  constants = require('../lib/constants');
+    Int64 = require('node-int64'),
+    constants = require('../lib/constants');
 
 if (process.argv.length < 3) {
   console.warn('Usage: node ' + process.argv[1] + ' <debug output file>');

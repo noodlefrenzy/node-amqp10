@@ -1,14 +1,10 @@
 'use strict';
 var AMQPClient = require('../../../../lib/index.js').Client,
   Policy = require('../../../../lib/index').Policy,
-  Message = require('../../../../lib/types/message'),
   Promise = require('bluebird'),
   config = require('./config'),
   expect = require('chai').expect,
-  uuid = require('uuid'),
-  debug = require('debug')('amqp10:test:servicebus:queues'),
-
-  M = require('../../../../lib/types/message');
+  uuid = require('uuid');
 
 var test = {};
 describe('ServiceBus', function() {

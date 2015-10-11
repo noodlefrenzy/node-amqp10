@@ -1,19 +1,12 @@
 'use strict';
 
-var Int64 = require('node-int64'),
-    expect = require('chai').expect,
-
-    debug = require('debug')('amqp10-test-FrameReader'),
+var expect = require('chai').expect,
     builder = require('buffer-builder'),
 
     constants = require('../../lib/constants'),
-    codec = require('../../lib/codec'),
     errors = require('../../lib/errors'),
 
     AMQPError = require('../../lib/types/amqp_error'),
-    Delivery = require('../../lib/types/delivery_state'),
-    DescribedType = require('../../lib/types/described_type'),
-    ForcedType = require('../../lib/types/forced_type'),
     reader = require('../../lib/frames/frame_reader'),
 
     AttachFrame = require('../../lib/frames/attach_frame'),

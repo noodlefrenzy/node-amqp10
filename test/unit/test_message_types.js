@@ -1,13 +1,8 @@
 'use strict';
 
-var debug = require('debug')('amqp10-test-message-types'),
-  expect = require('chai').expect,
-  Int64 = require('node-int64'),
-
-  M = require('../../lib/types/message'),
-  tu = require('./testing_utils');
-
-var buf = tu.buildBuffer;
+var expect = require('chai').expect,
+    Int64 = require('node-int64'),
+    M = require('../../lib/types/message');
 
 describe('MessageTypes', function() {
   describe('Properties', function() {
