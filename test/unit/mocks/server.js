@@ -2,7 +2,7 @@
 var _ = require('lodash'),
     Promise = require('bluebird'),
     net = require('net'),
-
+    expect = require('chai').expect,
     debug = require('debug')('amqp10:mock:server'),
 
     FrameBase = require('../../../lib/frames/frame'),
@@ -14,6 +14,7 @@ function MockServer(options) {
   this._server = null;
   this._client = null;
   this._responses = [];
+  this._expectedFrames = [];
 
   _.defaults(this, options, {
     hostname: '0.0.0.0',
@@ -22,9 +23,15 @@ function MockServer(options) {
   });
 }
 
-MockServer.prototype.address = function() {
+MockServer.prototype.address = function(user, pass) {
   if (!this.server) throw new Error('no server');
-  return 'amqp://' + this.server.address().address + ':' + this.server.address().port;
+
+  var address = 'amqp://';
+  if (!!user) address += user;
+  if (!!pass) address += ':' + pass;
+  if (!!user || !!pass) address += '@';
+  address += this.server.address().address + ':' + this.server.address().port;
+  return address;
 };
 
 MockServer.prototype.setup = function() {
@@ -44,6 +51,15 @@ MockServer.prototype.setup = function() {
       });
 
       c.on('data', function(d) {
+        debug('read: ', d.toString('hex'));
+        if (self._expectedFrames.length) {
+          var expectedFrame = self._expectedFrames.shift();
+          if (!!expectedFrame) {
+            debug('check: ' + expectedFrame.toString('hex'));
+            expect(d).to.eql(expectedFrame);
+          }
+        }
+
         self._sendNextResponse();
       });
     });
@@ -84,6 +100,16 @@ function convertSequenceFramesToBuffers(frame) {
 
   return frame;
 }
+
+/**
+ * These are the frames we expect to receive from the client. You can
+ * specify "false" for any given frame to indicate that we don't care
+ * what came in (to more readably test a particular frame sequence)
+ */
+MockServer.prototype.setExpectedFrameSequence = function(expected) {
+  this._expectedFrames = expected.map(convertSequenceFramesToBuffers);
+  console.log(this._expectedFrames[0].toString('hex'));
+};
 
 MockServer.prototype.setResponseSequence = function(responses) {
   this._responses = responses.map(convertSequenceFramesToBuffers);
