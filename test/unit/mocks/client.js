@@ -1,5 +1,6 @@
 'use strict';
-var EventEmitter = require('events').EventEmitter,
+var _ = require('lodash'),
+    EventEmitter = require('events').EventEmitter,
     AMQPClient = require('../../../lib/amqp_client'),
     Connection = require('../../../lib/connection'),
     Session = require('../../../lib/session'),
@@ -15,18 +16,23 @@ module.exports = function(c, s) {
   };
 
   client._newSession = function(conn) {
-    for (var lname in s._mockLinks) {
-      var l = s._mockLinks[lname];
-      [Link.MessageReceived, Link.ErrorReceived, Link.CreditChange, Link.Detached].forEach(l.removeAllListeners);
-    }
+    _.values(s._mockLinks).forEach(function(link) {
+      [ Link.MessageReceived, Link.ErrorReceived, Link.CreditChange, Link.Detached ]
+        .forEach(function(event) { link.removeAllListeners(event); });
+    });
+
     expect(c).to.equal(conn);
     s._created++;
     return s;
   };
 
   client._clearState = function() {
-    var connEvts = [Connection.Connected, Connection.Disconnected];
-    var sessEvts = [Session.Mapped, Session.Unmapped, Session.ErrorReceived, Session.LinkAttached, Session.LinkDetached, Session.DispositionReceived];
+    var connEvts = [ Connection.Connected, Connection.Disconnected ];
+    var sessEvts = [
+      Session.Mapped, Session.Unmapped, Session.ErrorReceived, Session.LinkAttached,
+      Session.LinkDetached, Session.DispositionReceived
+    ];
+
     var idx, e;
     for (idx in connEvts) {
       e = connEvts[idx];
