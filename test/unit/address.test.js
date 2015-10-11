@@ -1,5 +1,6 @@
 "use strict";
-var defaultPolicy = require('../../lib/policies/default_policy'),
+var DefaultPolicy = require('../../lib/policies/default_policy'),
+    QpidJavaPolicy = require('../../lib/policies/qpid_java_policy'),
     expect = require('chai').expect;
 
 describe('Address', function() {
@@ -66,7 +67,7 @@ describe('Address', function() {
       }
     ].forEach(function(testCase) {
       it('should match ' + testCase.description, function() {
-        expect(defaultPolicy.parseAddress(testCase.address))
+        expect(DefaultPolicy.parseAddress(testCase.address))
           .to.eql(testCase.expected);
       });
     });
@@ -77,8 +78,24 @@ describe('Address', function() {
     ].forEach(function(testCase, idx) {
       it('should throw error on invalid address (' + (idx+1) + ')', function() {
         expect(function() {
-          defaultPolicy.parseAddress(testCase.address);
+          DefaultPolicy.parseAddress(testCase.address);
         }).to.throw(Error, null, testCase.error);
+      });
+    });
+  });
+
+  describe('Qpid Java', function() {
+    it('should parse vhosts', function() {
+      var address = 'amqps://username:password@192.168.1.1:1234/some-vhost/topic/and/more';
+      expect(QpidJavaPolicy.parseAddress(address)).to.eql({
+        host: "192.168.1.1",
+        pass: "password",
+        path: "topic/and/more",
+        port: 1234,
+        protocol: "amqps",
+        rootUri: "amqps://username:password@192.168.1.1:1234",
+        user: "username",
+        vhost: "some-vhost"
       });
     });
   });
