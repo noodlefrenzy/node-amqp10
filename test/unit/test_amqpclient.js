@@ -9,7 +9,7 @@ var expect = require('chai').expect,
     Link = require('../../lib/link'),
 
     Mock = require('./mocks'),
-    u = require('../../lib/utilities');
+    defaultPolicy = require('../../lib/policies/default_policy');
 
 var chai = require('chai');
 chai.config.includeStack = true; // turn on stack trace
@@ -24,7 +24,7 @@ describe('AMQPClient', function() {
       var client = new Mock.Client(c, s);
       var called = {open: 0, begin: 0};
       c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(mock_uri));
+        expect(_addr).to.eql(defaultPolicy.parseAddress(mock_uri));
         expect(_sasl).to.be.null;
         called.open++;
         _c.emit(Connection.Connected, _c);
@@ -68,7 +68,7 @@ describe('AMQPClient', function() {
       var queue = 'queue';
       var called = {open: 0, begin: 0, attachLink: 0, canSend: 0, sendMessage: 0};
       c.on('open-called', function (_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(mock_uri));
+        expect(_addr).to.eql(defaultPolicy.parseAddress(mock_uri));
         expect(_sasl).to.not.exist;
         called.open++;
         _c.emit(Connection.Connected, _c);
@@ -140,7 +140,7 @@ describe('AMQPClient', function() {
       var queue = 'queue';
       var called = {open: 0, begin: 0, attachLink: 0};
       c.on('open-called', function (_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(mock_uri));
+        expect(_addr).to.eql(defaultPolicy.parseAddress(mock_uri));
         expect(_sasl).to.not.exist;
         called.open++;
         _c.emit(Connection.Connected, _c);
@@ -222,7 +222,7 @@ describe('AMQPClient', function() {
       var client = new Mock.Client(c, s);
       var called = { open: 0, begin: 0, attachLink: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(mock_uri));
+        expect(_addr).to.eql(defaultPolicy.parseAddress(mock_uri));
         expect(_sasl).to.not.exist;
 
         called.open++;
@@ -277,7 +277,7 @@ describe('AMQPClient', function() {
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(mock_uri));
+        expect(_addr).to.eql(defaultPolicy.parseAddress(mock_uri));
         expect(_sasl).to.not.exist;
 
         called.open++;
@@ -337,7 +337,7 @@ describe('AMQPClient', function() {
       var queue = 'queue';
       var called = { open: 0, begin: 0, attachLink: 0 };
       c.on('open-called', function(_c, _addr, _sasl) {
-        expect(_addr).to.eql(u.parseAddress(mock_uri));
+        expect(_addr).to.eql(defaultPolicy.parseAddress(mock_uri));
         expect(_sasl).to.not.exist;
 
         called.open++;
