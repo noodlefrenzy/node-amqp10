@@ -2,6 +2,7 @@
 
 var amqp = require('../../../lib'),
     MockServer = require('../mocks').Server,
+    Builder = require('buffer-builder'),
 
     constants = require('../../../lib/constants'),
 
@@ -15,6 +16,15 @@ var amqp = require('../../../lib'),
     test = require('../test-fixture');
 
 amqp.Policy.QpidJava.connect.options.containerId = 'test';
+
+function buildInitialResponseFor(user, pass) {
+  var buf = new Builder();
+  buf.appendUInt8(0); // <nul>
+  buf.appendString(user);
+  buf.appendUInt8(0); // <nul>
+  buf.appendString(pass);
+  return buf.get();
+}
 
 describe('Client', function() {
   describe('#connect()', function() {
@@ -38,7 +48,9 @@ describe('Client', function() {
       test.server.setExpectedFrameSequence([
         false,
         new SaslFrames.SaslInit({ mechanism: 'PLAIN', hostname: 'my-special-vhost',
-          initialResponse: new Buffer('00757365720070617373', 'hex') })
+          initialResponse: buildInitialResponseFor('user', 'pass') }),
+        false,
+        new OpenFrame({ containerId: "test", hostname:"my-special-vhost" })
       ]);
 
       test.server.setResponseSequence([
