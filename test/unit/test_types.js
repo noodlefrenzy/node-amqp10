@@ -35,6 +35,13 @@ describe('Types', function() {
           expect(function() { codec.encode(type, buffer); }).to.throw(errors.NotImplementedError);
         });
       });
+
+      it('should throw an EncodingError for invalid ForcedTypes', function() {
+        var invalidType = new ForcedType('bazookas', 'hello world');
+        var invalid = function() { codec.encode(invalidType, new BufferBuilder()); };
+        expect(invalid).to.throw(errors.EncodingError);
+        expect(invalid).to.throw(/bazookas/);
+      });
     });
 
     describe('primitives', function() {

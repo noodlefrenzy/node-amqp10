@@ -21,13 +21,13 @@ codeclimate-send:
 	CODECLIMATE_REPO_TOKEN=2612b6d4b7bed06760320154f22eba4e348e53055c0eaf9a9a00e3b05ef3b37d codeclimate < coverage/lcov.info
 
 test-unit: jshint
-	$(NPM_BIN)/mocha --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) $(UNIT_TESTS) $(GREPARG)
+	$(NPM_BIN)/mocha --globals setImmediate,clearImmediate --recursive --check-leaks --colors -t 10000 --reporter $(REPORTER) $(UNIT_TESTS) $(GREPARG)
 
 test-qpid: jshint
-	$(NPM_BIN)/mocha --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) $(QPID_INTEGRATION_TESTS) $(GREPARG)
+	$(NPM_BIN)/mocha --globals setImmediate,clearImmediate --recursive --check-leaks --colors -t 10000 --reporter $(REPORTER) $(QPID_INTEGRATION_TESTS) $(GREPARG)
 
 test-servicebus: jshint
-	$(NPM_BIN)/mocha --recursive --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) $(SERVICEBUS_INTEGRATION_TESTS) $(GREPARG)
+	$(NPM_BIN)/mocha --recursive --globals setImmediate,clearImmediate --recursive --check-leaks --colors -t 10000 --reporter $(REPORTER) $(SERVICEBUS_INTEGRATION_TESTS) $(GREPARG)
 
 test: test-unit test-qpid test-servicebus
 

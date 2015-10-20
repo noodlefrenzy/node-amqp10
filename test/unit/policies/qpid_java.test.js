@@ -26,7 +26,7 @@ function buildInitialResponseFor(user, pass) {
   return buf.get();
 }
 
-describe('Client', function() {
+describe('QpidJava Policy', function() {
   describe('#connect()', function() {
     beforeEach(function() {
       if (!!test.server) test.server = undefined;

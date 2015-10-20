@@ -108,7 +108,6 @@ function convertSequenceFramesToBuffers(frame) {
  */
 MockServer.prototype.setExpectedFrameSequence = function(expected) {
   this._expectedFrames = expected.map(convertSequenceFramesToBuffers);
-  console.log(this._expectedFrames[0].toString('hex'));
 };
 
 MockServer.prototype.setResponseSequence = function(responses) {
