@@ -72,11 +72,14 @@ describe('Types', function() {
             expect(function() { codec.encode(type, buffer); }).to.throw(errors.EncodingError);
           });
 
-          it('should error encoding timestamps greater than 2^32 - 1', function() {
-            var buffer = new BufferBuilder();
-            var type = new ForcedType('timestamp', 4294967295);
-            expect(function() { codec.encode(type, buffer); }).to.throw(errors.NotImplementedError);
-          });
+          // NOTE: We now allow users to specify up to 2^53, and silently drop precision otherwise.
+          //       This test should perhaps be reenabled to verify that a warning is shown if/when
+          //       a user is using a number that will lose precision over the wire.
+          // it('should error encoding timestamps greater than 2^32 - 1', function() {
+          //   var buffer = new BufferBuilder();
+          //   var type = new ForcedType('timestamp', 4294967295);
+          //   expect(function() { codec.encode(type, buffer); }).to.throw(errors.NotImplementedError);
+          // });
 
           it('should error encoding timestamps of invalid type', function() {
             var buffer = new BufferBuilder();
@@ -85,7 +88,6 @@ describe('Types', function() {
           });
 
         });
-
 
         var vbin32Buffer = [];
         var str32Utf8String;
@@ -218,8 +220,13 @@ describe('Types', function() {
             expectedOutput: buf([0x83, 0x00, 0x00, 0x00, 0x00, 0x55, 0x10, 0x7B, 0x38])
           },
           {
-            name: 'ms64 (timestamp)', type: 'timestamp',
+            name: 'ms64 (timestamp Number)', type: 'timestamp',
             value: 1427143480,
+            expectedOutput: buf([0x83, 0x00, 0x00, 0x00, 0x00, 0x55, 0x10, 0x7B, 0x38])
+          },
+          {
+            name: 'ms64 (timestamp Date)', type: 'timestamp',
+            value: new Date(1427143480),
             expectedOutput: buf([0x83, 0x00, 0x00, 0x00, 0x00, 0x55, 0x10, 0x7B, 0x38])
           },
           {
@@ -534,7 +541,7 @@ describe('Types', function() {
             expectedOutput: '797ff043-11eb-11e1-80d6-510998755d10'
           },
 
-          // @todo: reenable this when we figure out how to mix Int64 with Dates
+          // @todo: reenable this when we figure out how to optionally enable Int64 with timestamps
           // {
           //   name: 'ms64 (timestamp)',
           //   value: buf([0x83, 0x00, 0x00, 0x00, 0x00, 0x55, 0x10, 0x7B, 0x38]),

@@ -109,8 +109,8 @@ describe('Client', function() {
 
             // we've got a very temperamental relationship with
             // timestamps right now...
-            absoluteExpiryTime: null,
-            creationTime: null
+            absoluteExpiryTime: Math.floor( Date.now() / 1000 ),
+            creationTime: Date.now()
           }
         }
       },
@@ -180,6 +180,10 @@ describe('Client', function() {
 
                 delete expected.ttl;
                 delete message[testCase.option].ttl;
+              } else if (testCase.option === 'properties') {
+                message[testCase.option].absoluteExpiryTime =
+                  message[testCase.option].absoluteExpiryTime.getTime();
+                expected.creationTime = new Date(expected.creationTime);
               }
 
               expect(message[testCase.option]).to.eql(expected);
