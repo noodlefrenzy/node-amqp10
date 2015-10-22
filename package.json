@@ -1,6 +1,6 @@
 {
   "name": "amqp10",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Native AMQP-1.0 client for node.js",
   "main": "./lib",
   "engines": {
@@ -11,7 +11,6 @@
     "bl": "^1.0.0",
     "bluebird": "^2.9.25",
     "debug": "^2.0.0",
-    "depd": "^1.0.1",
     "lodash": "^3.3.0",
     "node-amqp-encoder": "^0.0.2",
     "node-int64": "^0.4.0",
@@ -20,7 +19,7 @@
   },
   "devDependencies": {
     "chai": "^3.3.0",
-    "istanbul": "^0.3.6",
+    "istanbul": "^0.4.0",
     "jsdoc-to-markdown": "^1.2.0",
     "jshint": "^2.6.0",
     "mocha": "^2.1.0",
