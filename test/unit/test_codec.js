@@ -77,8 +77,9 @@ describe('Codec', function() {
     });
 
     it('should fail when not implemented', function() {
-      var buffer = newBuffer([0x73, 0x01, 0x02, 0x03, 0x04]);
-      expect(function() { codec.decode(buffer); }).to.throw(Error);   // jshint ignore:line
+      // @todo: use a dec32 until support is added
+      var buffer = newBuffer([0x74, 0x01, 0x02, 0x03, 0x04]);
+      expect(function() { codec.decode(buffer); }).to.throw(Error);
     });
 
     it('should decode described types', function() {

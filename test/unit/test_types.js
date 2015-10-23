@@ -28,7 +28,7 @@ describe('Types', function() {
     }
 
     describe('errors', function() {
-      ['decimal32', 'decimal64', 'decimal128', 'char'].forEach(function(typeName) {
+      ['decimal32', 'decimal64', 'decimal128'].forEach(function(typeName) {
         it('should error on unsupported type: ' + typeName, function() {
           var buffer = new BufferBuilder();
           var type = new ForcedType(typeName, 'some data');
@@ -205,7 +205,9 @@ describe('Types', function() {
           //   ]),
           //   expectedOutput: 1.1
           // },
-          // { name: 'utf32 (char)', type: 0x73, value: buf([0x24]), expectedOutput: '$' },
+          { name: 'utf32 (char)', type: 0x73, value: 'A',
+            expectedOutput: buf([0x73, 0x00, 0x00, 0x00, 0x41])
+          },
           {
             name: 'uuid', type: 0x98,
             value: '797ff043-11eb-11e1-80d6-510998755d10',
@@ -448,7 +450,6 @@ describe('Types', function() {
 
     describe('errors', function() {
       [
-        { name: 'char', value: buf([0x73, 0x00, 0x00, 0x00, 0x00]) },
         { name: 'decimal32', value: buf([0x74, 0x00, 0x00, 0x00, 0x00]) },
         { name: 'decimal64', value: buf([0x84, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]) },
         { name: 'decimal128' , value: buf([0x94, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]) }
@@ -530,7 +531,7 @@ describe('Types', function() {
           //   ]),
           //   expectedOutput: 1.1
           // },
-          // { name: 'utf32 (char)', type: 0x73, value: buf([0x24]), expectedOutput: '$' },
+          { name: 'utf32 (char)', value: buf([0x73, 0x00, 0x00, 0x00, 0x41]), expectedOutput: 'A' },
           {
             name: 'uuid',
             value: buf([
