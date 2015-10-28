@@ -9,7 +9,7 @@
   "dependencies": {
     "buffer-builder": "^0.2.0",
     "bl": "^1.0.0",
-    "bluebird": "^2.9.25",
+    "bluebird": "^3.0.0",
     "debug": "^2.0.0",
     "lodash": "^3.3.0",
     "node-amqp-encoder": "^0.0.2",
