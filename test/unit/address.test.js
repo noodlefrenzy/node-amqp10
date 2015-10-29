@@ -1,9 +1,11 @@
 "use strict";
 var DefaultPolicy = require('../../lib/policies/default_policy'),
     QpidJavaPolicy = require('../../lib/policies/qpid_java_policy'),
-    expect = require('chai').expect;
+    ActiveMQPolicy = require('../../lib/policies/activemq_policy'),
+    expect = require('chai').expect,
+    u = require('../../lib/utilities');
 
-describe('Address', function() {
+describe('Address Parsing', function() {
   describe('default', function() {
     [
       {
@@ -88,15 +90,38 @@ describe('Address', function() {
     it('should parse vhosts', function() {
       var address = 'amqps://username:password@192.168.1.1:1234/some-vhost/topic/and/more';
       expect(QpidJavaPolicy.parseAddress(address)).to.eql({
-        host: "192.168.1.1",
-        pass: "password",
-        path: "topic/and/more",
+        host: '192.168.1.1',
+        pass: 'password',
+        path: '/topic/and/more',
         port: 1234,
-        protocol: "amqps",
-        rootUri: "amqps://username:password@192.168.1.1:1234",
-        user: "username",
-        vhost: "some-vhost"
+        protocol: 'amqps',
+        rootUri: 'amqps://username:password@192.168.1.1:1234',
+        user: 'username',
+        vhost: 'some-vhost'
       });
+    });
+  });
+
+  describe('ActiveMQ', function() {
+    it('should parse link names with `topic://` and `queue://` prefixes', function() {
+      var address = 'amqps://username:password@192.168.1.1:1234/topic://mytopic';
+      expect(ActiveMQPolicy.parseAddress(address)).to.eql({
+        host: '192.168.1.1',
+        pass: 'password',
+        path: '/topic://mytopic',
+        port: 1234,
+        protocol: 'amqps',
+        rootUri: 'amqps://username:password@192.168.1.1:1234',
+        user: 'username'
+      });
+    });
+
+    it('should support links with names prefixed with `topic://` and `queue://`', function() {
+      var address = u.parseLinkAddress('topic://mytopic', ActiveMQPolicy);
+      expect(address.name).to.eql('topic://mytopic');
+      var linkName = u.linkName(address.name, {});
+      var nonUniqueLinkNamePart = linkName.split('_')[0];
+      expect(nonUniqueLinkNamePart).to.equal('topic://mytopic');
     });
   });
 
