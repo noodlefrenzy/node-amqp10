@@ -48,36 +48,32 @@ var msgVal = Math.floor(Math.random() * 1000000);
 var uri = protocol + '://' + encodeURIComponent(sasName) + ':' + encodeURIComponent(sasKey) + '@' + serviceBusHost;
 
 var client = new AMQPClient(Policy.ServiceBusQueue);
-client.connect(uri).then(function () {
-  client.createSender(queueName).then(function (sender) {
-    sender.on('errorReceived', function(tx_err) {
-      console.warn('===> TX ERROR: ', tx_err);
+client.connect(uri)
+  .then(function () {
+    return Promise.all([
+      client.createSender(queueName),
+      client.createReceiver(queueName)
+    ]);
+  })
+  .spread(function(sender, receiver) {
+    sender.on('errorReceived', function(tx_err) { console.warn('===> TX ERROR: ', tx_err); });
+    receiver.on('errorReceived', function(rx_err) { console.warn('===> RX ERROR: ', rx_err); });
+    receiver.on('message', function (message) {
+      console.log('received: ', message.body);
+      if (message.annotations) console.log('annotations: ', message.annotations);
+      if (message.body.DataValue === msgVal) {
+        client.disconnect().then(function () {
+          console.log('disconnected, when we saw the value we inserted.');
+          process.exit(0);
+        });
+      }
     });
-    client.createReceiver(queueName).then(function (receiver) {
-      receiver.on('message', function (message) {
-        console.log('Recv: ');
-        console.log(message.body);
-        if (message.annotations) {
-          console.log('Annotations:');
-          console.log(message.annotations);
-        }
-        console.log('');
-        if (message.body.DataValue === msgVal) {
-          client.disconnect().then(function () {
-            console.log("Disconnected, when we saw the value we'd inserted.");
-            process.exit(0);
-          });
-        }
-      });
-      receiver.on('errorReceived', function(rx_err) {
-        console.warn('===> RX ERROR: ', rx_err);
-      });
-      sender.send({"DataString": "From Node", "DataValue": msgVal}).then(function (state) {
-        console.log('State: ', state);
-      });
-    });
-  });
-}).catch(function (e) {
-  console.warn('Error send/receive: ', e);
-});
 
+    return sender.send({ DataString: 'From Node', DataValue: msgVal }).then(function (state) {
+      // this can be used to optionally track the disposition of the sent message
+      console.log('state: ', state);
+    });
+  })
+  .catch(function (e) {
+    console.warn('connection error: ', e);
+  });

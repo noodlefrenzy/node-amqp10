@@ -21,14 +21,18 @@ client.connect(uri)
       if (message.annotations) console.log('annotations: ', message.annotations);
       if (message.body.dataValue === msgId) {
         client.disconnect().then(function() {
-          console.log("received expected message, disconnected.");
+          console.log('received expected message, disconnected.');
+          process.exit(0);
         });
       }
     });
 
     var message = { dataString: "From Node", dataValue: msgId };
     console.log('sending: ', message);
-    return sender.send(message);
+    return sender.send(message).then(function (state) {
+      // this can be used to optionally track the disposition of the sent message
+      console.log('state: ', state);
+    });
   })
   .catch(function (e) {
     console.log('connection error: ', e);

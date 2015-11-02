@@ -14,8 +14,7 @@
 'use strict';
 //var AMQPClient = require('amqp10').Client;
 var AMQPClient  = require('../lib').Client,
-    Policy = require('../lib').Policy,
-    util = require('util');
+    Policy = require('../lib').Policy;
 
 var settingsFile = process.argv[2];
 var settings = {};
@@ -60,31 +59,26 @@ client.connect(uri)
   })
   .spread(function(sender, receiver) {
     // error handling
-    sender.on('errorReceived', function(tx_err) {
-      console.warn('===> TX ERROR: ', tx_err);
-    });
-    receiver.on('errorReceived', function(rx_err) {
-      console.warn('===> RX ERROR: ', rx_err);
-    });
+    sender.on('errorReceived', function(tx_err) { console.warn('===> TX ERROR: ', tx_err); });
+    receiver.on('errorReceived', function(rx_err) { console.warn('===> RX ERROR: ', rx_err); });
 
     // message event handler
     receiver.on('message', function(message) {
-      console.log('Recv: ' + util.inspect(message));
-
+      console.log('received: ', message);
       if (message.body.DataValue === msgVal) {
         client.disconnect().then(function () {
-          console.log("Disconnected, when we saw the value we'd inserted.");
+          console.log('disconnected, when we saw the value we inserted.');
           process.exit(0);
         });
       }
     });
 
     // send test message
-    return sender.send({"DataString": "From Node", "DataValue": msgVal});
-  })
-  .then(function(state) {
-    console.log('State: ', state);
+    return sender.send({ DataString: 'from node', DataValue: msgVal }).then(function(state) {
+      // this can be used to optionally track the disposition of the sent message
+      console.log('state: ', state);
+    });
   })
   .catch(function (e) {
-    console.warn('Error send/receive: ', e);
+    console.warn('connection error: ', e);
   });
