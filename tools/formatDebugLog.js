@@ -12,8 +12,8 @@ if (process.argv.length < 3) {
 var debugOutputFile = process.argv[2];
 var tryToConvert = true;
 
-var rxPrefix = 'Connection Rx:';
-var txPrefix = 'amqp10-Frame Sending frame:';
+var rxPrefix = 'amqp10:connection Rx:';
+var txPrefix = 'amqp10:framing Sending frame:';
 
 function s(cnt) {
   var r = '';
@@ -135,7 +135,7 @@ function parseHex(hexstr) {
   var headerIdx = hexstr.indexOf(amqpstr);
   var body = hexstr;
   if (headerIdx === -1) {
-    console.log('Header not found, assuming partial trace.  If trace is not frame-aligned, results will be incorrect.');
+    console.log('Header "' + amqpstr + '" not found, assuming partial trace.  If trace is not frame-aligned, results will be incorrect.');
   } else {
     body = hexstr.substr(headerIdx + amqpstr.length);
   }
