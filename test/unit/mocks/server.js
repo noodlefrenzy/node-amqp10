@@ -1,5 +1,6 @@
 'use strict';
 var _ = require('lodash'),
+    BufferList = require('bl'),
     Promise = require('bluebird'),
     net = require('net'),
     expect = require('chai').expect,
@@ -15,9 +16,10 @@ function MockServer(options) {
   this._client = null;
   this._responses = [];
   this._expectedFrames = [];
+  this._seenFrames = [];
 
   _.defaults(this, options, {
-    hostname: '0.0.0.0',
+    hostname: '127.0.0.1',
     port: 4321,
     serverGoesFirst: false
   });
@@ -60,6 +62,7 @@ MockServer.prototype.setup = function() {
           }
         }
 
+        self._seenFrames.push(new BufferList(d));
         self._sendNextResponse();
       });
     });
@@ -111,7 +114,7 @@ MockServer.prototype.setExpectedFrameSequence = function(expected) {
 };
 
 MockServer.prototype.setResponseSequence = function(responses) {
-  this._responses = responses.map(convertSequenceFramesToBuffers);
+  this._responses = responses;
 };
 
 MockServer.prototype._sendNextResponse = function() {
@@ -131,6 +134,11 @@ MockServer.prototype._sendResponse = function(response) {
     return;
   }
 
+  if (typeof response === 'function') {
+    response = response(this._seenFrames);
+  }
+
+  response = convertSequenceFramesToBuffers(response);
   if (typeof response !== 'string') {
     this._client.write(response, function() {
       debug('wrote: ', response.toString('hex'));
