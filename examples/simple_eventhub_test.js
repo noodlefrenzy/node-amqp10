@@ -114,7 +114,7 @@ client.connect(uri)
       console.log('state: ', state);
     });
   })
-  .catch(function (e) {
+  .error(function (e) {
     console.warn('connection error: ', e);
   });
 

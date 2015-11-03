@@ -81,6 +81,6 @@ client.connect(uri)
       console.log('State: ', state);
     });
   })
-  .catch(function (e) {
+  .error(function (e) {
     console.warn('connection error: ', e);
   });
