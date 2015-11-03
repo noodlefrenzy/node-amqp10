@@ -13,8 +13,8 @@
 //================================
 
 'use strict';
-//var AMQPClient = require('amqp10').Client;
-var AMQPClient  = require('../lib').Client,
+var Promise = require('bluebird'),
+    AMQPClient  = require('../lib').Client,
     Policy = require('../lib').Policy,
     translator = require('../lib').translator;
 
@@ -68,48 +68,53 @@ var recvAddr = eventHubName + '/ConsumerGroups/$default/Partitions/';
 var msgVal = Math.floor(Math.random() * 1000000);
 
 var client = new AMQPClient(Policy.EventHub);
-
-var errorHandler = function(myIdx, rx_err) {
-  console.warn('==> RX ERROR: ', rx_err);
-};
-
+var errorHandler = function(myIdx, rx_err) { console.warn('==> RX ERROR: ', rx_err); };
 var messageHandler = function (myIdx, msg) {
-  console.log('Recv(' + myIdx + '): ');
-  console.log(msg.body);
-  if (msg.annotations) {
-    console.log('Annotations:');
-    console.log(msg.annotations);
-  }
-  console.log('');
+  console.log('received(' + myIdx + '): ', msg.body);
+  if (msg.annotations) console.log('annotations: ', msg.annotations);
   if (msg.body.DataValue === msgVal) {
     client.disconnect().then(function () {
-      console.log("Disconnected, when we saw the value we'd inserted.");
+      console.log('disconnected, when we saw the value we inserted.');
       process.exit(0);
     });
   }
 };
 
-var setupReceiver = function(curIdx, curRcvAddr, filterOption) {
-  client.createReceiver(curRcvAddr, filterOption)
+function range(begin, end) {
+  return Array.apply(null, new Array(end - begin)).map(function(_, i) { return i + begin; });
+}
+
+var createPartitionReceiver = function(curIdx, curRcvAddr, filterOption) {
+  return client.createReceiver(curRcvAddr, filterOption)
     .then(function (receiver) {
       receiver.on('message', messageHandler.bind(null, curIdx));
       receiver.on('errorReceived', errorHandler.bind(null, curIdx));
     });
 };
 
-client.connect(uri).then(function () {
-  for (var idx = 0; idx < numPartitions; ++idx) {
-    setupReceiver(idx, recvAddr + idx, filterOption); // TODO:: filterOption-> checkpoints are per partition.
-  }
-  // {'x-opt-partition-key': 'pk' + msgVal}
-  client.createSender(sendAddr).then(function (sender) {
-    sender.on('errorReceived', function (tx_err) {
-      console.warn('===> TX ERROR: ', tx_err);
+client.connect(uri)
+  .then(function () {
+    return Promise.all([
+      client.createSender(sendAddr),
+
+      // TODO:: filterOption-> checkpoints are per partition.
+      Promise.map(range(0, numPartitions), function(idx) {
+        return createPartitionReceiver(idx, recvAddr + idx, filterOption);
+      })
+    ]);
+  })
+  .spread(function(sender, unused) {
+    sender.on('errorReceived', function (tx_err) { console.warn('===> TX ERROR: ', tx_err); });
+
+    // {'x-opt-partition-key': 'pk' + msgVal}
+    var message = { DataString: 'From Node', DataValue: msgVal };
+    var options = { annotations: { 'x-opt-partition-key': 'pk' + msgVal } };
+    return sender.send(message, options).then(function (state) {
+      // this can be used to optionally track the disposition of the sent message
+      console.log('state: ', state);
     });
-    sender.send({ "DataString": "From Node", "DataValue": msgVal }, { annotations: {'x-opt-partition-key': 'pk' + msgVal} }).then(function (state) {
-      console.log('State: ', state);
-    });
+  })
+  .error(function (e) {
+    console.warn('connection error: ', e);
   });
-}).catch(function (e) {
-  console.warn('Failed to send due to ', e);
-});
+

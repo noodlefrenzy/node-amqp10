@@ -51,34 +51,36 @@ var managementEndpoint = '$management';
 var rxName = 'client-temp-node';
 var rxOptions = { attach: { target: { address: rxName } } };
 var client = new AMQPClient(Policy.EventHub);
-client.connect(uri).then(function () {
-  return Promise.all([
-    client.createReceiver(managementEndpoint, rxOptions),
-    client.createSender(managementEndpoint)
-  ]);
-})
-.spread(function (receiver, sender) {
-  receiver.on('errorReceived', function (rx_err) {
-    console.warn('===> RX ERROR: ', rx_err);
-  });
-  receiver.on('message', function (msg) {
-    console.log('Message received: ');
-    console.log('Number of partitions: ' + msg.body.partition_count);
-    console.log('Partition IDs: ' + msg.body.partition_ids);
-    client.disconnect().then(function() {
-      console.log('=== Disconnected ===');
-      process.exit(0);
+client.connect(uri)
+  .then(function () {
+    return Promise.all([
+      client.createReceiver(managementEndpoint, rxOptions),
+      client.createSender(managementEndpoint)
+    ]);
+  })
+  .spread(function (receiver, sender) {
+    sender.on('errorReceived', function (tx_err) { console.warn('===> TX ERROR: ', tx_err); });
+    receiver.on('errorReceived', function (rx_err) { console.warn('===> RX ERROR: ', rx_err); });
+    receiver.on('message', function (msg) {
+      console.log('Message received: ');
+      console.log('Number of partitions: ' + msg.body.partition_count);
+      console.log('Partition IDs: ' + msg.body.partition_ids);
+      client.disconnect().then(function() {
+        console.log('=== Disconnected ===');
+        process.exit(0);
+      });
     });
+
+    var request = {
+      body: 'stub',
+      properties: { messageId: 'request1', replyTo: rxName },
+      applicationProperties: { operation: 'READ', name: eventHubName, type: 'com.microsoft:eventhub' }
+    };
+    return sender.send(request).then(function (state) {
+      // this can be used to optionally track the disposition of the sent message
+      console.log('State: ', state);
+    });
+  })
+  .error(function (e) {
+    console.warn('connection error: ', e);
   });
-  sender.on('errorReceived', function (tx_err) {
-    console.warn('===> TX ERROR: ', tx_err);
-  });
-  var request = { body: "stub", properties: { messageId: 'request1', replyTo: rxName }, applicationProperties: { operation: "READ", name: eventHubName, type: "com.microsoft:eventhub" } };
-  return sender.send(request);
-})
-.then(function (state) {
-  console.log('State: ', state);
-})
-.catch(function (e) {
-  console.warn('Failed to send due to ', e);
-});
