@@ -120,14 +120,16 @@ describe('Client', function() {
         },
         function (prev) {
           var txFrame = new TransferFrame({
-            handle: 1
+            handle: 1,
+            more: true
           });
           txFrame.message = buf1;
           return txFrame;
         },
         function (prev) {
           var txFrame = new TransferFrame({
-            handle: 1
+            handle: 1,
+            more: false
           });
           txFrame.message = buf2;
           return txFrame;
