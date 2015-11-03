@@ -15,6 +15,7 @@
 'use strict';
 //var AMQPClient = require('amqp10').Client;
 var AMQPClient  = require('../lib').Client,
+    Promise = require('bluebird'),
     Policy = require('../lib').Policy,
     translator = require('../lib').translator;
 
@@ -114,7 +115,7 @@ client.connect(uri)
       console.log('state: ', state);
     });
   })
-  .catch(function (e) {
+  .error(function (e) {
     console.warn('connection error: ', e);
   });
 

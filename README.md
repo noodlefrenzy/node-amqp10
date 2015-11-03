@@ -37,7 +37,7 @@ server would look like:
 
         return sender.send({ key: "Value" });
       })
-      .catch(function(err) {
+      .error(function(err) {
         console.log("error: ", err);
       });
 
