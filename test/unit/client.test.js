@@ -193,22 +193,29 @@ describe('Client', function() {
       expected.push(messageBuffer.slice(20, 30));
       expected.push(messageBuffer.slice(30, 40));
 
+      // 1. It is an error if the delivery-id on a continuation transfer differs
+      // from the delivery-id on the first transfer of a delivery.
+
+      // 2. It is an error if the delivery-tag on a continuation transfer differs
+      // from the delivery-tag on the first transfer of a delivery.
+
+      var deliveryTag = new Buffer(Number(1).toString());
       test.server.setExpectedFrameSequence([
         false, false, false, false,
         new TransferFrame({
-          channel: 1, handle: 0, deliveryId: 1, settled: false, deliveryTag: 1,
+          channel: 1, handle: 0, deliveryId: 1, settled: false, deliveryTag: deliveryTag,
           message: expected[0], more: true,
         }),
         new TransferFrame({
-          channel: 1, handle: 0, deliveryId: 2, settled: false, deliveryTag: 1,
+          channel: 1, handle: 0, deliveryId: 1, settled: false, deliveryTag: deliveryTag,
           message: expected[1], more: true,
         }),
         new TransferFrame({
-          channel: 1, handle: 0, deliveryId: 3, settled: false, deliveryTag: 1,
+          channel: 1, handle: 0, deliveryId: 1, settled: false, deliveryTag: deliveryTag,
           message: expected[2], more: true,
         }),
         new TransferFrame({
-          channel: 1, handle: 0, deliveryId: 4, settled: false, deliveryTag: 1,
+          channel: 1, handle: 0, deliveryId: 1, settled: false, deliveryTag: deliveryTag,
           message: expected[3], more: false,
         }),
         false
