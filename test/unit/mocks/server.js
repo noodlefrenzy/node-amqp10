@@ -74,6 +74,7 @@ MockServer.prototype._checkExpectations = function(data) {
     var idx = 0;
     var expectedFrame = this._expectedFrames.shift();
     while (true) {
+      if (data.length <= idx + expectedFrame.length) break;
       if (expectedFrame === false || expectedFrame === undefined) break;
       var actualFrame = data.slice(idx, idx + expectedFrame.length);
       debug('expected(', expectedFrame.length, '): ' + expectedFrame.toString('hex'));
