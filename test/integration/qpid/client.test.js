@@ -31,6 +31,7 @@ describe('Client', function() {
       .spread(function(receiver, sender) {
         receiver.on('message', function(message) {
           expect(message).to.exist;
+          expect(message.body).to.equal('test');
           done();
         });
 

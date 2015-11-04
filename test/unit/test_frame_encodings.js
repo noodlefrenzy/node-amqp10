@@ -4,10 +4,8 @@ var builder = require('buffer-builder'),
 
     constants = require('../../lib/constants'),
 
-    ForcedType = require('../../lib/types/forced_type'),
     Source = require('../../lib/types/source_target').Source,
     Target = require('../../lib/types/source_target').Target,
-    M = require('../../lib/types/message'),
 
     AttachFrame = require('../../lib/frames/attach_frame'),
     BeginFrame = require('../../lib/frames/begin_frame'),
@@ -185,8 +183,7 @@ describe('TransferFrame', function() {
       receiverSettleMode: constants.receiverSettleMode.autoSettle
     });
     transfer.channel = 1;
-    transfer.message = new M.Message();
-    transfer.message.body = new ForcedType('uint', 10);
+    transfer.message = new Buffer([0x00, 0x53, 0x77, 0x52, 10]);
     var actual = tu.convertFrameToBuffer(transfer);
     var payloadSize = 12;
     var listSize = 1 + 2 + 2 + 3 + 5 + 1 + 1 + 2 + 1 + 1 + 1 + 1;
