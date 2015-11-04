@@ -181,13 +181,35 @@ describe('Client', function() {
         new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test'))
       ]);
 
+      // build our expected buffer segments
+      var message = new M.Message({ body: 'asupercalifragilisticexpialidocious' });
+      var codecBuffer = new Builder();
+      Codec.encode(message, codecBuffer);
+      var messageBuffer = codecBuffer.get();
+
+      var expected = [];
+      expected.push(messageBuffer.slice(0, 10));
+      expected.push(messageBuffer.slice(10, 20));
+      expected.push(messageBuffer.slice(20, 30));
+      expected.push(messageBuffer.slice(30, 40));
+
       test.server.setExpectedFrameSequence([
         false, false, false, false,
         new TransferFrame({
-          frameType: 0, channel: 1, handle: 0, deliveryId: 1, settled: false, deliveryTag: 1,
-          message: new M.Message({ body: 'supercalifragilisticexpialidocious' }),
-          messageFormat: 0, more: false, receiverSettleMode: null,
-          state: null, resume: false, aborted: false, batchable: false
+          channel: 1, handle: 0, deliveryId: 1, settled: false, deliveryTag: 1,
+          message: expected[0], more: true,
+        }),
+        new TransferFrame({
+          channel: 1, handle: 0, deliveryId: 2, settled: false, deliveryTag: 1,
+          message: expected[1], more: true,
+        }),
+        new TransferFrame({
+          channel: 1, handle: 0, deliveryId: 3, settled: false, deliveryTag: 1,
+          message: expected[2], more: true,
+        }),
+        new TransferFrame({
+          channel: 1, handle: 0, deliveryId: 4, settled: false, deliveryTag: 1,
+          message: expected[3], more: false,
         }),
         false
       ]);
