@@ -63,6 +63,10 @@ describe('Client', function() {
     });
 
     it('should connect and receive', function(done) {
+      var message = new M.Message({}, { test: 'testing' });
+      var tmpBuf = new Builder();
+      Codec.encode(message, tmpBuf);
+      var messageBuf = tmpBuf.get();
       test.server.setResponseSequence([
         constants.amqpVersion,
         new OpenFrame(DefaultPolicy.connect.options),
@@ -79,7 +83,7 @@ describe('Client', function() {
           var txFrame = new TransferFrame({
             handle: 1
           });
-          txFrame.message = new M.Message({}, { test: 'testing' });
+          txFrame.message = messageBuf;
           return txFrame;
         },
         new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test'))
