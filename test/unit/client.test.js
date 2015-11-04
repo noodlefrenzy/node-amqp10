@@ -165,10 +165,11 @@ describe('Client', function() {
     });
 
     it('should send multi-frame messages', function() {
+      var testMaxFrameSize = 512;
       test.server.setResponseSequence([
         constants.amqpVersion,
         new OpenFrame(_.extend(DefaultPolicy.connect.options, {
-          maxFrameSize: 10 // <-- the important part, though it will be overwritten with 512
+          maxFrameSize: testMaxFrameSize // <-- the important part
         })),
         new BeginFrame({
           remoteChannel: 1, nextOutgoingId: 0, incomingWindow: 100000,
@@ -203,20 +204,22 @@ describe('Client', function() {
       Codec.encode(message, codecBuffer);
       var messageBuffer = codecBuffer.get();
 
-      var expected = [];
-      expected.push(messageBuffer.slice(0, 482));
-      expected.push(messageBuffer.slice(482, 964));
-      expected.push(messageBuffer.slice(964, 1446));
-      expected.push(messageBuffer.slice(1446, 1928));
-      expected.push(messageBuffer.slice(1928, 2410));
+      // ensure expected frames are broken up the same way we break them up
+      var deliveryTag = new Buffer(Number(1).toString());
+      var frameOverhead = TransferFrame.FRAME_OVERHEAD + deliveryTag.length;
+      var idealMessageSize = testMaxFrameSize - frameOverhead;
+      var messageCount = Math.ceil(messageBuffer.length / idealMessageSize);
+      var expected = [], idx = 0;
+      for (var i = 0; i < messageCount; ++i) {
+        expected.push(messageBuffer.slice(idx, idx + idealMessageSize));
+        idx += idealMessageSize;
+      }
 
       // 1. It is an error if the delivery-id on a continuation transfer differs
       // from the delivery-id on the first transfer of a delivery.
 
       // 2. It is an error if the delivery-tag on a continuation transfer differs
       // from the delivery-tag on the first transfer of a delivery.
-
-      var deliveryTag = new Buffer(Number(1).toString());
       test.server.setExpectedFrameSequence([
         false, false, false, false,
         new TransferFrame({
