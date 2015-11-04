@@ -49,7 +49,7 @@ describe('Client', function() {
         });
     });
 
-    it('should connect then disconnect', function(done) {
+    it('should connect then disconnect', function() {
       test.server.setResponseSequence([
         constants.amqpVersion,
         new OpenFrame(DefaultPolicy.connect.options),
@@ -60,11 +60,7 @@ describe('Client', function() {
       ]);
 
       return test.client.connect(test.server.address())
-        .then(function() {
-          return test.client.disconnect().then(function() {
-            done();
-          });
-        });
+        .then(function() { return test.client.disconnect(); });
     });
 
     it('should connect and receive', function(done) {
@@ -91,9 +87,7 @@ describe('Client', function() {
       ]);
 
       return test.client.connect(test.server.address())
-        .then(function() {
-          return test.client.createReceiver('testing');
-        })
+        .then(function() { return test.client.createReceiver('testing'); })
         .then(function (rxLink) {
           rxLink.on('message', function (msg) {
             expect(msg.body).not.to.be.null;
@@ -145,9 +139,7 @@ describe('Client', function() {
       ]);
 
       return test.client.connect(test.server.address())
-        .then(function() {
-          return test.client.createReceiver('testing');
-        })
+        .then(function() { return test.client.createReceiver('testing'); })
         .then(function (rxLink) {
           rxLink.on('message', function (msg) {
             expect(msg.body).not.to.be.null;
@@ -205,8 +197,6 @@ describe('Client', function() {
         .then(function(sender) { return sender.send('supercalifragilisticexpialidocious'); })
         .then(function() { return test.client.disconnect(); });
     });
-
-
 
   });
 });
