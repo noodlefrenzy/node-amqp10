@@ -4,10 +4,8 @@ var builder = require('buffer-builder'),
 
     constants = require('../../lib/constants'),
 
-    ForcedType = require('../../lib/types/forced_type'),
     Source = require('../../lib/types/source_target').Source,
     Target = require('../../lib/types/source_target').Target,
-    M = require('../../lib/types/message'),
 
     AttachFrame = require('../../lib/frames/attach_frame'),
     BeginFrame = require('../../lib/frames/begin_frame'),
