@@ -88,5 +88,24 @@ describe('SenderLink', function() {
       });
   });
 
+  it('should send and receive multi-frame messages', function(done) {
+    var messageData = new Array(2048).join('0');
+    return test.client.connect(config.address)
+      .then(function() {
+        return Promise.all([
+          test.client.createReceiver(config.defaultLink),
+          test.client.createSender(config.defaultLink)
+        ]);
+      })
+      .spread(function(receiver, sender) {
+        receiver.on('message', function(message) {
+          expect(message.body).to.eql(messageData);
+          done();
+        });
+
+        return sender.send(messageData);
+      });
+  });
+
 });
 });

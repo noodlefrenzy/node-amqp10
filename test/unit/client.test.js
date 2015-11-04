@@ -1,6 +1,7 @@
 'use strict';
 
-var expect = require('chai').expect,
+var _ = require('lodash'),
+    expect = require('chai').expect,
     Builder = require('buffer-builder'),
     AMQPClient = require('../../lib').Client,
     MockServer = require('./mocks').Server,
@@ -162,7 +163,9 @@ describe('Client', function() {
     it('should send multi-frame messages', function() {
       test.server.setResponseSequence([
         constants.amqpVersion,
-        new OpenFrame(DefaultPolicy.connect.options),
+        new OpenFrame(_.extend(DefaultPolicy.connect.options, {
+          maxFrameSize: 10 // <-- the important part, though it will be overwritten with 512
+        })),
         new BeginFrame({
           remoteChannel: 1, nextOutgoingId: 0, incomingWindow: 100000,
           outgoingWindow: 2147483647, handleMax: 4294967295
@@ -172,7 +175,7 @@ describe('Client', function() {
             var rxAttach = FrameReader.read(prev[prev.length-1]);
             return new AttachFrame({
               name: rxAttach.name, handle: 1, role: constants.linkRole.receiver,
-              source: {}, target: {}, initialDeliveryCount: 0, maxMessageSize: 1 // <-- the important part
+              source: {}, target: {}, initialDeliveryCount: 0
             });
           },
           new FlowFrame({
@@ -190,16 +193,18 @@ describe('Client', function() {
       ]);
 
       // build our expected buffer segments
-      var message = new M.Message({ body: 'asupercalifragilisticexpialidocious' });
+      var messageData = new Array(2048).join('0');
+      var message = new M.Message({ body: messageData });
       var codecBuffer = new Builder();
       Codec.encode(message, codecBuffer);
       var messageBuffer = codecBuffer.get();
 
       var expected = [];
-      expected.push(messageBuffer.slice(0, 10));
-      expected.push(messageBuffer.slice(10, 20));
-      expected.push(messageBuffer.slice(20, 30));
-      expected.push(messageBuffer.slice(30, 40));
+      expected.push(messageBuffer.slice(0, 512));
+      expected.push(messageBuffer.slice(512, 1024));
+      expected.push(messageBuffer.slice(1024, 1536));
+      expected.push(messageBuffer.slice(1536, 2048));
+      expected.push(messageBuffer.slice(2048, 2063));
 
       // 1. It is an error if the delivery-id on a continuation transfer differs
       // from the delivery-id on the first transfer of a delivery.
@@ -224,14 +229,18 @@ describe('Client', function() {
         }),
         new TransferFrame({
           channel: 1, handle: 0, deliveryId: 1, settled: false, deliveryTag: deliveryTag,
-          message: expected[3], more: false,
+          message: expected[3], more: true,
+        }),
+        new TransferFrame({
+          channel: 1, handle: 0, deliveryId: 1, settled: false, deliveryTag: deliveryTag,
+          message: expected[4], more: false,
         }),
         false
       ]);
 
       return test.client.connect(test.server.address())
         .then(function() { return test.client.createSender('test.link'); })
-        .then(function(sender) { return sender.send('supercalifragilisticexpialidocious'); })
+        .then(function(sender) { return sender.send(messageData); })
         .then(function() { return test.client.disconnect(); });
     });
 
