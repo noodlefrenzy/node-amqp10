@@ -200,11 +200,11 @@ describe('Client', function() {
       var messageBuffer = codecBuffer.get();
 
       var expected = [];
-      expected.push(messageBuffer.slice(0, 512));
-      expected.push(messageBuffer.slice(512, 1024));
-      expected.push(messageBuffer.slice(1024, 1536));
-      expected.push(messageBuffer.slice(1536, 2048));
-      expected.push(messageBuffer.slice(2048, 2063));
+      expected.push(messageBuffer.slice(0, 482));
+      expected.push(messageBuffer.slice(482, 964));
+      expected.push(messageBuffer.slice(964, 1446));
+      expected.push(messageBuffer.slice(1446, 1928));
+      expected.push(messageBuffer.slice(1928, 2410));
 
       // 1. It is an error if the delivery-id on a continuation transfer differs
       // from the delivery-id on the first transfer of a delivery.
