@@ -100,12 +100,13 @@ describe('Client', function() {
     });
 
     it('should receive multi-frame messages', function(done) {
-      var message = new M.Message({}, { test: 'testing' });
+      var message = new M.Message({}, { test: 'Really long message' });
       var tmpBuf = new Builder();
       Codec.encode(message, tmpBuf);
       var messageBuf = tmpBuf.get();
       var buf1 = messageBuf.slice(0, 10);
-      var buf2 = messageBuf.slice(10);
+      var buf2 = messageBuf.slice(10, 15);
+      var buf3 = messageBuf.slice(15);
       test.server.setResponseSequence([
         constants.amqpVersion,
         new OpenFrame(DefaultPolicy.connect.options),
@@ -118,22 +119,32 @@ describe('Client', function() {
             name: rxAttach.name, handle: 1, role: constants.linkRole.sender, source: {}, target: {}, initialDeliveryCount: 0
           });
         },
-        function (prev) {
-          var txFrame = new TransferFrame({
-            handle: 1,
-            more: true
-          });
-          txFrame.message = buf1;
-          return txFrame;
-        },
-        function (prev) {
-          var txFrame = new TransferFrame({
-            handle: 1,
-            more: false
-          });
-          txFrame.message = buf2;
-          return txFrame;
-        },
+        [
+          function (prev) {
+            var txFrame = new TransferFrame({
+              handle: 1,
+              more: true
+            });
+            txFrame.message = buf1;
+            return txFrame;
+          },
+          function (prev) {
+            var txFrame = new TransferFrame({
+              handle: 1,
+              more: true
+            });
+            txFrame.message = buf2;
+            return txFrame;
+          },
+          function (prev) {
+            var txFrame = new TransferFrame({
+              handle: 1,
+              more: false
+            });
+            txFrame.message = buf3;
+            return txFrame;
+          }
+        ],
         new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test'))
       ]);
 
@@ -144,7 +155,7 @@ describe('Client', function() {
         .then(function (rxLink) {
           rxLink.on('message', function (msg) {
             expect(msg.body).not.to.be.null;
-            expect(msg.body.test).to.eql('testing');
+            expect(msg.body.test).to.eql('Really long message');
             test.client.disconnect().then(function() {
               done();
             });

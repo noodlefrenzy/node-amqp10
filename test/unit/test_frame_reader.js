@@ -236,8 +236,9 @@ describe('FrameReader', function() {
         expect(newTransfer.channel).to.eql(channel);
         expect(newTransfer.handle).to.eql(handle);
         expect(newTransfer.receiverSettleMode).to.eql(constants.receiverSettleMode.autoSettle);
-        expect(newTransfer.message.body).to.have.length(1);
-        expect(newTransfer.message.body[0]).to.eql(10);
+        expect(newTransfer.message).to.have.length(5);
+        var message = newTransfer.decodePayload();
+        expect(message.body[0]).to.eql(10);
       });
 
       it('flow', function() {
