@@ -109,7 +109,7 @@ If you find any issues, please report them via GitHub.
     ```
 
     ```bash
-    [root@pinguino]# node receive.js
+    [root@pinguino]# node simple_eventhub_test.js
       amqp10:client connecting to: amqps://xxxxxx:xxxxxxxxx@xxxxxxxxxxxx.servicebus.windows.net +0ms
       amqp10:connection Connecting to xxxxxx-service-bus-001.servicebus.windows.net:5671 via TLS +72ms
       amqp10:connection Transitioning from DISCONNECTED to START due to connect +17ms
