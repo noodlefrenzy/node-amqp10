@@ -86,15 +86,25 @@ If you find any issues, please report them via GitHub.
 ## Implementation Notes ##
 
 +   Using node's built-in net/tls classes for communicating with the server.
+
 +   Data from the server is written to a buffer-list based on [Rod Vagg's BL](https://github.com/rvagg/bl).
+
 +   Outgoing data is encoded using [this buffer builder](https://github.com/PeterReid/node-buffer-builder) - streaming
     output won't really work since each outgoing payload needs to be prefixed with its encoded size, however we're working on
     converting to use as much streaming as possible.
+
 +   The connection state is managed using [Stately.js](https://github.com/fschaefer/Stately.js), with state transitions
     swapping which callback gets invoked on receipt of new data. (e.g. post-connection, we write the AMQP version header
     and then install a callback to ensure the correct version.  Once incoming data is written to the circular buffer, this
     callback is invoked, and a comparison vs. the expected version triggers another transition).
+
 +   Debug output is done via [debug](https://www.npmjs.com/package/debug) with the prefix `amqp10:`.  The main client's debug
-    name is `amqp10:client` so setting `DEBUG=amqp10:client` will get you all top-level debugging output.
+    name is `amqp10:client` so setting `DEBUG=amqp10:client` as an environment variable will get you all top-level debugging output.
+    ```bash
+    bash# export DEBUG=amqp*
+    ```
+    ```bash
+    C:\> set DEBUG=amqp*
+    ```
 
 Further, detailed implementation notes are available in the [API Readme](api/).
