@@ -103,8 +103,24 @@ If you find any issues, please report them via GitHub.
     ```bash
     bash# export DEBUG=amqp*
     ```
+    
     ```bash
     C:\> set DEBUG=amqp*
+    ```
+
+    ```bash
+    [root@pinguino]# node receive.js
+      amqp10:client connecting to: amqps://xxxxxx:xxxxxxxxx@xxxxxxxxxxxx.servicebus.windows.net +0ms
+      amqp10:connection Connecting to xxxxxx-service-bus-001.servicebus.windows.net:5671 via TLS +72ms
+      amqp10:connection Transitioning from DISCONNECTED to START due to connect +17ms
+      amqp10:connection Sending Header 414d515003010000 +405ms
+      amqp10:connection Transitioning from START to IN_SASL due to connected +6ms
+      amqp10:connection Rx: 414d515003010000 +128ms
+      amqp10:sasl Server SASL Version: 414d515003010000 vs 414d515003010000 +1ms
+      amqp10:connection Rx: 0000003f02010000005340c03201e02f04b3000000074d535342434... +162ms
+      amqp10:client Reading variable with prefix 0xc0 of length 52 +2ms
+      amqp10:client Decoding 5340 +0ms
+      [...]
     ```
 
 Further, detailed implementation notes are available in the [API Readme](api/).
