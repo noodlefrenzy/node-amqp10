@@ -20,7 +20,7 @@ client.connect('amqp://' + server)
       if (receivedCount === messageCount) {
         finish = new Date();
         console.log('=> sent ' + messageCount + ' messages in ' + (finish.getTime() - start.getTime()) + 'ms');
-        process.exit(0);
+        client.disconnect().then(function() { process.exit(0); });
       }
     });
 
