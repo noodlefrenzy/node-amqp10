@@ -18,6 +18,7 @@
     "uuid": "^2.0.1"
   },
   "devDependencies": {
+    "benchmark": "^1.0.0",
     "chai": "^3.3.0",
     "istanbul": "^0.4.0",
     "jsdoc-to-markdown": "^1.2.0",
