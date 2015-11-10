@@ -17,9 +17,6 @@ fixjsstyle:
 coverage: jshint
 	$(NPM_BIN)/istanbul cover $(NPM_BIN)/_mocha --report lcovonly -- --recursive -t 10000 --ui tdd $(UNIT_TESTS) $(QPID_INTEGRATION_TESTS) $(SERVICEBUS_INTEGRATION_TESTS)
 
-codeclimate-send:
-	CODECLIMATE_REPO_TOKEN=2612b6d4b7bed06760320154f22eba4e348e53055c0eaf9a9a00e3b05ef3b37d codeclimate < coverage/lcov.info
-
 test-unit: jshint
 	$(NPM_BIN)/mocha --globals setImmediate,clearImmediate --recursive --check-leaks --colors -t 10000 --reporter $(REPORTER) $(UNIT_TESTS) $(GREPARG)
 
@@ -34,4 +31,4 @@ test: test-unit test-qpid test-servicebus
 apidoc: jshint
 	$(NPM_BIN)/jsdoc2md --src lib/**/*.js > api/README.md
 
-.PHONY: jshint fixjsstyle coverage codeclimate-send test
+.PHONY: jshint fixjsstyle coverage test

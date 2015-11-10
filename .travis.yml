@@ -4,10 +4,6 @@ node_js:
   - '0.12'
   - '4'
 
-cache:
-  directories:
-    - node_modules
-
 branches:
   except:
     - gh-pages
@@ -21,12 +17,14 @@ branches:
 #       - rabbitmq-server
 #       - qpidd
 
-before_script:
+before_install:
   - npm install -g codeclimate-test-reporter
   - sudo add-apt-repository ppa:qpid/testing -y
   - sudo apt-get update -q
   - sudo apt-get install qpidd qpid-tools
   - sudo sh -c 'echo "auth=no" >> /etc/qpid/qpidd.conf'
+
+before_script:
   - sudo /etc/init.d/qpidd restart
 
   # remove these when we can specify link properties
@@ -34,5 +32,6 @@ before_script:
 
 script:
   - make coverage
+
 after_script:
-  - make codeclimate-send
+  - codeclimate-test-reporter < coverage/lcov.info
