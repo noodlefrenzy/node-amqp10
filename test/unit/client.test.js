@@ -270,23 +270,17 @@ describe('Client', function() {
     });
 
     it('should resolve the connect promise on reconnect if initial connection fails', function() {
-      this.timeout(10000);
+      test.server.setResponseSequence([
+        constants.amqpVersion,
+        new OpenFrame(DefaultPolicy.connect.options),
+        new BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0, incomingWindow: 2147483647, outgoingWindow: 2147483647, handleMax: 4294967295
+        }),
+        new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test'))
+      ]);
 
       // restart the server after 1s
-      setTimeout(function() {
-        return test.server.setup()
-          .then(function() {
-            test.server.setResponseSequence([
-              constants.amqpVersion,
-              new OpenFrame(DefaultPolicy.connect.options),
-              new BeginFrame({
-                remoteChannel: 1, nextOutgoingId: 0, incomingWindow: 2147483647, outgoingWindow: 2147483647, handleMax: 4294967295
-              }),
-              new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test'))
-            ]);
-          });
-      }, 1000);
-
+      setTimeout(function() { return test.server.setup(); }, 10);
 
       var address = test.server.address();
       test.client.policy.reconnect = {
@@ -297,5 +291,37 @@ describe('Client', function() {
         .then(function() { return test.client.connect(address); })
         .then(function() { return test.client.disconnect(); });
     });
+
+    it('should reconnect if connection lost and already connected', function() {
+      test.server.setResponseSequence([
+        // first connect
+        constants.amqpVersion,
+        new OpenFrame(DefaultPolicy.connect.options),
+        new BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0, incomingWindow: 2147483647, outgoingWindow: 2147483647, handleMax: 4294967295
+        }),
+
+        // second connect
+        constants.amqpVersion,
+        new OpenFrame(DefaultPolicy.connect.options),
+        new BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0, incomingWindow: 2147483647, outgoingWindow: 2147483647, handleMax: 4294967295
+        }),
+
+        new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test'))
+      ]);
+
+      var address = test.server.address();
+      test.client.policy.reconnect = {
+        retries: 5, strategy: 'fibonacci', forever: true
+      };
+
+      return test.client.connect(address)
+        // destroy the client to simulate a forced disconnect
+        .then(function() { return test.server._client.destroy(); })
+        .delay(250) // simulate some time to reconnect
+        .then(function() { return test.client.disconnect(); });
+    });
+
   });
 });
