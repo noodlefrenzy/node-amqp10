@@ -31,7 +31,6 @@ DefaultPolicy.reconnect.forever = false;
 
 describe('Client', function() {
   describe('#connect()', function() {
-
     beforeEach(function() {
       if (!!test.server) test.server = undefined;
       if (!!test.client) test.client = undefined;
@@ -251,5 +250,52 @@ describe('Client', function() {
         .then(function() { return test.client.disconnect(); });
     });
 
+  });
+
+  describe('#reconnect()', function() {
+    beforeEach(function() {
+      if (!!test.server) test.server = undefined;
+      if (!!test.client) test.client = undefined;
+      test.client = new AMQPClient();
+      test.server = new MockServer();
+      return test.server.setup();
+    });
+
+    afterEach(function() {
+      if (!test.server) return;
+      return test.server.teardown()
+        .then(function() {
+          test.server = undefined;
+        });
+    });
+
+    it('should resolve the connect promise on reconnect if initial connection fails', function() {
+      this.timeout(10000);
+
+      // restart the server after 1s
+      setTimeout(function() {
+        return test.server.setup()
+          .then(function() {
+            test.server.setResponseSequence([
+              constants.amqpVersion,
+              new OpenFrame(DefaultPolicy.connect.options),
+              new BeginFrame({
+                remoteChannel: 1, nextOutgoingId: 0, incomingWindow: 2147483647, outgoingWindow: 2147483647, handleMax: 4294967295
+              }),
+              new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test'))
+            ]);
+          });
+      }, 1000);
+
+
+      var address = test.server.address();
+      test.client.policy.reconnect = {
+        retries: 5, strategy: 'fibonacci', forever: true
+      };
+
+      return test.server.teardown()
+        .then(function() { return test.client.connect(address); })
+        .then(function() { return test.client.disconnect(); });
+    });
   });
 });
