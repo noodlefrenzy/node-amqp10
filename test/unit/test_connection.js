@@ -195,7 +195,7 @@ describe('Connection', function() {
         process.nextTick(function() {
           expect(events).to.have.length(3);
           expect(events[0][0]).to.eql(Connection.ErrorReceived);
-          expect(events[0][1]).to.include('Invalid AMQP version');
+          expect(events[0][1].message).to.include('Invalid AMQP version');
           expect(events[1]).to.eql(Connection.Disconnected);
           expect(events[2]).to.eql(Connection.Disconnected);
           done();
@@ -237,7 +237,7 @@ describe('Connection', function() {
         process.nextTick(function() {
           expect(events).to.have.length(3);
           expect(events[0][0]).to.eql(Connection.ErrorReceived);
-          expect(events[0][1]).to.include('Credentials Expected');
+          expect(events[0][1].message).to.include('Credentials Expected');
           expect(events[1]).to.eql(Connection.Disconnected);
           expect(events[2]).to.eql(Connection.Disconnected);
           done();

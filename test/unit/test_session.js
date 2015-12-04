@@ -3,6 +3,7 @@
 var expect = require('chai').expect,
 
     constants = require('../../lib/constants'),
+    errors = require('../../lib/errors'),
     u = require('../../lib/utilities'),
     tu = require('./testing_utils'),
     _ = require('lodash'),
@@ -224,7 +225,7 @@ describe('Session', function() {
           var opts = u.deepMerge({ attach: { name: 'test', source: src(), target: tgt() } }, DefaultPolicy.senderLink);
           var link = session.createLink(opts);
           link.on('errorReceived', function(err) {
-            expect(err).to.eql(new AMQPError(AMQPError.LinkDetachForced, 'test', ''));
+            expect(err).to.eql(errors.wrapProtocolError(new AMQPError(AMQPError.LinkDetachForced, 'test', '')));
           });
 
           link.linkSM.bind(tu.assertTransitions(expected.link, function(transitions) {
