@@ -1,6 +1,6 @@
 {
   "name": "amqp10",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "Native AMQP-1.0 client for node.js",
   "main": "./lib",
   "engines": {
