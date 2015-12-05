@@ -7,13 +7,14 @@
     "node": ">= 0.10"
   },
   "dependencies": {
-    "buffer-builder": "^0.2.0",
     "bl": "^1.0.0",
     "bluebird": "^3.0.0",
+    "buffer-builder": "^0.2.0",
     "debug": "^2.0.0",
     "lodash": "^3.3.0",
     "node-amqp-encoder": "^0.0.2",
     "node-int64": "^0.4.0",
+    "nodejs-websocket": "^1.4.1",
     "stately.js": "^1.2.0",
     "uuid": "^2.0.1"
   },

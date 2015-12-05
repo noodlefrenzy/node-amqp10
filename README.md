@@ -86,6 +86,7 @@ If you find any issues, please report them via GitHub.
 ## Implementation Notes ##
 
 +   Using node's built-in net/tls classes for communicating with the server.
++   Using [nodejs-websocket](https://github.com/sitegui/nodejs-websocket) for Azure IoT Hub support of AMQP over WebSockets.
 
 +   Data from the server is written to a buffer-list based on [Rod Vagg's BL](https://github.com/rvagg/bl).
 

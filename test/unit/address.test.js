@@ -13,7 +13,8 @@ describe('Address Parsing', function() {
         address: 'amqp://127.0.0.1',
         expected: {
           protocol: 'amqp', host: '127.0.0.1', port: 5672, path: '/',
-          rootUri: 'amqp://127.0.0.1:5672'
+          rootUri: 'amqp://127.0.0.1:5672',
+          href: 'amqp://127.0.0.1'
         }
       },
       {
@@ -21,7 +22,8 @@ describe('Address Parsing', function() {
         address: 'amqps://localhost',
         expected: {
           protocol: 'amqps', host: 'localhost', port: 5671, path: '/',
-          rootUri: 'amqps://localhost:5671'
+          rootUri: 'amqps://localhost:5671',
+          href: 'amqps://localhost'
         }
       },
       {
@@ -29,7 +31,8 @@ describe('Address Parsing', function() {
         address: 'amqp://localhost:1234',
         expected: {
           protocol: 'amqp', host: 'localhost', port: 1234, path: '/',
-          rootUri: 'amqp://localhost:1234'
+          rootUri: 'amqp://localhost:1234',
+          href: 'amqp://localhost:1234'
         }
       },
       {
@@ -38,7 +41,8 @@ describe('Address Parsing', function() {
         expected: {
           protocol: 'amqps', host: 'mq.myhost.com', port: 1235,
           path: '/myroute?with=arguments&multiple=arguments',
-          rootUri: 'amqps://mq.myhost.com:1235'
+          rootUri: 'amqps://mq.myhost.com:1235',
+          href: 'amqps://mq.myhost.com:1235/myroute?with=arguments&multiple=arguments'
         }
       },
       {
@@ -46,7 +50,8 @@ describe('Address Parsing', function() {
         address: 'amqp://10.42.1.193:8118/testqueue',
         expected: {
           protocol: 'amqp', host: '10.42.1.193', port: 8118, path: '/testqueue',
-          rootUri: 'amqp://10.42.1.193:8118'
+          rootUri: 'amqp://10.42.1.193:8118',
+          href: 'amqp://10.42.1.193:8118/testqueue'
         }
       },
       {
@@ -55,7 +60,8 @@ describe('Address Parsing', function() {
         expected: {
           protocol: 'amqp', host: 'my.amqp.server', port: 5672, path: '/',
           user: 'username', pass: 'password',
-          rootUri: 'amqp://username:password@my.amqp.server:5672'
+          rootUri: 'amqp://username:password@my.amqp.server:5672',
+          href: 'amqp://username:password@my.amqp.server'
         }
       },
       {
@@ -64,7 +70,8 @@ describe('Address Parsing', function() {
         expected: {
           protocol: 'amqps', host: '192.168.1.1', port: 1234, path: '/myroute',
           user: 'username', pass: 'password',
-          rootUri: 'amqps://username:password@192.168.1.1:1234'
+          rootUri: 'amqps://username:password@192.168.1.1:1234',
+          href: 'amqps://username:password@192.168.1.1:1234/myroute'
         }
       }
     ].forEach(function(testCase) {
@@ -97,7 +104,8 @@ describe('Address Parsing', function() {
         protocol: 'amqps',
         rootUri: 'amqps://username:password@192.168.1.1:1234',
         user: 'username',
-        vhost: 'some-vhost'
+        vhost: 'some-vhost',
+        href: 'amqps://username:password@192.168.1.1:1234/some-vhost/topic/and/more'
       });
     });
   });
@@ -112,7 +120,8 @@ describe('Address Parsing', function() {
         port: 1234,
         protocol: 'amqps',
         rootUri: 'amqps://username:password@192.168.1.1:1234',
-        user: 'username'
+        user: 'username',
+        href: 'amqps://username:password@192.168.1.1:1234/topic://mytopic'
       });
     });
 
