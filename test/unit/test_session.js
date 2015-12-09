@@ -12,8 +12,6 @@ var expect = require('chai').expect,
 
     Connection = require('../../lib/connection'),
     Session = require('../../lib/session'),
-    
-    TransportProvider = require('../../lib/transport'),
 
     AMQPError = require('../../lib/types/amqp_error'),
 
@@ -95,7 +93,7 @@ describe('Session', function() {
         [ true, new CloseFrame() ]
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect, new TransportProvider());
+      var connection = new Connection(DefaultPolicy.connect);
       server.setup(connection);
 
       var expected = {
@@ -145,7 +143,7 @@ describe('Session', function() {
         [ true, new CloseFrame() ]
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect, new TransportProvider());
+      var connection = new Connection(DefaultPolicy.connect);
       server.setup(connection);
 
       var events = [];
@@ -193,7 +191,7 @@ describe('Session', function() {
         [ true, new CloseFrame() ]
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect, new TransportProvider());
+      var connection = new Connection(DefaultPolicy.connect);
       server.setup(connection);
 
       var expected = {

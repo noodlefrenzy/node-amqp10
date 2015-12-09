@@ -13,8 +13,6 @@ var expect = require('chai').expect,
     OpenFrame = require('../../lib/frames/open_frame'),
 
     Connection = require('../../lib/connection'),
-    
-    TransportProvider = require('../../lib/transport'),
 
     tu = require('./testing_utils');
 
@@ -41,7 +39,7 @@ describe('Connection', function() {
         new CloseFrame()
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect, new TransportProvider());
+      var connection = new Connection(DefaultPolicy.connect);
       server.setup(connection);
 
       var expected = ['DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'DISCONNECTED'];
@@ -62,7 +60,7 @@ describe('Connection', function() {
         new CloseFrame()
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect, new TransportProvider());
+      var connection = new Connection(DefaultPolicy.connect);
       server.setup(connection);
 
       var expected = ['DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'DISCONNECTED'];
@@ -78,7 +76,7 @@ describe('Connection', function() {
         'disconnect'
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect, new TransportProvider());
+      var connection = new Connection(DefaultPolicy.connect);
       server.setup(connection);
 
       var expected = ['DISCONNECTED', 'START', 'HDR_SENT', 'DISCONNECTED'];
@@ -94,7 +92,7 @@ describe('Connection', function() {
         'error'
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect, new TransportProvider());
+      var connection = new Connection(DefaultPolicy.connect);
       server.setup(connection);
 
       var expected = ['DISCONNECTED', 'START', 'HDR_SENT', 'DISCONNECTED'];
@@ -114,7 +112,7 @@ describe('Connection', function() {
         [ true, new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect, new TransportProvider());
+      var connection = new Connection(DefaultPolicy.connect);
       server.setup(connection);
       var expected = [
         'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'OPENED',
@@ -136,7 +134,7 @@ describe('Connection', function() {
         [ true, new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect, new TransportProvider());
+      var connection = new Connection(DefaultPolicy.connect);
       server.setup(connection);
 
       var events = [];
@@ -177,7 +175,7 @@ describe('Connection', function() {
         [ true, new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect, new TransportProvider());
+      var connection = new Connection(DefaultPolicy.connect);
       server.setup(connection);
 
       var events = [];
@@ -219,7 +217,7 @@ describe('Connection', function() {
         [ true, new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect, new TransportProvider());
+      var connection = new Connection(DefaultPolicy.connect);
       server.setup(connection);
 
       var events = [];

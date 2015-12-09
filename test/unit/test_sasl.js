@@ -16,7 +16,6 @@ var builder = require('buffer-builder'),
 
     Connection = require('../../lib/connection'),
     Sasl = require('../../lib/sasl'),
-    TransportProvider = require('../../lib/transport'),
 
     tu = require('./testing_utils');
 
@@ -58,7 +57,7 @@ describe('Sasl', function() {
         [ true, new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect, new TransportProvider());
+      var connection = new Connection(DefaultPolicy.connect);
       server.setup(connection);
 
       var expected = [
