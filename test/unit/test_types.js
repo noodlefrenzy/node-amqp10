@@ -461,11 +461,6 @@ describe('Types', function() {
     });
 
     describe('primitives', function() {
-      describe('errors', function() {
-
-      });
-
-
       describe('scalar', function() {
         [
           { name: 'null', value: buf([0x40]), expectedOutput: null },
@@ -484,9 +479,14 @@ describe('Types', function() {
           { name: 'uint0', value: buf([0x43]), expectedOutput: 0 },
 
           {
+            name: 'ulong-not-int64',
+            value: buf([0x80, 0x00, 0x00, 0x00, 0x00, 0x80, 0x10, 0x00, 0x00]),
+            expectedOutput: 2148532224
+          },
+          {
             name: 'ulong',
-            value: buf([0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]),
-            expectedOutput: new Int64(0xFFFFFFFF, 0xFFFFFFFF)
+            value: buf([0x80, 0x01, 0x01, 0x01, 0x01, 0x23, 0x45, 0x67, 0x89]),
+            expectedOutput: new Int64(0x01010101, 0x23456789)
           },
           {
             name: 'smallulong', value: buf([0x53, 0x01]),
@@ -502,9 +502,14 @@ describe('Types', function() {
           { name: 'int', value: buf([0x71, 0x00, 0x00, 0x00, 0x01]), expectedOutput: 1 },
           { name: 'smallint', value: buf([0x54, 0x01]), expectedOutput: 1 },
           {
+            name: 'long-not-int64',
+            value: buf([0x81, 0x00, 0x00, 0x00, 0x00, 0x80, 0x10, 0x00, 0x00]),
+            expectedOutput: 2148532224
+          },
+          {
             name: 'long',
-            value: buf([0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]),
-            expectedOutput: new Int64(0xFFFFFFFF, 0xFFFFFFFF)
+            value: buf([0x81, 0x01, 0x01, 0x01, 0x01, 0x23, 0x45, 0x67, 0x89]),
+            expectedOutput: new Int64(0x01010101, 0x23456789)
           },
           { name: 'smalllong', value: buf([0x55, 0x23]), expectedOutput: 0x23 },
           {

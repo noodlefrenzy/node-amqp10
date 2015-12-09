@@ -59,5 +59,24 @@ describe('Types', function() {
       });
   });
 
+  it('should be able to send a big number', function(done) {
+    var message = 2148532224;
+    test.client.connect(config.address)
+      .then(function() {
+        return Promise.all([
+          test.client.createReceiver(config.defaultLink),
+          test.client.createSender(config.defaultLink)
+        ]);
+      })
+      .spread(function(receiver, sender) {
+        receiver.on('message', function(msg) {
+          expect(msg.body).to.eql(message);
+          done();
+        });
+
+        return sender.send(message);
+      });
+  });
+
 });
 });
