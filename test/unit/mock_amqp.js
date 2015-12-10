@@ -99,7 +99,7 @@ MockServer.prototype._sendUntil = function(toSend) {
         this.conn.end();
         break;
       case 'error':
-        this.client.client.emit('error', 'Forced error');
+        this.client._transport.emit('error', 'Forced error');
         break;
       default:
         this.conn.write(toSend, 'utf8', function() { debug('Wrote ' + toSend); });
