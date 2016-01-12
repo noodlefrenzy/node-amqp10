@@ -204,6 +204,95 @@ describe('FrameReader', function() {
         expect(newAttach.receiverSettleMode).to.eql(constants.receiverSettleMode.autoSettle);
       });
 
+      it('attach', function() {
+        var buffer = tu.newBuffer([
+          0x00, 0x00, 0x00, 0x1e,
+          0x02, 0x00, 0x00, 0x00,
+          0x00, 0x53, 0x12,
+          0xc0, 0x11, 0x06,
+          0xa1, 0x04, 0x74, 0x65, 0x73, 0x74,
+          0x43, 0x41,
+          0x50, 0x02,
+          0x50, 0x00,
+          0x00, 0x53, 0x28, 0x45
+        ]);
+
+        var newAttach = reader.read(buffer);
+        expect(newAttach).to.be.an.instanceOf(AttachFrame);
+        expect(newAttach.channel).to.eql(0);
+        expect(newAttach.name).to.eql('test');
+        expect(newAttach.handle).to.eql(0);
+        expect(newAttach.role).to.eql(true);
+        expect(newAttach.senderSettleMode).to.eql(constants.senderSettleMode.mixed);
+        expect(newAttach.receiverSettleMode).to.eql(constants.receiverSettleMode.autoSettle);
+      });
+
+      it('attach (more complete)', function() {
+        var sourceSize = 1 + 1 + 1 + 13 + 1 + 1 + 3 + 1 + 3 + 1 + 1 + 1;
+        var targetSize = 1 + 9 + 1 + 13 + 1 + 1 + 3 + 1;
+        var propertiesSize = 4 + 28 + 32;
+        var listSize = 1 + 6 + 2 + 1 + 2 + 2 + 3 + 2 + sourceSize + 3 + 2 + targetSize + 3 + 1 + 2 + 1 + 1 + 1 + 3 + propertiesSize;
+        var listCount = 14;
+        var frameSize = 1 + 1 + 9 + 2 + listSize;
+
+        var buffer = tu.newBuffer([
+          0x00, 0x00, 0x00, frameSize,
+          0x02, 0x00, 0x00, 0x01,
+          0x00,
+          0x53,
+          0x12,
+          0xc0, listSize, listCount,
+          0xA1, 4, builder.prototype.appendString, 'test',
+          0x52, 1, // handle
+          0x42, // role=sender
+          0x50, 2, // sender-settle-mode=mixed
+          0x50, 0, // rcv-settle-mode=first
+          0x00, 0x53, 0x28, // source
+          0xc0, sourceSize, 11,
+          0x40,
+          0x43,
+          0xA3, 11, builder.prototype.appendString, 'session-end',
+          0x43,
+          0x41,
+          0xc1, 1, 0,
+          0x40,
+          0xc1, 1, 0,
+          0x40,
+          0x40,
+          0x40,
+          0x00, 0x53, 0x29, // target
+          0xc0, targetSize, 7,
+          0xA1, 7, builder.prototype.appendString, 'testtgt',
+          0x43,
+          0xA3, 11, builder.prototype.appendString, 'session-end',
+          0x43,
+          0x42,
+          0xc1, 1, 0,
+          0x40,
+          0xc1, 1, 0,
+          0x42,
+          0x52, 1,
+          0x44,
+          0x40,
+          0x40,
+          0xc1, 65, 2,
+          0xA3, 28, builder.prototype.appendString, 'com.microsoft:client-version',
+          0xA1, 32, builder.prototype.appendString, 'azure-iot-device/1.0.0-preview.9',
+        ]);
+
+        var attachFrame = reader.read(buffer);
+        expect(attachFrame).to.be.an.instanceOf(AttachFrame);
+        expect(attachFrame.channel).to.eql(1);
+        expect(attachFrame.name).to.eql('test');
+        expect(attachFrame.handle).to.eql(1);
+        expect(attachFrame.role).to.eql(false);
+        expect(attachFrame.senderSettleMode).to.eql(constants.senderSettleMode.mixed);
+        expect(attachFrame.receiverSettleMode).to.eql(constants.receiverSettleMode.autoSettle);
+        expect(attachFrame.properties).to.eql({
+          'com.microsoft:client-version': 'azure-iot-device/1.0.0-preview.9'
+        });
+      });
+
       it('transfer (trivial message body)', function() {
         var listSize = 1 + 2 + 2 + 3 + 3 + 2 + 4;
         var payloadSize = 5;

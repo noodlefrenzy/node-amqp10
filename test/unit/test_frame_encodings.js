@@ -75,12 +75,17 @@ describe('AttachFrame', function() {
       role: constants.linkRole.sender,
       source: new Source({ address: null, dynamic: true }),
       target: new Target({ address: 'testtgt' }),
-      initialDeliveryCount: 1 });
+      initialDeliveryCount: 1,
+      properties: {
+        'com.microsoft:client-version': 'azure-iot-device/1.0.0-preview.9'
+      }
+    });
     attach.channel = 1;
     var actual = tu.convertFrameToBuffer(attach);
     var sourceSize = 1 + 1 + 1 + 13 + 1 + 1 + 3 + 1 + 3 + 1 + 1 + 1;
     var targetSize = 1 + 9 + 1 + 13 + 1 + 1 + 3 + 1;
-    var listSize = 1 + 6 + 2 + 1 + 2 + 2 + 3 + 2 + sourceSize + 3 + 2 + targetSize + 3 + 1 + 2 + 1 + 1 + 1 + 3;
+    var propertiesSize = 4 + 28 + 32;
+    var listSize = 1 + 6 + 2 + 1 + 2 + 2 + 3 + 2 + sourceSize + 3 + 2 + targetSize + 3 + 1 + 2 + 1 + 1 + 1 + 3 + propertiesSize;
     var listCount = 14;
     var frameSize = 1 + 1 + 9 + 2 + listSize;
     var expected = tu.buildBuffer([
@@ -123,7 +128,9 @@ describe('AttachFrame', function() {
       0x44,
       0x40,
       0x40,
-      0xc1, 1, 0
+      0xc1, 65, 2,
+      0xA3, 28, builder.prototype.appendString, 'com.microsoft:client-version',
+      0xA1, 32, builder.prototype.appendString, 'azure-iot-device/1.0.0-preview.9',
     ]);
 
     tu.shouldBufEql(expected, actual);
