@@ -32,7 +32,7 @@ describe('Codec', function() {
       expect(codec.decode(newBuffer([0x41]))[0]).to.be.true;
       expect(codec.decode(newBuffer([0x42]))[0]).to.be.false;
       expect(codec.decode(newBuffer([0x43]))[0]).to.eql(0);
-      expect(codec.decode(newBuffer([0x44]))[0]).to.eql(new Int64(0, 0));
+      expect(codec.decode(newBuffer([0x44]))[0]).to.eql(0);
     });
 
     it('should match longs', function() {
@@ -106,10 +106,10 @@ describe('Codec', function() {
       var actual = codec.decode(buffer);
       expect(actual[0]).to.be.an.instanceOf(DescribedType);
       expect(actual[0].value).to.be.an.instanceOf(Array);
-      expect(actual[0].descriptor).to.eql(new Int64(0, 1));
+      expect(actual[0].descriptor).to.eql(0x01);
       expect(actual[0].value).to.not.be.empty;
       expect(actual[0].value[0]).to.be.an.instanceOf(DescribedType);
-      expect(actual[0].value[0].descriptor).to.eql(new Int64(0, 2));
+      expect(actual[0].value[0].descriptor).to.eql(0x02);
       expect(actual[0].value[0].value).to.eql('VAL');
     });
 
@@ -149,7 +149,7 @@ describe('Codec', function() {
         0xa1, 0x00,
         0x70, 0x00, 0x10, 0x00, 0x00]);
       var actual = codec.decode(newBuffer(buffer));
-      expect(actual[0]).to.eql(new DescribedType(new Int64(0, 0x10), ['', '', 0x00100000]));
+      expect(actual[0]).to.eql(new DescribedType(0x10, ['', '', 0x00100000]));
     });
 
     it('should decode known type (AMQPError) from described type', function() {

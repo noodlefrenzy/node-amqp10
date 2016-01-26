@@ -511,12 +511,12 @@ describe('Types', function() {
           },
           {
             name: 'smallulong', value: buf([0x53, 0x01]),
-            expectedOutput: new Int64(0x00000000, 0x00000001)
+            expectedOutput: 0x01
           },
           {
             name: 'ulong0',
             value: buf([0x44]),
-            expectedOutput: new Int64(0x00000000, 0x00000000)
+            expectedOutput: 0
           },
           { name: 'byte', value: buf([0x51, 0x01]), expectedOutput: 1 },
           { name: 'short', value: buf([0x61, 0x00, 0x01]), expectedOutput: 1 },

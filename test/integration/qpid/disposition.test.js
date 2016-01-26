@@ -47,7 +47,7 @@ describe('Disposition', function() {
 
           test.broker.getQueue(queueName)
             .then(function(queue) {
-              expect(queue.msgDepth.toNumber(true)).to.equal(0);
+              expect(queue.msgDepth).to.equal(0);
               done();
             });
         });
@@ -89,7 +89,7 @@ describe('Disposition', function() {
 
           test.broker.getQueue(queueName)
             .then(function(queue) {
-              expect(queue.msgDepth.toNumber(true)).to.equal(0);
+              expect(queue.msgDepth).to.equal(0);
               done();
             });
         });
