@@ -354,6 +354,27 @@ describe('Types', function() {
             expectedOutput: buf([0x05, 0x03, 0x54, 0x01, 0x02, 0x03])
           },
           {
+            name: 'array8 (of lists)', type: 'array',
+            value: new AMQPArray([ [1,2,3], [1,2,3] ], 0xc0),
+            expectedOutput: buf([
+              0xe0,
+              0x12, 0x02,
+              0xc0,
+                0x07, 0x03, 0x54, 0x01, 0x54, 0x02, 0x54, 0x03,
+                0x07, 0x03, 0x54, 0x01, 0x54, 0x02, 0x54, 0x03])
+          },
+          {
+            name: 'array8 (of maps)', type: 'array',
+            value: new AMQPArray([ { hello: 'world' }, { goodnight: 'moon'} ], 0xc1),
+            expectedOutput: buf([
+              0xe0,
+              0x25, 0x02,
+              0xc1, 0x0f, 0x02,
+                0xa1, 0x05, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0xa1, 0x05, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x12, 0x02,
+                0xa1, 0x09, 0x67, 0x6f, 0x6f, 0x64, 0x6e, 0x69, 0x67, 0x68, 0x74, 0xa1, 0x04, 0x6d, 0x6f, 0x6f, 0x6e
+            ])
+          },
+          {
             name: 'array32', type: 'array',
             value: new AMQPArray(array32, 0x54),
             expectedOutput: array32ExpectedBuffer
@@ -490,12 +511,12 @@ describe('Types', function() {
           },
           {
             name: 'smallulong', value: buf([0x53, 0x01]),
-            expectedOutput: new Int64(0x00000000, 0x00000001)
+            expectedOutput: 0x01
           },
           {
             name: 'ulong0',
             value: buf([0x44]),
-            expectedOutput: new Int64(0x00000000, 0x00000000)
+            expectedOutput: 0
           },
           { name: 'byte', value: buf([0x51, 0x01]), expectedOutput: 1 },
           { name: 'short', value: buf([0x61, 0x00, 0x01]), expectedOutput: 1 },

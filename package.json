@@ -24,7 +24,7 @@
     "jsdoc-to-markdown": "^1.2.0",
     "jshint": "^2.6.0",
     "mocha": "^2.1.0",
-    "qmf2": "^0.0.5",
+    "qmf2": "^0.0.6",
     "stream-buffers": "^2.2.0"
   },
   "scripts": {},
