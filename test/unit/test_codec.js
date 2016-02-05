@@ -230,12 +230,12 @@ describe('Codec', function() {
     it('should encode described types', function() {
       var bufb = new Builder();
       codec.encode(new DescribedType('D1', 'V1'), bufb);
-      var expected = buildBuffer([0x00, 0xA1, 0x2, Builder.prototype.appendString, 'D1', 0xA1, 0x2, Builder.prototype.appendString, 'V1']);
+      var expected = buildBuffer([0x00, 0xA3, 0x2, Builder.prototype.appendString, 'D1', 0xA1, 0x2, Builder.prototype.appendString, 'V1']);
       tu.shouldBufEql(expected, bufb);
     });
     it('should encode described types with no values', function() {
       var bufb = new Builder();
-      codec.encode(new DescribedType(new Int64(0x0, 0x26)), bufb);
+      codec.encode(new DescribedType(0x26), bufb);
       var expected = buildBuffer([0x00, 0x53, 0x26, 0x45]);
       tu.shouldBufEql(expected, bufb);
     });
@@ -303,7 +303,7 @@ describe('Codec', function() {
       tu.shouldBufEql(expected, bufb);
     });
     it('should encode frame performative correctly', function() {
-      var performative = new DescribedType(new Int64(0x00000000, 0x00000010), {
+      var performative = new DescribedType(0x10, {
         id: 'client', /* string */
         hostname: 'localhost', /* string */
         maxFrameSize: new ForcedType('uint', 512), /* uint */
