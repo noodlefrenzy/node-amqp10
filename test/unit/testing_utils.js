@@ -4,7 +4,8 @@ var Builder = require('buffer-builder'),
     BufferList = require('bl'),
     expect = require('chai').expect,
     _ = require('lodash'),
-    sb = require('stream-buffers');
+    sb = require('stream-buffers'),
+    frames = require('../../lib/frames');
 
 function buildBuffer(contents) {
   var bufb = new Builder();
@@ -71,6 +72,6 @@ module.exports.assertTransitions = function(expectedTransitions, callback) {
 
 module.exports.convertFrameToBuffer = function(frame) {
   var buffer = new sb.WritableStreamBuffer();
-  frame.write(buffer);
+  frames.writeFrame(frame, buffer);
   return buffer.getContents();
 };
