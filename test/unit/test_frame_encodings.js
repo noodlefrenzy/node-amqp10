@@ -3,6 +3,7 @@
 var builder = require('buffer-builder'),
 
     constants = require('../../lib/constants'),
+    translator = require('../../lib/adapters/translate_encoder'),
 
     Source = require('../../lib/types/source_target').Source,
     Target = require('../../lib/types/source_target').Target,
@@ -91,46 +92,113 @@ describe('AttachFrame', function() {
     var expected = tu.buildBuffer([
       0x00, 0x00, 0x00, frameSize,
       0x02, 0x00, 0x00, 0x01,
-      0x00,
-      0x53,
-      0x12,
+      0x00, 0x53, 0x12,
       0xc0, listSize, listCount,
-      0xA1, 4, builder.prototype.appendString, 'test',
-      0x52, 1, // handle
-      0x42, // role=sender
-      0x50, 2, // sender-settle-mode=mixed
-      0x50, 0, // rcv-settle-mode=first
+        0xA1, 4, builder.prototype.appendString, 'test',
+        0x52, 1, // handle
+        0x42, // role=sender
+        0x50, 2, // sender-settle-mode=mixed
+        0x50, 0, // rcv-settle-mode=first
+
       0x00, 0x53, 0x28, // source
-      0xc0, sourceSize, 11,
-      0x40,
-      0x43,
-      0xA3, 11, builder.prototype.appendString, 'session-end',
-      0x43,
-      0x41,
-      0xc1, 1, 0,
-      0x40,
-      0xc1, 1, 0,
-      0x40,
-      0x40,
-      0x40,
+        0xc0, sourceSize, 11,
+        0x40,
+        0x43,
+        0xA3, 11, builder.prototype.appendString, 'session-end',
+        0x43,
+        0x41,
+        0xc1, 1, 0,
+        0x40,
+        0xc1, 1, 0,
+        0x40,
+        0x40,
+        0x40,
+
       0x00, 0x53, 0x29, // target
-      0xc0, targetSize, 7,
-      0xA1, 7, builder.prototype.appendString, 'testtgt',
-      0x43,
-      0xA3, 11, builder.prototype.appendString, 'session-end',
-      0x43,
-      0x42,
-      0xc1, 1, 0,
-      0x40,
-      0xc1, 1, 0,
-      0x42,
-      0x52, 1,
-      0x44,
-      0x40,
-      0x40,
-      0xc1, 65, 2,
+        0xc0, targetSize, 7,
+        0xA1, 7, builder.prototype.appendString, 'testtgt',
+        0x43,
+        0xA3, 11, builder.prototype.appendString, 'session-end',
+        0x43,
+        0x42,
+        0xc1, 1, 0,
+        0x40,
+        0xc1, 1, 0,
+        0x42,
+        0x52, 1,
+        0x44,
+        0x40,
+        0x40,
+
+      0xc1, 65, 2, // properties
       0xA3, 28, builder.prototype.appendString, 'com.microsoft:client-version',
       0xA1, 32, builder.prototype.appendString, 'azure-iot-device/1.0.0-preview.9',
+    ]);
+
+    tu.shouldBufEql(expected, actual);
+  });
+
+  it('should encode performative correctly (with source filter)', function() {
+    var attach = new AttachFrame({
+      name: 'test',
+      handle: 1,
+      role: constants.linkRole.sender,
+      source: new Source({ address: null, dynamic: true }),
+      target: new Target({ address: 'testtgt' }),
+      initialDeliveryCount: 1,
+      properties: {
+        'com.microsoft:client-version': 'azure-iot-device/1.0.0-preview.9'
+      }
+    });
+    attach.channel = 1;
+    attach.source.filter = translator([
+      'described', ['symbol', 'apache.org:legacy-amqp-direct-binding:string'], ['string', 'news']
+    ]);
+
+    var actual = tu.convertFrameToBuffer(attach);
+    var expected = tu.buildBuffer([
+      0x00, 0x00, 0x00, 0xf2,
+      0x02, 0x00, 0x00, 0x01,
+      0x00, 0x53,0x12,
+        0xc0, 0xe5, 0x0e,
+        0xa1, 0x04, builder.prototype.appendString, 'test',
+        0x52, 0x01,
+        0x42,
+        0x50, 0x02,
+        0x50, 0x00,
+
+        0x00, 0x53, 0x28, // source
+          0xc0, 0x63, 0x0b,
+          0x40,
+          0x43,
+          0xa3, 11, builder.prototype.appendString, 'session-end',
+          0x43,
+          0x41,
+          0xc1, 0x01, 0x00,
+          0x40,
+          0xc1, 0x48, 0x04,
+          0xa3, 10, builder.prototype.appendString, 'descriptor',
+          0xa3, 44, builder.prototype.appendString, 'apache.org:legacy-amqp-direct-binding:string',
+          0xa3, 5,  builder.prototype.appendString, 'value',
+          0xa1, 4,  builder.prototype.appendString, 'news',
+          0x40,
+          0x40,
+
+        0x40, 0x00, 0x53, 0x29,
+          0xc0, 0x1e, 0x07,
+          0xa1, 7, builder.prototype.appendString, 'testtgt',
+          0x43,
+          0xa3, 11, builder.prototype.appendString, 'session-end',
+          0x43,
+          0x42,
+
+        0xc1, 0x01, 0x00, 0x40,
+        0xc1, 0x01, 0x00, 0x42,
+        0x52, 0x01, 0x44, 0x40, 0x40,
+
+        0xc1, 0x41, 0x02,  // properties
+        0xA3, 28, builder.prototype.appendString, 'com.microsoft:client-version',
+        0xA1, 32, builder.prototype.appendString, 'azure-iot-device/1.0.0-preview.9',
     ]);
 
     tu.shouldBufEql(expected, actual);
