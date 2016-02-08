@@ -135,6 +135,8 @@ describe('FrameReader', function() {
         expect(newClose).to.exist;
         expect(newClose).to.be.an.instanceOf(CloseFrame);
         expect(newClose.error).to.not.exist;
+
+        console.log(newClose);
       });
 
       it('close (with error)', function() {
@@ -155,6 +157,8 @@ describe('FrameReader', function() {
         expect(newClose).to.exist;
         expect(newClose).to.be.an.instanceOf(CloseFrame);
         expect(newClose.error).to.be.an.instanceOf(AMQPError);
+
+        console.log(newClose);
       });
 
       it('begin', function() {
@@ -344,7 +348,9 @@ describe('FrameReader', function() {
           0x01, 0x00
         ]);
 
-        expect(reader.read(buffer)).to.be.an.instanceOf(FlowFrame);
+        var flow = reader.read(buffer);
+        expect(flow).to.be.an.instanceOf(FlowFrame);
+        console.log(flow);
       });
 
       it('disposition', function() {

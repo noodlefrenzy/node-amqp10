@@ -98,35 +98,36 @@ describe('Utilities', function() {
       expect(merged.foo.baz).to.be.an.instanceOf(AMQPSymbol);
     });
 
-    it('should work for described types', function() {
-      var dt = new DescribedType(new AMQPSymbol('keyname'), 'value string');
-      var merged = u.deepMerge({ options: dt });
-      expect(merged.options).to.be.an.instanceOf(DescribedType);
-      expect(merged.options.descriptor).to.be.an.instanceOf(AMQPSymbol);
-      expect(merged.options.descriptor.contents).to.eql('keyname');
-      expect(merged.options.value).to.eql('value string');
-    });
+    // it('should work for described types', function() {
+    //   var dt = new DescribedType(new AMQPSymbol('keyname'), 'value string');
+    //   var merged = u.deepMerge({ options: dt });
+    //   expect(merged.options).to.be.an.instanceOf(DescribedType);
+    //   expect(merged.options.descriptor).to.be.an.instanceOf(AMQPSymbol);
+    //   expect(merged.options.descriptor.contents).to.eql('keyname');
+    //   expect(merged.options.value).to.eql('value string');
+    // });
 
     it('should work for attach frame details', function() {
       var input = { options: {
         name: 'recv',
-                    role: constants.linkRole.receiver,
-                    source: new Source({
+        role: constants.linkRole.receiver,
+        source: new Source({
           address: 'recv',
           filter: new Fields({
-                        'apache.org:selector-filter:string' :
-                            new DescribedType(new AMQPSymbol('apache.org:selector-filter:string'),
-                                "amqp.annotation.x-opt-offset > '" + 1000 + "'")
-          })
+            'apache.org:selector-filter:string' :
+                new DescribedType(new AMQPSymbol('apache.org:selector-filter:string'),
+                    "amqp.annotation.x-opt-offset > '" + 1000 + "'")
+            })
         }),
-                    target: new Target({
+        target: new Target({
           address: 'localhost'
         }),
-                    senderSettleMode: constants.senderSettleMode.settled,
-                    receiverSettleMode: constants.receiverSettleMode.autoSettle,
-                    maxMessageSize: 10000,
-                    initialDeliveryCount: 1
+        senderSettleMode: constants.senderSettleMode.settled,
+        receiverSettleMode: constants.receiverSettleMode.autoSettle,
+        maxMessageSize: 10000,
+        initialDeliveryCount: 1
       }};
+
       var merged = u.deepMerge(input);
       expect(merged).to.eql(input);
     });
