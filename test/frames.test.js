@@ -6,6 +6,7 @@ var frames = require('../lib/frames'),
     tu = require('./unit/testing_utils'),
     expect = require('chai').expect,
 
+    AMQPSymbol = require('../lib/types/amqp_symbol'),
     AMQPError = require('../lib/types/amqp_error');
 
     // terminus = require('../lib/types/source_target'),
@@ -423,17 +424,17 @@ describe('FlowFrame', function() {
 
     tu.shouldBufEql(expected, actual);
   });
-});
+}); // FlowFrame
 
 describe('DetachFrame', function() {
   // @todo missing encode
   // @todo missing decode
-});
+}); // DetachFrame
 
 describe('EndFrame', function() {
   // @todo missing encode
   // @todo missing decode
-});
+}); // EndFrame
 
 describe('CloseFrame', function() {
   // @todo missing encode
@@ -471,7 +472,124 @@ describe('CloseFrame', function() {
     expect(close).to.be.an.instanceOf(frames.close);
     expect(close.error).to.be.an.instanceOf(AMQPError);
   });
-});
+}); // CloseFrame
+
+describe('SaslMechanismsFrame', function() {
+  // @todo missing encode
+  it('should encode correctly', function() {
+    var mechanisms = new frames.sasl_mechanisms({
+      saslServerMechanisms: [ 'ANONYMOUS' ]
+    });
+
+    var actual = tu.convertFrameToBuffer(mechanisms);
+    var frameSize = 8 + 1 + 2 + 3 + 2 + 'ANONYMOUS'.length;
+    var expected = tu.buildBuffer([
+      0x00, 0x00, 0x00, frameSize,
+      0x02, 0x01, 0x00, 0x00,
+      0x00, 0x53, 0x40,
+        0xc0, 9 + 3, 1,
+        0xa3, 9, builder.prototype.appendString, 'ANONYMOUS'
+    ]);
+
+    tu.shouldBufEql(expected, actual);
+  });
+
+  it('should decode correctly', function() {
+    var arraySize = 1 + 1 + 6 + 5;
+    var frameSize = 8 + 2 + 1 + 2 + 3 + arraySize;
+    var buffer = tu.newBuffer([
+      0x00, 0x00, 0x00, frameSize,
+      0x02, 0x01, 0x00, 0x00,
+      0x00, 0x53, 0x40,
+      0xc0, arraySize + 3, 1,
+        0xe0, arraySize, 2, 0xa3,
+          5, builder.prototype.appendString, 'PLAIN',
+          4, builder.prototype.appendString, 'CRAP'
+    ]);
+
+    var mechanisms = frames.readFrame(buffer);
+    expect(mechanisms).to.be.an.instanceOf(frames.sasl_mechanisms);
+    expect(mechanisms.saslServerMechanisms).to.have.length(2);
+    expect(mechanisms.saslServerMechanisms[0]).to.eql(new AMQPSymbol('PLAIN'));
+    expect(mechanisms.saslServerMechanisms[1]).to.eql(new AMQPSymbol('CRAP'));
+  });
+
+}); // SaslMechanismsFrame
+
+describe('SaslInitFrame', function() {
+  // @todo missing encode
+  it('should decode the performative correctly', function() {
+    var buffer = tu.newBuffer([
+      0x00, 0x00, 0x00, 0x24,
+      0x02, 0x01, 0x00, 0x00,
+      0x00, 0x53, 0x41,
+      0xc0, 0x17, 0x03,
+        0xa3, 0x05, 0x50, 0x4c, 0x41, 0x49, 0x4e,
+        0xa0, 0x0c, 0x00, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x00, 0x61, 0x64, 0x6d, 0x69, 0x6e,
+        0x40
+    ]);
+
+    var init = frames.readFrame(buffer);
+    expect(init).to.be.an.instanceOf(frames.sasl_init);
+    expect(init.mechanism).to.eql(new AMQPSymbol('PLAIN'));
+    expect(init.initialResponse).to.eql(new Buffer('0061646d696e0061646d696e', 'hex'));
+    expect(init.hostname).to.be.null;
+  });
+}); // SaslInitFrame
+
+describe('SaslChallengeFrame', function() {
+  // @todo missing encode
+  it('should decode the performative correctly', function() {
+    var buffer = tu.newBuffer([
+      0x00, 0x00, 0x00, 0x18,
+      0x02, 0x01, 0x00, 0x00,
+      0x00, 0x53, 0x42,
+      0xc0, 0x0b, 0x01,
+        0xa0, 0x08, 0x62, 0x61, 0x62, 0x61, 0x79, 0x61, 0x67, 0x61
+    ]);
+
+    var challenge = frames.readFrame(buffer);
+    expect(challenge).to.be.an.instanceOf(frames.sasl_challenge);
+    expect(challenge.challenge).to.eql(new Buffer('6261626179616761', 'hex'));
+  });
+}); // SaslChallengeFrame
+
+describe('SaslResponseFrame', function() {
+  // @todo missing encode
+  it('should decode the performative correctly', function() {
+    var buffer = tu.newBuffer([
+      0x00, 0x00, 0x00, 0x18,
+      0x02, 0x01, 0x00, 0x00,
+      0x00, 0x53, 0x43,
+      0xc0, 0x0b, 0x01,
+        0xa0, 0x08, 0x62, 0x61, 0x62, 0x61, 0x79, 0x61, 0x67, 0x61
+    ]);
+
+    var response = frames.readFrame(buffer);
+    expect(response).to.be.an.instanceOf(frames.sasl_response);
+    expect(response.response).to.eql(new Buffer('6261626179616761', 'hex'));
+  });
+}); // SaslResponseFrame
+
+describe('SaslOutcomeFrame', function() {
+  // @todo missing encode
+  it('should decode the performative correctly', function() {
+    var buffer = tu.newBuffer([
+      0x00, 0x00, 0x00, 0x1a,
+      0x02, 0x01, 0x00, 0x00,
+      0x00, 0x53, 0x44,
+      0xc0, 0x0d, 0x02,
+        0x50, 0x01,
+        0xa0, 0x08, 0x62, 0x61, 0x62, 0x61, 0x79, 0x61, 0x67, 0x61
+
+    ]);
+
+    var outcome = frames.readFrame(buffer);
+    expect(outcome).to.be.an.instanceOf(frames.sasl_outcome);
+    expect(outcome.code).to.eql(1);
+    expect(outcome.additionalData).to.eql(new Buffer('6261626179616761', 'hex'));
+  });
+}); // SaslOutcomeFrame
 
 }); // Frames
 
