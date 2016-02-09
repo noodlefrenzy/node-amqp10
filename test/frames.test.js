@@ -16,7 +16,7 @@ var frames = require('../lib/frames'),
 describe('Frames', function() {
 describe('OpenFrame', function() {
   it('should encode performative correctly', function() {
-    var open = new frames.open({ containerId: 'test', hostname: 'localhost' });
+    var open = new frames.OpenFrame({ containerId: 'test', hostname: 'localhost' });
     var actual = tu.convertFrameToBuffer(open);
     var expected = tu.buildBuffer([
       0x00, 0x00, 0x00, 0x3f,
@@ -48,14 +48,14 @@ describe('OpenFrame', function() {
     ]);
 
     var open = frames.readFrame(buffer);
-    expect(open).to.be.instanceOf(frames.open);
+    expect(open).to.be.instanceOf(frames.OpenFrame);
     expect(open.maxFrameSize).to.eql(0x00100000);
   });
 }); // OpenFrame
 
 describe('BeginFrame', function() {
   it('should encode performative correctly', function() {
-    var begin = new frames.begin({ nextOutgoingId: 1, incomingWindow: 100, outgoingWindow: 100 });
+    var begin = new frames.BeginFrame({ nextOutgoingId: 1, incomingWindow: 100, outgoingWindow: 100 });
     begin.channel = 1;
 
     var actual = tu.convertFrameToBuffer(begin);
@@ -91,7 +91,7 @@ describe('BeginFrame', function() {
 
     var begin = frames.readFrame(buffer);
     expect(begin).to.exist;
-    expect(begin).to.be.an.instanceOf(frames.begin);
+    expect(begin).to.be.an.instanceOf(frames.BeginFrame);
     expect(begin.channel).to.eql(5);
     expect(begin.remoteChannel).to.eql(10);
     expect(begin.nextOutgoingId).to.eql(2);
@@ -103,7 +103,7 @@ describe('BeginFrame', function() {
 
 describe('AttachFrame', function() {
   it('should encode performative correctly', function() {
-    var attach = new frames.attach({
+    var attach = new frames.AttachFrame({
       name: 'test',
       handle: 1,
       role: constants.linkRole.sender,
@@ -174,7 +174,7 @@ describe('AttachFrame', function() {
   });
 
   it('should encode performative correctly (with source filter)', function() {
-    var attach = new frames.attach({
+    var attach = new frames.AttachFrame({
       name: 'test',
       handle: 1,
       role: constants.linkRole.sender,
@@ -253,7 +253,7 @@ describe('AttachFrame', function() {
     ]);
 
     var attach = frames.readFrame(buffer);
-    expect(attach).to.be.an.instanceOf(frames.attach);
+    expect(attach).to.be.an.instanceOf(frames.AttachFrame);
     expect(attach.channel).to.eql(0);
     expect(attach.name).to.eql('test');
     expect(attach.handle).to.eql(0);
@@ -276,7 +276,7 @@ describe('AttachFrame', function() {
     ]);
 
     var attach = frames.readFrame(buffer);
-    expect(attach).to.be.an.instanceOf(frames.attach);
+    expect(attach).to.be.an.instanceOf(frames.AttachFrame);
     expect(attach.channel).to.eql(0);
     expect(attach.name).to.eql('test');
     expect(attach.handle).to.eql(0);
@@ -333,7 +333,7 @@ describe('AttachFrame', function() {
     ]);
 
     var attach = frames.readFrame(buffer);
-    expect(attach).to.be.an.instanceOf(frames.attach);
+    expect(attach).to.be.an.instanceOf(frames.AttachFrame);
     expect(attach.channel).to.eql(1);
     expect(attach.name).to.eql('test');
     expect(attach.handle).to.eql(1);
@@ -368,7 +368,7 @@ describe('FlowFrame', function() {
     ]);
 
     var flow = frames.readFrame(buffer);
-    expect(flow).to.be.an.instanceOf(frames.flow);
+    expect(flow).to.be.an.instanceOf(frames.FlowFrame);
     expect(flow.nextIncomingId).to.equal(0);
     expect(flow.incomingWindow).to.equal(200);
     expect(flow.nextOutgoingId).to.equal(1);
@@ -383,7 +383,7 @@ describe('FlowFrame', function() {
   });
 
   it('should encode performative correctly', function() {
-    var flow = new frames.flow({
+    var flow = new frames.FlowFrame({
       nextIncomingId: 1,
       incomingWindow: 100,
       nextOutgoingId: 1,
@@ -444,7 +444,7 @@ describe('CloseFrame', function() {
 
     var close = frames.readFrame(buffer);
     expect(close).to.exist;
-    expect(close).to.be.an.instanceOf(frames.close);
+    expect(close).to.be.an.instanceOf(frames.CloseFrame);
     expect(close.error).to.not.exist;
   });
 
@@ -465,7 +465,7 @@ describe('CloseFrame', function() {
 
     var close = frames.readFrame(buffer);
     expect(close).to.exist;
-    expect(close).to.be.an.instanceOf(frames.close);
+    expect(close).to.be.an.instanceOf(frames.CloseFrame);
     expect(close.error).to.be.an.instanceOf(types.error);
     expect(close.error.condition).to.eql(new AMQPSymbol('amqp:internal-error'));
     expect(close.error.description).to.equal('test');
@@ -475,7 +475,7 @@ describe('CloseFrame', function() {
 
 describe('TransferFrame', function() {
   it('should encode performative correctly', function() {
-    var transfer = new frames.transfer({
+    var transfer = new frames.TransferFrame({
       handle: 1,
       deliveryId: 1,
       deliveryTag: tu.buildBuffer([1]),
@@ -544,7 +544,7 @@ describe('TransferFrame', function() {
 
     var transfer = frames.readFrame(buffer);
     console.dir(transfer, { depth: null });
-    expect(transfer).to.be.an.instanceOf(frames.transfer);
+    expect(transfer).to.be.an.instanceOf(frames.TransferFrame);
     expect(transfer.channel).to.eql(channel);
     expect(transfer.handle).to.eql(handle);
     expect(transfer.rcvSettleMode).to.eql(constants.receiverSettleMode.autoSettle);
@@ -559,7 +559,7 @@ describe('TransferFrame', function() {
 
 describe('DispositionFrame', function() {
   it('should encode the performative correctly', function() {
-    var disposition = new frames.disposition({
+    var disposition = new frames.DispositionFrame({
       role: constants.linkRole.receiver,
       first: 1,
       settled: true,
@@ -598,7 +598,7 @@ describe('DispositionFrame', function() {
     ]);
 
     var disposition = frames.readFrame(buffer);
-    expect(disposition).to.be.an.instanceof(frames.disposition);
+    expect(disposition).to.be.an.instanceof(frames.DispositionFrame);
     expect(disposition.role).to.equal(true);
     expect(disposition.first).to.equal(1);
     expect(disposition.last).to.equal(null);
@@ -611,7 +611,7 @@ describe('DispositionFrame', function() {
 describe('SaslMechanismsFrame', function() {
   // @todo missing encode
   it('should encode correctly', function() {
-    var mechanisms = new frames.sasl_mechanisms({
+    var mechanisms = new frames.SaslMechanismsFrame({
       saslServerMechanisms: [ 'ANONYMOUS' ]
     });
 
@@ -642,7 +642,7 @@ describe('SaslMechanismsFrame', function() {
     ]);
 
     var mechanisms = frames.readFrame(buffer);
-    expect(mechanisms).to.be.an.instanceOf(frames.sasl_mechanisms);
+    expect(mechanisms).to.be.an.instanceOf(frames.SaslMechanismsFrame);
     expect(mechanisms.saslServerMechanisms).to.have.length(2);
     expect(mechanisms.saslServerMechanisms[0]).to.eql(new AMQPSymbol('PLAIN'));
     expect(mechanisms.saslServerMechanisms[1]).to.eql(new AMQPSymbol('CRAP'));
@@ -664,7 +664,7 @@ describe('SaslInitFrame', function() {
     ]);
 
     var init = frames.readFrame(buffer);
-    expect(init).to.be.an.instanceOf(frames.sasl_init);
+    expect(init).to.be.an.instanceOf(frames.SaslInitFrame);
     expect(init.mechanism).to.eql(new AMQPSymbol('PLAIN'));
     expect(init.initialResponse).to.eql(new Buffer('0061646d696e0061646d696e', 'hex'));
     expect(init.hostname).to.be.null;
@@ -683,7 +683,7 @@ describe('SaslChallengeFrame', function() {
     ]);
 
     var challenge = frames.readFrame(buffer);
-    expect(challenge).to.be.an.instanceOf(frames.sasl_challenge);
+    expect(challenge).to.be.an.instanceOf(frames.SaslChallengeFrame);
     expect(challenge.challenge).to.eql(new Buffer('6261626179616761', 'hex'));
   });
 }); // SaslChallengeFrame
@@ -700,7 +700,7 @@ describe('SaslResponseFrame', function() {
     ]);
 
     var response = frames.readFrame(buffer);
-    expect(response).to.be.an.instanceOf(frames.sasl_response);
+    expect(response).to.be.an.instanceOf(frames.SaslResponseFrame);
     expect(response.response).to.eql(new Buffer('6261626179616761', 'hex'));
   });
 }); // SaslResponseFrame
@@ -719,7 +719,7 @@ describe('SaslOutcomeFrame', function() {
     ]);
 
     var outcome = frames.readFrame(buffer);
-    expect(outcome).to.be.an.instanceOf(frames.sasl_outcome);
+    expect(outcome).to.be.an.instanceOf(frames.SaslOutcomeFrame);
     expect(outcome.code).to.eql(1);
     expect(outcome.additionalData).to.eql(new Buffer('6261626179616761', 'hex'));
   });
