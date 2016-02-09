@@ -6,11 +6,11 @@ var frames = require('../lib/frames'),
     tu = require('./unit/testing_utils'),
     expect = require('chai').expect,
 
-    DeliveryState = require('../lib/types/delivery_state'),
+    DeliveryState = require('../lib/new_types/delivery_state'),
     AMQPSymbol = require('../lib/types/amqp_symbol'),
 
-    types = require('../lib/types'),
-    terminus = require('../lib/terminus'),
+    types = require('../lib/new_types'),
+    terminus = require('../lib/new_types/terminus'),
     translator = require('../lib/adapters/translate_encoder');
 
 describe('Frames', function() {
@@ -107,8 +107,8 @@ describe('AttachFrame', function() {
       name: 'test',
       handle: 1,
       role: constants.linkRole.sender,
-      source: new terminus.source({ address: null, dynamic: true }),
-      target: new terminus.target({ address: 'testtgt' }),
+      source: new terminus.Source({ address: null, dynamic: true }),
+      target: new terminus.Target({ address: 'testtgt' }),
       initialDeliveryCount: 1,
       properties: {
         'com.microsoft:client-version': 'azure-iot-device/1.0.0-preview.9'
@@ -178,8 +178,8 @@ describe('AttachFrame', function() {
       name: 'test',
       handle: 1,
       role: constants.linkRole.sender,
-      source: new terminus.source({ address: null, dynamic: true }),
-      target: new terminus.target({ address: 'testtgt' }),
+      source: new terminus.Source({ address: null, dynamic: true }),
+      target: new terminus.Target({ address: 'testtgt' }),
       initialDeliveryCount: 1,
       properties: {
         'com.microsoft:client-version': 'azure-iot-device/1.0.0-preview.9'
