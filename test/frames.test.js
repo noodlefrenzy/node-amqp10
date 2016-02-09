@@ -6,6 +6,7 @@ var frames = require('../lib/frames'),
     tu = require('./unit/testing_utils'),
     expect = require('chai').expect,
 
+    DeliveryState = require('../lib/types/delivery_state'),
     AMQPSymbol = require('../lib/types/amqp_symbol'),
     AMQPError = require('../lib/types/amqp_error'),
 
@@ -468,6 +469,142 @@ describe('CloseFrame', function() {
     expect(close.error).to.be.an.instanceOf(AMQPError);
   });
 }); // CloseFrame
+
+describe('TransferFrame', function() {
+  it('should encode performative correctly', function() {
+    var transfer = new frames.transfer({
+      handle: 1,
+      deliveryId: 1,
+      deliveryTag: tu.buildBuffer([1]),
+      messageFormat: 20000,
+      settled: true,
+      receiverSettleMode: constants.receiverSettleMode.autoSettle
+    });
+    transfer.channel = 1;
+    transfer.message = new Buffer([0x00, 0x53, 0x77, 0x52, 10]);
+
+    var actual = tu.convertFrameToBuffer(transfer);
+    var payloadSize = 12;
+    var listSize = 1 + 2 + 2 + 3 + 5 + 1 + 1 + 2 + 1 + 1 + 1 + 1;
+    var frameSize = 1 + 1 + 2 + 2 + listSize + payloadSize;
+    var expected = tu.buildBuffer([
+      0x00, 0x00, 0x00, frameSize,
+      0x02, 0x00, 0x00, 0x01,
+      0x00, 0x53, 0x14,
+        0xc0, listSize, 11,
+        0x52, 1, // handle
+        0x52, 1, // delivery-id
+        0xA0, 1, 1, // delivery-tag
+        0x70, builder.prototype.appendUInt32BE, 20000, // message-format
+        0x41, // settled
+        0x42, // more
+        0x50, 0, // rcv-settle-mode
+        0x40, // state
+        0x42, 0x42, 0x42, // resume/aborted/batchable
+
+        // Message Body - amqp-value of uint(10)
+        0x00, 0x53, 0x77,
+        0x52, 10
+    ]);
+
+    tu.shouldBufEql(expected, actual);
+  });
+
+  /*
+  it('should decode the performative correctly (trivial message body)', function() {
+    var listSize = 1 + 2 + 2 + 3 + 3 + 2 + 4;
+    var payloadSize = 5;
+    var txFrameSize = 8 + 3 + 2 + listSize + payloadSize;
+    var channel = 1;
+    var handle = 1;
+    var buffer = tu.newBuffer([
+      0x00, 0x00, 0x00, txFrameSize,
+      0x02, 0x00, 0x00, channel,
+        0x00, 0x53, 0x14,
+        0xc0, listSize, 10,
+        0x52, handle,
+        0x52, 1, // delivery-id
+        0xa0, 1, 1, // delivery-tag
+        0x43, // message-format
+        0x41, // settled=true
+        0x42, // more=false
+        0x50, 0, // rcv-settle-mode=first
+        0x40, // state=null
+        0x42, // resume=false
+        0x42, // aborted=false
+        0x42, // batchable=false
+
+      // Message Body - amqp-value of uint(10)
+      0x00, 0x53, 0x77,
+      0x52, 10
+    ]);
+
+    var transfer = frames.readFrame(buffer);
+    console.dir(transfer, { depth: null });
+    expect(transfer).to.be.an.instanceOf(frames.transfer);
+    expect(transfer.channel).to.eql(channel);
+    expect(transfer.handle).to.eql(handle);
+    expect(transfer.rcvSettleMode).to.eql(constants.receiverSettleMode.autoSettle);
+    expect(transfer.message).to.have.length(5);
+
+    // var message = transfer.decodePayload();
+    // expect(message.body[0]).to.eql(10);
+  });
+  */
+
+}); // TransferFrame
+
+describe('DispositionFrame', function() {
+  it.only('should encode the performative correctly', function() {
+    var disposition = new frames.disposition({
+      role: constants.linkRole.receiver,
+      first: 1,
+      settled: true,
+      state: new DeliveryState.Accepted()
+    });
+
+    var actual = tu.convertFrameToBuffer(disposition);
+    var expected = tu.buildBuffer([
+      0x00, 0x00, 0x00, 0x18,
+      0x02, 0x00, 0x00, 0x00,
+      0x00, 0x53, 0x15,
+        0xc0, 0x0b, 0x06,
+        0x41,
+        0x52, 0x01,
+        0x40,
+        0x41,
+        0x00, 0x53, 0x24, 0x45, // Accepted
+        0x42  // batchable
+    ]);
+
+    tu.shouldBufEql(expected, actual);
+  });
+
+  it('should decode the perfomative correctly', function() {
+    var buffer = tu.newBuffer([
+      0x00, 0x00, 0x00, 0x18,
+      0x02, 0x00, 0x00, 0x00,
+      0x00, 0x53, 0x15,
+        0xc0, 0x0b, 0x05,
+        0x41,
+        0x52, 0x01,
+        0x52, 0x01,
+        0x41,
+        0x00, 0x53, 0x24, 0x45, // Accepted
+        0x41  // batchable
+    ]);
+
+    var disposition = frames.readFrame(buffer);
+    console.dir(disposition, { depth: null });
+    expect(disposition).to.be.an.instanceof(frames.disposition);
+    expect(disposition.role).to.equal(true);
+    expect(disposition.first).to.equal(1);
+    expect(disposition.last).to.equal(1);
+    expect(disposition.settled).to.equal(true);
+    expect(disposition.state).to.be.an.instanceof(DeliveryState.Accepted);
+    expect(disposition.batchable).to.equal(true);
+  });
+});
 
 describe('SaslMechanismsFrame', function() {
   // @todo missing encode
