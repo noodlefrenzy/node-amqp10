@@ -8,8 +8,8 @@ var frames = require('../lib/frames'),
 
     DeliveryState = require('../lib/types/delivery_state'),
     AMQPSymbol = require('../lib/types/amqp_symbol'),
-    AMQPError = require('../lib/types/amqp_error'),
 
+    types = require('../lib/types'),
     terminus = require('../lib/terminus'),
     translator = require('../lib/adapters/translate_encoder');
 
@@ -448,7 +448,7 @@ describe('CloseFrame', function() {
     expect(close.error).to.not.exist;
   });
 
-  it('should decode perfomative correctly (2)', function() {
+  it('should decode perfomative correctly (with error)', function() {
     var sizeOfError = (4 + 2 + 19 + 2 + 4 + 3);
     var sizeOfCloseFrameList = (4 + 3 + 1 + 4 + sizeOfError);
     var buffer = tu.newBuffer([
@@ -466,7 +466,10 @@ describe('CloseFrame', function() {
     var close = frames.readFrame(buffer);
     expect(close).to.exist;
     expect(close).to.be.an.instanceOf(frames.close);
-    expect(close.error).to.be.an.instanceOf(AMQPError);
+    expect(close.error).to.be.an.instanceOf(types.error);
+    expect(close.error.condition).to.eql(new AMQPSymbol('amqp:internal-error'));
+    expect(close.error.description).to.equal('test');
+    expect(close.error.info).to.eql({});
   });
 }); // CloseFrame
 
@@ -555,7 +558,7 @@ describe('TransferFrame', function() {
 }); // TransferFrame
 
 describe('DispositionFrame', function() {
-  it.only('should encode the performative correctly', function() {
+  it('should encode the performative correctly', function() {
     var disposition = new frames.disposition({
       role: constants.linkRole.receiver,
       first: 1,
@@ -585,24 +588,23 @@ describe('DispositionFrame', function() {
       0x00, 0x00, 0x00, 0x18,
       0x02, 0x00, 0x00, 0x00,
       0x00, 0x53, 0x15,
-        0xc0, 0x0b, 0x05,
+        0xc0, 0x0b, 0x06,
         0x41,
         0x52, 0x01,
-        0x52, 0x01,
+        0x40,
         0x41,
         0x00, 0x53, 0x24, 0x45, // Accepted
-        0x41  // batchable
+        0x42  // batchable
     ]);
 
     var disposition = frames.readFrame(buffer);
-    console.dir(disposition, { depth: null });
     expect(disposition).to.be.an.instanceof(frames.disposition);
     expect(disposition.role).to.equal(true);
     expect(disposition.first).to.equal(1);
-    expect(disposition.last).to.equal(1);
+    expect(disposition.last).to.equal(null);
     expect(disposition.settled).to.equal(true);
     expect(disposition.state).to.be.an.instanceof(DeliveryState.Accepted);
-    expect(disposition.batchable).to.equal(true);
+    expect(disposition.batchable).to.equal(false);
   });
 });
 
