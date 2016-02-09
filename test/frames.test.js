@@ -7,10 +7,10 @@ var frames = require('../lib/frames'),
     expect = require('chai').expect,
 
     AMQPSymbol = require('../lib/types/amqp_symbol'),
-    AMQPError = require('../lib/types/amqp_error');
+    AMQPError = require('../lib/types/amqp_error'),
 
-    // terminus = require('../lib/types/source_target'),
-    // translator = require('../lib/adapters/translate_encoder');
+    terminus = require('../lib/terminus'),
+    translator = require('../lib/adapters/translate_encoder');
 
 describe('Frames', function() {
 describe('OpenFrame', function() {
@@ -100,23 +100,20 @@ describe('BeginFrame', function() {
   });
 }); // BeginFrame
 
-/*
 describe('AttachFrame', function() {
   it('should encode performative correctly', function() {
-    var attach = new frames.Attach({
+    var attach = new frames.attach({
       name: 'test',
       handle: 1,
       role: constants.linkRole.sender,
-      source: new terminus.Source({ address: null, dynamic: true }),
-      target: new terminus.Target({ address: 'testtgt' }),
+      source: new terminus.source({ address: null, dynamic: true }),
+      target: new terminus.target({ address: 'testtgt' }),
       initialDeliveryCount: 1,
       properties: {
         'com.microsoft:client-version': 'azure-iot-device/1.0.0-preview.9'
       }
     });
     attach.channel = 1;
-
-    console.log(attach);
 
     var actual = tu.convertFrameToBuffer(attach);
     var sourceSize = 1 + 1 + 1 + 13 + 1 + 1 + 3 + 1 + 3 + 1 + 1 + 1;
@@ -159,31 +156,29 @@ describe('AttachFrame', function() {
         0x42,
         0xc1, 1, 0,
         0x40,
-        0xc1, 1, 0,
-        0x42,
-        0x52, 1,
-        0x44,
-        0x40,
-        0x40,
+
+      0xc1, 1, 0,
+      0x42,
+      0x52, 1,
+      0x44,
+      0x40,
+      0x40,
 
       0xc1, 65, 2, // properties
       0xA3, 28, builder.prototype.appendString, 'com.microsoft:client-version',
       0xA1, 32, builder.prototype.appendString, 'azure-iot-device/1.0.0-preview.9',
     ]);
 
-    console.log('expected: ', expected.toString('hex'));
-    console.log('  actual: ', actual.toString('hex'));
-
     tu.shouldBufEql(expected, actual);
   });
 
   it('should encode performative correctly (with source filter)', function() {
-    var attach = new frames.Attach({
+    var attach = new frames.attach({
       name: 'test',
       handle: 1,
       role: constants.linkRole.sender,
-      source: new terminus.Source({ address: null, dynamic: true }),
-      target: new terminus.Target({ address: 'testtgt' }),
+      source: new terminus.source({ address: null, dynamic: true }),
+      target: new terminus.target({ address: 'testtgt' }),
       initialDeliveryCount: 1,
       properties: {
         'com.microsoft:client-version': 'azure-iot-device/1.0.0-preview.9'
@@ -257,7 +252,7 @@ describe('AttachFrame', function() {
     ]);
 
     var attach = frames.readFrame(buffer);
-    expect(attach).to.be.an.instanceOf(frames.Attach);
+    expect(attach).to.be.an.instanceOf(frames.attach);
     expect(attach.channel).to.eql(0);
     expect(attach.name).to.eql('test');
     expect(attach.handle).to.eql(0);
@@ -280,7 +275,7 @@ describe('AttachFrame', function() {
     ]);
 
     var attach = frames.readFrame(buffer);
-    expect(attach).to.be.an.instanceOf(frames.Attach);
+    expect(attach).to.be.an.instanceOf(frames.attach);
     expect(attach.channel).to.eql(0);
     expect(attach.name).to.eql('test');
     expect(attach.handle).to.eql(0);
@@ -337,7 +332,7 @@ describe('AttachFrame', function() {
     ]);
 
     var attach = frames.readFrame(buffer);
-    expect(attach).to.be.an.instanceOf(frames.Attach);
+    expect(attach).to.be.an.instanceOf(frames.attach);
     expect(attach.channel).to.eql(1);
     expect(attach.name).to.eql('test');
     expect(attach.handle).to.eql(1);
@@ -348,8 +343,8 @@ describe('AttachFrame', function() {
       'com.microsoft:client-version': 'azure-iot-device/1.0.0-preview.9'
     });
   });
+
 }); // AttachFrame
-*/
 
 describe('FlowFrame', function() {
   it('should decode performative correctly', function() {
