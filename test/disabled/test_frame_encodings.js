@@ -15,7 +15,7 @@ var builder = require('buffer-builder'),
     TransferFrame = require('../../lib/frames/transfer_frame'),
     HeartbeatFrame = require('../../lib/frames/heartbeat_frame'),
 
-    Sasl = require('../../lib/frames/sasl_frame'),
+    Sasl = require('../../lib/frames/frame').SaslFrame,
 
     tu = require('./testing_utils');
 

@@ -6,7 +6,6 @@ var BufferList = require('bl'),
     expect = require('chai').expect,
 
     FrameBase = require('../../lib/frames/frame'),
-    SaslFrame = require('../../lib/frames/sasl_frame').SaslFrame,
 
     tu = require('./testing_utils');
 
@@ -71,8 +70,7 @@ MockServer.prototype.teardown = function() {
 };
 
 function convertSequenceFramesToBuffers(frame) {
-  if (frame instanceof FrameBase.AMQPFrame ||
-      frame instanceof SaslFrame) {
+  if (frame instanceof FrameBase.AMQPFrame || frame instanceof FrameBase.SaslFrame) {
     return tu.convertFrameToBuffer(frame);
   } else if (Array.isArray(frame)) {
     return [frame[0], convertSequenceFramesToBuffers(frame[1])];

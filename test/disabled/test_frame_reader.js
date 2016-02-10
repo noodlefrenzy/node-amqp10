@@ -17,7 +17,7 @@ var expect = require('chai').expect,
     OpenFrame = require('../../lib/frames/open_frame'),
     TransferFrame = require('../../lib/frames/transfer_frame'),
 
-    Sasl = require('../../lib/frames/sasl_frame'),
+    Sasl = require('../../lib/frames/frame').SaslFrame,
 
     tu = require('./testing_utils');
 
