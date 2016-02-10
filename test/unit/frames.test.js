@@ -1,17 +1,17 @@
 'use strict';
 
-var frames = require('../lib/frames'),
+var frames = require('../../lib/frames'),
     builder = require('buffer-builder'),
-    constants = require('../lib/constants'),
-    tu = require('./unit/testing_utils'),
+    constants = require('../../lib/constants'),
+    tu = require('./testing_utils'),
     expect = require('chai').expect,
 
-    DeliveryState = require('../lib/new_types/delivery_state'),
-    AMQPSymbol = require('../lib/types/amqp_symbol'),
+    DeliveryState = require('../../lib/new_types/delivery_state'),
+    AMQPSymbol = require('../../lib/types/amqp_symbol'),
+    AMQPError = require('../../lib/types/amqp_error'),
 
-    types = require('../lib/new_types'),
-    terminus = require('../lib/new_types/terminus'),
-    translator = require('../lib/adapters/translate_encoder');
+    terminus = require('../../lib/new_types/terminus'),
+    translator = require('../../lib/adapters/translate_encoder');
 
 describe('Frames', function() {
 describe('OpenFrame', function() {
@@ -172,6 +172,78 @@ describe('AttachFrame', function() {
 
     tu.shouldBufEql(expected, actual);
   });
+
+  it('should encode performative correctly (using requires)', function() {
+    var attach = new frames.AttachFrame({
+      name: 'test',
+      handle: 1,
+      role: constants.linkRole.sender,
+      source: { address: null, dynamic: true },
+      target: { address: 'testtgt' },
+      initialDeliveryCount: 1,
+      properties: {
+        'com.microsoft:client-version': 'azure-iot-device/1.0.0-preview.9'
+      }
+    });
+    attach.channel = 1;
+
+    var actual = tu.convertFrameToBuffer(attach);
+    var sourceSize = 1 + 1 + 1 + 13 + 1 + 1 + 3 + 1 + 3 + 1 + 1 + 1;
+    var targetSize = 1 + 9 + 1 + 13 + 1 + 1 + 3 + 1;
+    var propertiesSize = 4 + 28 + 32;
+    var listSize = 1 + 6 + 2 + 1 + 2 + 2 + 3 + 2 + sourceSize + 3 + 2 + targetSize + 3 + 1 + 2 + 1 + 1 + 1 + 3 + propertiesSize;
+    var listCount = 14;
+    var frameSize = 1 + 1 + 9 + 2 + listSize;
+    var expected = tu.buildBuffer([
+      0x00, 0x00, 0x00, frameSize,
+      0x02, 0x00, 0x00, 0x01,
+      0x00, 0x53, 0x12,
+      0xc0, listSize, listCount,
+        0xA1, 4, builder.prototype.appendString, 'test',
+        0x52, 1, // handle
+        0x42, // role=sender
+        0x50, 2, // sender-settle-mode=mixed
+        0x50, 0, // rcv-settle-mode=first
+
+      0x00, 0x53, 0x28, // source
+        0xc0, sourceSize, 11,
+        0x40,
+        0x43,
+        0xA3, 11, builder.prototype.appendString, 'session-end',
+        0x43,
+        0x41,
+        0xc1, 1, 0,
+        0x40,
+        0xc1, 1, 0,
+        0x40,
+        0x40,
+        0x40,
+
+      0x00, 0x53, 0x29, // target
+        0xc0, targetSize, 7,
+        0xA1, 7, builder.prototype.appendString, 'testtgt',
+        0x43,
+        0xA3, 11, builder.prototype.appendString, 'session-end',
+        0x43,
+        0x42,
+        0xc1, 1, 0,
+        0x40,
+
+      0xc1, 1, 0,
+      0x42,
+      0x52, 1,
+      0x44,
+      0x40,
+      0x40,
+
+      0xc1, 65, 2, // properties
+      0xA3, 28, builder.prototype.appendString, 'com.microsoft:client-version',
+      0xA1, 32, builder.prototype.appendString, 'azure-iot-device/1.0.0-preview.9',
+    ]);
+
+    tu.shouldBufEql(expected, actual);
+  });
+
 
   it('should encode performative correctly (with source filter)', function() {
     var attach = new frames.AttachFrame({
@@ -466,7 +538,7 @@ describe('CloseFrame', function() {
     var close = frames.readFrame(buffer);
     expect(close).to.exist;
     expect(close).to.be.an.instanceOf(frames.CloseFrame);
-    expect(close.error).to.be.an.instanceOf(types.error);
+    expect(close.error).to.be.an.instanceOf(AMQPError);
     expect(close.error.condition).to.eql(new AMQPSymbol('amqp:internal-error'));
     expect(close.error.description).to.equal('test');
     expect(close.error.info).to.eql({});
@@ -605,6 +677,15 @@ describe('DispositionFrame', function() {
     expect(disposition.settled).to.equal(true);
     expect(disposition.state).to.be.an.instanceof(DeliveryState.Accepted);
     expect(disposition.batchable).to.equal(false);
+  });
+});
+
+describe('HeartbeatFrame', function() {
+  it('should encode correctly', function() {
+    var heartbeat = new frames.HeartbeatFrame();
+    var actual = tu.convertFrameToBuffer(heartbeat);
+    var expected = tu.buildBuffer([0, 0, 0, 8, 2, 0, 0, 0]);
+    tu.shouldBufEql(expected, actual);
   });
 });
 

@@ -109,8 +109,7 @@ MockServer.prototype.teardown = function() {
 };
 
 function convertSequenceFramesToBuffers(frame) {
-  if (frame instanceof FrameBase.AMQPFrame ||
-      frame instanceof SaslFrame) {
+  if (frame instanceof FrameBase.AMQPFrame || frame instanceof SaslFrame) {
     return tu.convertFrameToBuffer(frame);
   } else if (Array.isArray(frame)) {
     return [frame[0], convertSequenceFramesToBuffers(frame[1])];

@@ -3,16 +3,12 @@
 var builder = require('buffer-builder'),
 
     constants = require('../../lib/constants'),
-
+    frames = require('../../lib/frames'),
     DefaultPolicy = require('../../lib/policies/default_policy'),
 
     MockServer = require('./mock_amqp'),
     AMQPError = require('../../lib/types/amqp_error'),
     AMQPSymbol = require('../../lib/types/amqp_symbol'),
-
-    CloseFrame = require('../../lib/frames/close_frame'),
-    OpenFrame = require('../../lib/frames/open_frame'),
-    SaslFrames = require('../../lib/frames/sasl_frame'),
 
     Connection = require('../../lib/connection'),
     Sasl = require('../../lib/sasl'),
@@ -22,7 +18,7 @@ var builder = require('buffer-builder'),
 DefaultPolicy.connect.options.containerId = 'test';
 
 function MockSaslInitFrame() {
-  return new SaslFrames.SaslInit({
+  return new frames.SaslInitFrame({
     mechanism: new AMQPSymbol('PLAIN'),
     initialResponse: tu.buildBuffer([0, builder.prototype.appendString, 'user', 0, builder.prototype.appendString, 'pass'])
   });
@@ -46,15 +42,19 @@ describe('Sasl', function() {
         constants.saslVersion,
         new MockSaslInitFrame(),
         constants.amqpVersion,
-        new OpenFrame(DefaultPolicy.connect.options),
-        new CloseFrame()
+        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.CloseFrame()
       ], [
         constants.saslVersion,
-        [ true, new SaslFrames.SaslMechanisms(['PLAIN']) ],
-        new SaslFrames.SaslOutcome({code: constants.saslOutcomes.ok}),
+        [ true, new frames.SaslMechanismsFrame({ saslServerMechanisms: ['PLAIN'] }) ],
+        new frames.SaslOutcomeFrame({ code: constants.saslOutcomes.ok }),
         constants.amqpVersion,
-        new OpenFrame(DefaultPolicy.connect.options),
-        [ true, new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
+        new frames.OpenFrame(DefaultPolicy.connect.options),
+        [ true,
+          new frames.CloseFrame({
+            error: new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test' })
+          })
+        ]
       ]);
 
       var connection = new Connection(DefaultPolicy.connect);

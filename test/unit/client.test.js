@@ -7,15 +7,8 @@ var _ = require('lodash'),
     MockServer = require('./mocks').Server,
 
     constants = require('../../lib/constants'),
-
-    FrameReader = require('../../lib/frames/frame_reader'),
-    OpenFrame = require('../../lib/frames/open_frame'),
-    BeginFrame = require('../../lib/frames/begin_frame'),
-    AttachFrame = require('../../lib/frames/attach_frame'),
-    FlowFrame = require('../../lib/frames/flow_frame'),
+    frames = require('../../lib/frames'),
     TransferFrame = require('../../lib/frames/transfer_frame'),
-    CloseFrame = require('../../lib/frames/close_frame'),
-    DispositionFrame = require('../../lib/frames/disposition_frame'),
 
     DefaultPolicy = require('../../lib/policies/default_policy'),
     AMQPError = require('../../lib/types/amqp_error'),
@@ -50,11 +43,15 @@ describe('Client', function() {
     it('should connect then disconnect', function() {
       test.server.setResponseSequence([
         constants.amqpVersion,
-        new OpenFrame(DefaultPolicy.connect.options),
-        new BeginFrame({
-          remoteChannel: 1, nextOutgoingId: 0, incomingWindow: 2147483647, outgoingWindow: 2147483647, handleMax: 4294967295
+        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0,
+          incomingWindow: 2147483647, outgoingWindow: 2147483647,
+          handleMax: 4294967295
         }),
-        new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test'))
+        new frames.CloseFrame({
+          error: new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test' })
+        })
       ]);
 
       return test.client.connect(test.server.address())
@@ -68,24 +65,31 @@ describe('Client', function() {
       var messageBuf = tmpBuf.get();
       test.server.setResponseSequence([
         constants.amqpVersion,
-        new OpenFrame(DefaultPolicy.connect.options),
-        new BeginFrame({
-          remoteChannel: 1, nextOutgoingId: 0, incomingWindow: 2147483647, outgoingWindow: 2147483647, handleMax: 4294967295
+        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0,
+          incomingWindow: 2147483647, outgoingWindow: 2147483647,
+          handleMax: 4294967295
         }),
         function (prev) {
-          var rxAttach = FrameReader.read(prev[prev.length-1]);
-          return new AttachFrame({
-            name: rxAttach.name, handle: 1, role: constants.linkRole.sender, source: {}, target: {}, initialDeliveryCount: 0
+          var rxAttach = frames.readFrame(prev[prev.length-1]);
+          return new frames.AttachFrame({
+            name: rxAttach.name, handle: 1,
+            role: constants.linkRole.sender,
+            source: {}, target: {},
+            initialDeliveryCount: 0
           });
         },
         function (prev) {
           var txFrame = new TransferFrame({
-            handle: 1
+            handle: 1, deliveryId: 1
           });
           txFrame.message = messageBuf;
           return txFrame;
         },
-        new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test'))
+        new frames.CloseFrame({
+          error: new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test' })
+        })
       ]);
 
       return test.client.connect(test.server.address())
@@ -111,20 +115,24 @@ describe('Client', function() {
       var buf3 = messageBuf.slice(15);
       test.server.setResponseSequence([
         constants.amqpVersion,
-        new OpenFrame(DefaultPolicy.connect.options),
-        new BeginFrame({
-          remoteChannel: 1, nextOutgoingId: 0, incomingWindow: 2147483647, outgoingWindow: 2147483647, handleMax: 4294967295
+        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0,
+          incomingWindow: 2147483647, outgoingWindow: 2147483647,
+          handleMax: 4294967295
         }),
         function (prev) {
-          var rxAttach = FrameReader.read(prev[prev.length-1]);
-          return new AttachFrame({
-            name: rxAttach.name, handle: 1, role: constants.linkRole.sender, source: {}, target: {}, initialDeliveryCount: 0
+          var rxAttach = frames.readFrame(prev[prev.length-1]);
+          return new frames.AttachFrame({
+            name: rxAttach.name, handle: 1,
+            role: constants.linkRole.sender,
+            source: {}, target: {}, initialDeliveryCount: 0
           });
         },
         [
           function (prev) {
             var txFrame = new TransferFrame({
-              handle: 1,
+              handle: 1, deliveryId: 1,
               more: true
             });
             txFrame.message = buf1;
@@ -132,7 +140,7 @@ describe('Client', function() {
           },
           function (prev) {
             var txFrame = new TransferFrame({
-              handle: 1,
+              handle: 1, deliveryId: 1,
               more: true
             });
             txFrame.message = buf2;
@@ -147,7 +155,9 @@ describe('Client', function() {
             return txFrame;
           }
         ],
-        new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test'))
+        new frames.CloseFrame({
+          error: new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test' })
+        })
       ]);
 
       return test.client.connect(test.server.address())
@@ -167,33 +177,35 @@ describe('Client', function() {
       var testMaxFrameSize = 512;
       test.server.setResponseSequence([
         constants.amqpVersion,
-        new OpenFrame(_.extend(DefaultPolicy.connect.options, {
+        new frames.OpenFrame(_.extend(DefaultPolicy.connect.options, {
           maxFrameSize: testMaxFrameSize // <-- the important part
         })),
-        new BeginFrame({
+        new frames.BeginFrame({
           remoteChannel: 1, nextOutgoingId: 0, incomingWindow: 100000,
           outgoingWindow: 2147483647, handleMax: 4294967295
         }),
         [
           function (prev) {
-            var rxAttach = FrameReader.read(prev[prev.length-1]);
-            return new AttachFrame({
+            var rxAttach = frames.readFrame(prev[prev.length-1]);
+            return new frames.AttachFrame({
               name: rxAttach.name, handle: 1, role: constants.linkRole.receiver,
               source: {}, target: {}, initialDeliveryCount: 0
             });
           },
-          new FlowFrame({
+          new frames.FlowFrame({
             handle: 1, deliveryCount: 1,
             nextIncomingId: 1, incomingWindow: 2147483647,
             nextOutgoingId: 0, outgoingWindow: 2147483647,
             linkCredit: 500
           })
         ],
-        new DispositionFrame({
+        new frames.DispositionFrame({
           role: constants.linkRole.receiver, first: 1, last: 1, settled: true, batchable: false,
           state: new DeliveryState.Accepted()
         }),
-        new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test'))
+        new frames.CloseFrame({
+          error: new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test' })
+        })
       ]);
 
       // build our expected buffer segments
@@ -272,11 +284,15 @@ describe('Client', function() {
     it('should resolve the connect promise on reconnect if initial connection fails', function() {
       test.server.setResponseSequence([
         constants.amqpVersion,
-        new OpenFrame(DefaultPolicy.connect.options),
-        new BeginFrame({
-          remoteChannel: 1, nextOutgoingId: 0, incomingWindow: 2147483647, outgoingWindow: 2147483647, handleMax: 4294967295
+        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0,
+          incomingWindow: 2147483647, outgoingWindow: 2147483647,
+          handleMax: 4294967295
         }),
-        new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test'))
+        new frames.CloseFrame({
+          error: new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test' })
+        })
       ]);
 
       // restart the server after 1s
@@ -296,19 +312,24 @@ describe('Client', function() {
       test.server.setResponseSequence([
         // first connect
         constants.amqpVersion,
-        new OpenFrame(DefaultPolicy.connect.options),
-        new BeginFrame({
-          remoteChannel: 1, nextOutgoingId: 0, incomingWindow: 2147483647, outgoingWindow: 2147483647, handleMax: 4294967295
+        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0,
+          incomingWindow: 2147483647, outgoingWindow: 2147483647,
+          handleMax: 4294967295
         }),
 
         // second connect
         constants.amqpVersion,
-        new OpenFrame(DefaultPolicy.connect.options),
-        new BeginFrame({
-          remoteChannel: 1, nextOutgoingId: 0, incomingWindow: 2147483647, outgoingWindow: 2147483647, handleMax: 4294967295
+        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0,
+          incomingWindow: 2147483647, outgoingWindow: 2147483647,
+          handleMax: 4294967295
         }),
-
-        new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test'))
+        new frames.CloseFrame({
+          error: new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test' })
+        })
       ]);
 
       var address = test.server.address();

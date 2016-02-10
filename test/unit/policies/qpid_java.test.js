@@ -1,16 +1,10 @@
 'use strict';
-
 var amqp = require('../../../lib'),
     MockServer = require('../mocks').Server,
     Builder = require('buffer-builder'),
 
     constants = require('../../../lib/constants'),
-
-    SaslFrames = require('../../../lib/frames/sasl_frame'),
-    OpenFrame = require('../../../lib/frames/open_frame'),
-    BeginFrame = require('../../../lib/frames/begin_frame'),
-    CloseFrame = require('../../../lib/frames/close_frame'),
-
+    frames = require('../../../lib/frames'),
     AMQPError = require('../../../lib/types/amqp_error'),
 
     test = require('../test-fixture');
@@ -47,24 +41,30 @@ describe('QpidJava Policy', function() {
     it('should add vhost to sasl init frame', function() {
       test.server.setExpectedFrameSequence([
         false,
-        new SaslFrames.SaslInit({ mechanism: 'PLAIN', hostname: 'my-special-vhost',
-          initialResponse: buildInitialResponseFor('user', 'pass') }),
+        new frames.SaslInitFrame({
+          mechanism: 'PLAIN', hostname: 'my-special-vhost',
+          initialResponse: buildInitialResponseFor('user', 'pass')
+        }),
         false,
-        new OpenFrame({ containerId: "test", hostname:"my-special-vhost" })
+        new frames.OpenFrame({ containerId: "test", hostname:"my-special-vhost" })
       ]);
 
       test.server.setResponseSequence([
         [
           constants.saslVersion,
-          new SaslFrames.SaslMechanisms(['PLAIN'])
+          new frames.SaslMechanismsFrame({ saslServerMechanisms: ['PLAIN'] })
         ],
-        new SaslFrames.SaslOutcome({ code: constants.saslOutcomes.ok }),
+        new frames.SaslOutcomeFrame({ code: constants.saslOutcomes.ok }),
         constants.amqpVersion,
-        new OpenFrame(amqp.Policy.QpidJava.connect.options),
-        new BeginFrame({
-          remoteChannel: 1, nextOutgoingId: 0, incomingWindow: 2147483647, outgoingWindow: 2147483647, handleMax: 4294967295
+        new frames.OpenFrame(amqp.Policy.QpidJava.connect.options),
+        new frames.BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0,
+          incomingWindow: 2147483647, outgoingWindow: 2147483647,
+          handleMax: 4294967295
         }),
-        new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test'))
+        new frames.CloseFrame({ error:
+          new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test' })
+        })
       ]);
 
       return test.client.connect(test.server.address('user', 'pass') + '/my-special-vhost')
