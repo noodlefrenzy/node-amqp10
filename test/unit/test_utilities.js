@@ -1,15 +1,7 @@
 'use strict';
-
 var expect = require('chai').expect,
-
-    constants = require('../../lib/constants'),
     u = require('../../lib/utilities'),
-    DescribedType = require('../../lib/types/described_type'),
-    Fields = require('../../lib/types/amqp_composites').Fields,
     AMQPSymbol = require('../../lib/types/amqp_symbol'),
-    ST = require('../../lib/types/source_target'),
-    Source = ST.Source,
-    Target = ST.Target,
     tu = require('./testing_utils');
 
 describe('Utilities', function() {
@@ -107,11 +99,14 @@ describe('Utilities', function() {
     //   expect(merged.options.value).to.eql('value string');
     // });
 
+    /*
+    NOTE: this isn't used for attach frames anymore, need to determine if this
+          test is still needed
     it('should work for attach frame details', function() {
       var input = { options: {
         name: 'recv',
         role: constants.linkRole.receiver,
-        source: new Source({
+        source: new terminus.Source({
           address: 'recv',
           filter: new Fields({
             'apache.org:selector-filter:string' :
@@ -119,11 +114,11 @@ describe('Utilities', function() {
                     "amqp.annotation.x-opt-offset > '" + 1000 + "'")
             })
         }),
-        target: new Target({
+        target: new terminus.Target({
           address: 'localhost'
         }),
-        senderSettleMode: constants.senderSettleMode.settled,
-        receiverSettleMode: constants.receiverSettleMode.autoSettle,
+        sndSettleMode: constants.senderSettleMode.settled,
+        rcvSettleMode: constants.receiverSettleMode.autoSettle,
         maxMessageSize: 10000,
         initialDeliveryCount: 1
       }};
@@ -131,6 +126,7 @@ describe('Utilities', function() {
       var merged = u.deepMerge(input);
       expect(merged).to.eql(input);
     });
+    */
 
     it('should work for chains', function() {
       var last = { a: 1, b: 1, c: 1 };
