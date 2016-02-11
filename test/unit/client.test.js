@@ -13,7 +13,7 @@ var _ = require('lodash'),
     AMQPError = require('../../lib/types/amqp_error'),
     M = require('../../lib/types/message'),
     Codec = require('../../lib/codec'),
-    DeliveryState = require('../../lib/new_types/delivery_state'),
+    DeliveryState = require('../../lib/types/delivery_state'),
 
     test = require('./test-fixture');
 

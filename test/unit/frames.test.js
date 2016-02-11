@@ -6,11 +6,11 @@ var frames = require('../../lib/frames'),
     tu = require('./testing_utils'),
     expect = require('chai').expect,
 
-    DeliveryState = require('../../lib/new_types/delivery_state'),
+    DeliveryState = require('../../lib/types/delivery_state'),
     AMQPSymbol = require('../../lib/types/amqp_symbol'),
     AMQPError = require('../../lib/types/amqp_error'),
 
-    terminus = require('../../lib/new_types/terminus'),
+    terminus = require('../../lib/types/terminus'),
     translator = require('../../lib/adapters/translate_encoder');
 
 describe('Frames', function() {

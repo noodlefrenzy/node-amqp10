@@ -3,7 +3,7 @@ var BufferBuilder = require('buffer-builder'),
     expect = require('chai').expect,
 
     codec = require('../../../lib/codec'),
-    DeliveryState = require('../../../lib/new_types/delivery_state');
+    DeliveryState = require('../../../lib/types/delivery_state');
 
 // @todo: this suite could use some actual structure, but for the moment
 //        accurately tests the issue reported
