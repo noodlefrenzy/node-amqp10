@@ -5,7 +5,7 @@ var _ = require('lodash'),
     net = require('net'),
     expect = require('chai').expect,
     debug = require('debug')('amqp10:mock:server'),
-    FrameBase = require('../../../lib/frames/frame'),
+    frames = require('../../../lib/frames'),
     tu = require('../testing_utils');
 
 function MockServer(options) {
@@ -106,7 +106,7 @@ MockServer.prototype.teardown = function() {
 };
 
 function convertSequenceFramesToBuffers(frame) {
-  if (frame instanceof FrameBase.AMQPFrame || frame instanceof FrameBase.SaslFrame) {
+  if (frame instanceof frames.AMQPFrame || frame instanceof frames.SaslFrame) {
     return tu.convertFrameToBuffer(frame);
   } else if (Array.isArray(frame)) {
     return [frame[0], convertSequenceFramesToBuffers(frame[1])];
