@@ -8,7 +8,6 @@ var _ = require('lodash'),
 
     constants = require('../../lib/constants'),
     frames = require('../../lib/frames'),
-    TransferFrame = require('../../lib/frames/transfer_frame'),
 
     DefaultPolicy = require('../../lib/policies/default_policy'),
     AMQPError = require('../../lib/types/amqp_error'),
@@ -81,10 +80,10 @@ describe('Client', function() {
           });
         },
         function (prev) {
-          var txFrame = new TransferFrame({
+          var txFrame = new frames.TransferFrame({
             handle: 1, deliveryId: 1
           });
-          txFrame.message = messageBuf;
+          txFrame.payload = messageBuf;
           return txFrame;
         },
         new frames.CloseFrame({
@@ -131,27 +130,27 @@ describe('Client', function() {
         },
         [
           function (prev) {
-            var txFrame = new TransferFrame({
+            var txFrame = new frames.TransferFrame({
               handle: 1, deliveryId: 1,
               more: true
             });
-            txFrame.message = buf1;
+            txFrame.payload = buf1;
             return txFrame;
           },
           function (prev) {
-            var txFrame = new TransferFrame({
+            var txFrame = new frames.TransferFrame({
               handle: 1, deliveryId: 1,
               more: true
             });
-            txFrame.message = buf2;
+            txFrame.payload = buf2;
             return txFrame;
           },
           function (prev) {
-            var txFrame = new TransferFrame({
+            var txFrame = new frames.TransferFrame({
               handle: 1,
               more: false
             });
-            txFrame.message = buf3;
+            txFrame.payload = buf3;
             return txFrame;
           }
         ],
@@ -217,12 +216,16 @@ describe('Client', function() {
 
       // ensure expected frames are broken up the same way we break them up
       var deliveryTag = new Buffer(Number(1).toString());
-      var frameOverhead = TransferFrame.FRAME_OVERHEAD + deliveryTag.length;
+      var frameOverhead = frames.TRANSFER_FRAME_OVERHEAD + deliveryTag.length;
       var idealMessageSize = testMaxFrameSize - frameOverhead;
       var messageCount = Math.ceil(messageBuffer.length / idealMessageSize);
-      var expected = [], idx = 0;
+      var expectedFrames = [], idx = 0;
       for (var i = 0; i < messageCount; ++i) {
-        expected.push(messageBuffer.slice(idx, idx + idealMessageSize));
+        var frame = new frames.TransferFrame({
+          channel: 1, handle: 0, deliveryId: 1, settled: false, deliveryTag: deliveryTag, more: true,
+        });
+        frame.payload = messageBuffer.slice(idx, idx + idealMessageSize);
+        expectedFrames.push(frame);
         idx += idealMessageSize;
       }
 
@@ -233,26 +236,7 @@ describe('Client', function() {
       // from the delivery-tag on the first transfer of a delivery.
       test.server.setExpectedFrameSequence([
         false, false, false, false,
-        new TransferFrame({
-          channel: 1, handle: 0, deliveryId: 1, settled: false, deliveryTag: deliveryTag,
-          message: expected[0], more: true,
-        }),
-        new TransferFrame({
-          channel: 1, handle: 0, deliveryId: 1, settled: false, deliveryTag: deliveryTag,
-          message: expected[1], more: true,
-        }),
-        new TransferFrame({
-          channel: 1, handle: 0, deliveryId: 1, settled: false, deliveryTag: deliveryTag,
-          message: expected[2], more: true,
-        }),
-        new TransferFrame({
-          channel: 1, handle: 0, deliveryId: 1, settled: false, deliveryTag: deliveryTag,
-          message: expected[3], more: true,
-        }),
-        new TransferFrame({
-          channel: 1, handle: 0, deliveryId: 1, settled: false, deliveryTag: deliveryTag,
-          message: expected[4], more: false,
-        }),
+        expectedFrames[0], expectedFrames[1], expectedFrames[2], expectedFrames[3], expectedFrames[4],
         false
       ]);
 

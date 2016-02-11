@@ -556,7 +556,7 @@ describe('TransferFrame', function() {
       receiverSettleMode: constants.receiverSettleMode.autoSettle
     });
     transfer.channel = 1;
-    transfer.message = new Buffer([0x00, 0x53, 0x77, 0x52, 10]);
+    transfer.payload = new Buffer([0x00, 0x53, 0x77, 0x52, 10]);
 
     var actual = tu.convertFrameToBuffer(transfer);
     var payloadSize = 12;
@@ -620,7 +620,7 @@ describe('TransferFrame', function() {
     expect(transfer.channel).to.eql(channel);
     expect(transfer.handle).to.eql(handle);
     expect(transfer.rcvSettleMode).to.eql(constants.receiverSettleMode.autoSettle);
-    expect(transfer.message).to.have.length(5);
+    expect(transfer.payload).to.have.length(5);
 
     // var message = transfer.decodePayload();
     // expect(message.body[0]).to.eql(10);
