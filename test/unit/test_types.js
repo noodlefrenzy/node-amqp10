@@ -7,8 +7,6 @@ var expect = require('chai').expect,
 
     codec = require('../../lib/codec'),
     ForcedType = require('../../lib/types/forced_type'),
-
-    AMQPSymbol = require('../../lib/types/amqp_symbol'),
     AMQPArray = require('../../lib/types/amqp_composites').Array,
 
     errors = require('../../lib/errors'),
@@ -256,16 +254,16 @@ describe('Types', function() {
             expectedOutput: buf(str32Utf8StringExpectedBuffer)
           },
           {
-            name: 'sym8', type: 'symbol', value: new AMQPSymbol('foo'),
+            name: 'sym8', type: 'symbol', value: 'foo',
             expectedOutput: buf([0xa3, 3, builder.prototype.appendString, 'foo'])
           },
           {
             name: 'sym8 (empty)', type: 'symbol',
-            value: new AMQPSymbol(''),
+            value: '',
             expectedOutput: buf([0xa3, 0]) },
           {
             name: 'sym32', type: 'symbol',
-            value: new AMQPSymbol(sym32String),
+            value: sym32String,
             expectedOutput: buf(sym32StringExpectedBuffer)
           }
         ].forEach(testEncoding);
@@ -608,13 +606,13 @@ describe('Types', function() {
           {
             name: 'sym8',
             value: buf([0xa3, 3, builder.prototype.appendString, 'foo']),
-            expectedOutput: new AMQPSymbol('foo')
+            expectedOutput: 'foo'
           },
-          { name: 'sym8 (empty)', value: buf([0xa3, 0]), expectedOutput: new AMQPSymbol('') },
+          { name: 'sym8 (empty)', value: buf([0xa3, 0]), expectedOutput: '' },
           {
             name: 'sym32',
             value: buf([0xb3, builder.prototype.appendUInt32BE, 3, builder.prototype.appendString, 'foo']),
-            expectedOutput: new AMQPSymbol('foo')
+            expectedOutput: 'foo'
           },
         ].forEach(testDecoding);
       });

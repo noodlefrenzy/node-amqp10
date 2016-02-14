@@ -8,7 +8,6 @@ var builder = require('buffer-builder'),
 
     MockServer = require('./mock_amqp'),
     AMQPError = require('../../lib/types/amqp_error'),
-    AMQPSymbol = require('../../lib/types/amqp_symbol'),
 
     Connection = require('../../lib/connection'),
     Sasl = require('../../lib/sasl'),
@@ -19,7 +18,7 @@ DefaultPolicy.connect.options.containerId = 'test';
 
 function MockSaslInitFrame() {
   return new frames.SaslInitFrame({
-    mechanism: new AMQPSymbol('PLAIN'),
+    mechanism: 'PLAIN',
     initialResponse: tu.buildBuffer([0, builder.prototype.appendString, 'user', 0, builder.prototype.appendString, 'pass'])
   });
 }

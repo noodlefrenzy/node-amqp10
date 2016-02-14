@@ -7,7 +7,6 @@ var frames = require('../../lib/frames'),
     expect = require('chai').expect,
 
     DeliveryState = require('../../lib/types/delivery_state'),
-    AMQPSymbol = require('../../lib/types/amqp_symbol'),
     AMQPError = require('../../lib/types/amqp_error'),
 
     terminus = require('../../lib/types/terminus'),
@@ -539,7 +538,7 @@ describe('CloseFrame', function() {
     expect(close).to.exist;
     expect(close).to.be.an.instanceOf(frames.CloseFrame);
     expect(close.error).to.be.an.instanceOf(AMQPError);
-    expect(close.error.condition).to.eql(new AMQPSymbol('amqp:internal-error'));
+    expect(close.error.condition).to.eql('amqp:internal-error');
     expect(close.error.description).to.equal('test');
     expect(close.error.info).to.eql({});
   });
@@ -725,8 +724,8 @@ describe('SaslMechanismsFrame', function() {
     var mechanisms = frames.readFrame(buffer);
     expect(mechanisms).to.be.an.instanceOf(frames.SaslMechanismsFrame);
     expect(mechanisms.saslServerMechanisms).to.have.length(2);
-    expect(mechanisms.saslServerMechanisms[0]).to.eql(new AMQPSymbol('PLAIN'));
-    expect(mechanisms.saslServerMechanisms[1]).to.eql(new AMQPSymbol('CRAP'));
+    expect(mechanisms.saslServerMechanisms[0]).to.eql('PLAIN');
+    expect(mechanisms.saslServerMechanisms[1]).to.eql('CRAP');
   });
 
 }); // SaslMechanismsFrame
@@ -746,7 +745,7 @@ describe('SaslInitFrame', function() {
 
     var init = frames.readFrame(buffer);
     expect(init).to.be.an.instanceOf(frames.SaslInitFrame);
-    expect(init.mechanism).to.eql(new AMQPSymbol('PLAIN'));
+    expect(init.mechanism).to.eql('PLAIN');
     expect(init.initialResponse).to.eql(new Buffer('0061646d696e0061646d696e', 'hex'));
     expect(init.hostname).to.be.null;
   });
