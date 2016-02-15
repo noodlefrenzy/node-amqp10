@@ -11,8 +11,7 @@ var _ = require('lodash'),
 
     DefaultPolicy = require('../../lib/policies/default_policy'),
     AMQPError = require('../../lib/types/amqp_error'),
-    M = require('../../lib/types/message'),
-    Codec = require('../../lib/codec'),
+    m = require('../../lib/types/message'),
     DeliveryState = require('../../lib/types/delivery_state'),
 
     test = require('./test-fixture');
@@ -20,6 +19,12 @@ var _ = require('lodash'),
 DefaultPolicy.connect.options.containerId = 'test';
 DefaultPolicy.reconnect.retries = 0;
 DefaultPolicy.reconnect.forever = false;
+
+function encodeMessagePayload(message) {
+  var tmpBuf = new Builder();
+  m.encodeMessage(message, tmpBuf);
+  return tmpBuf.get();
+}
 
 describe('Client', function() {
   describe('#connect()', function() {
@@ -58,10 +63,8 @@ describe('Client', function() {
     });
 
     it('should connect and receive', function(done) {
-      var message = new M.Message({}, { test: 'testing' });
-      var tmpBuf = new Builder();
-      Codec.encode(message, tmpBuf);
-      var messageBuf = tmpBuf.get();
+      var message = { body: { test: 'testing' } };
+      var messageBuf = encodeMessagePayload(message);
       test.server.setResponseSequence([
         constants.amqpVersion,
         new frames.OpenFrame(DefaultPolicy.connect.options),
@@ -105,10 +108,8 @@ describe('Client', function() {
     });
 
     it('should receive multi-frame messages', function(done) {
-      var message = new M.Message({}, { test: 'Really long message' });
-      var tmpBuf = new Builder();
-      Codec.encode(message, tmpBuf);
-      var messageBuf = tmpBuf.get();
+      var message = { body: { test: 'Really long message' } };
+      var messageBuf = encodeMessagePayload(message);
       var buf1 = messageBuf.slice(0, 10);
       var buf2 = messageBuf.slice(10, 15);
       var buf3 = messageBuf.slice(15);
@@ -209,10 +210,8 @@ describe('Client', function() {
 
       // build our expected buffer segments
       var messageData = new Array(2048).join('0');
-      var message = new M.Message({ body: messageData });
-      var codecBuffer = new Builder();
-      Codec.encode(message, codecBuffer);
-      var messageBuffer = codecBuffer.get();
+      var message = { body: messageData };
+      var messageBuffer = encodeMessagePayload(message);
 
       // ensure expected frames are broken up the same way we break them up
       var deliveryTag = new Buffer(Number(1).toString());
