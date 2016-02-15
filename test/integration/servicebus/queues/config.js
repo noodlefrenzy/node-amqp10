@@ -1,6 +1,5 @@
 'use strict';
 module.exports = {
-
   protocol: 'amqps',
   serviceBusHost: process.env.ServiceBusNamespace,
   defaultLink: process.env.ServiceBusQueueName,

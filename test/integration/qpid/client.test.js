@@ -125,7 +125,7 @@ describe('Client', function() {
       {
         section: 'messageAnnotations',
         data: {
-          annotations: {
+          messageAnnotations: {
             "x-foo" : 5,
             "x-bar" : "wibble"
           }
