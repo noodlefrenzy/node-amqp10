@@ -29,8 +29,8 @@ describe('ServiceBus', function() {
       test.client.connect(config.address)
         .then(function() {
           return Promise.all(
-           _.range(config.partitionCount).map(function(partition) { return test.client.createReceiver(config.receiverLinkPrefix + partition); }).
-             concat(test.client.createSender(config.senderLink))
+            _.range(config.partitionCount).map(function(partition) { return test.client.createReceiver(config.receiverLinkPrefix + partition); }).
+              concat(test.client.createSender(config.senderLink))
           );
         })
         .then(function (links) {
