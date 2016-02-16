@@ -241,17 +241,6 @@ describe('Codec', function() {
       var expected = buildBuffer([0x00, 0x53, 0x26, 0x45]);
       tu.shouldBufEql(expected, bufb);
     });
-    it('should encode objects as lists when asked', function() {
-      var toEncode = {
-        foo: 'V1',
-        bar: 'V2',
-        encodeOrdering: ['foo', 'bar']
-      };
-      var expected = buildBuffer([0xC0, 0x9, 0x2, 0xA1, 0x2, Builder.prototype.appendString, 'V1', 0xA1, 0x2, Builder.prototype.appendString, 'V2']);
-      var bufb = new Builder();
-      codec.encode(toEncode, bufb);
-      tu.shouldBufEql(expected, bufb);
-    });
     it('should encode forced-types when asked', function() {
       var toEncode = new ForcedType('uint', 0x123);
       var expected = buildBuffer([0x70, 0x00, 0x00, 0x01, 0x23]);
@@ -302,38 +291,6 @@ describe('Codec', function() {
            new AMQPArray(['Rob J. Godfrey', 'Rafael H. Schloming'], 0xA1),
            null
           ]), bufb);
-      tu.shouldBufEql(expected, bufb);
-    });
-    it('should encode frame performative correctly', function() {
-      var performative = new DescribedType(0x10, {
-        id: 'client', /* string */
-        hostname: 'localhost', /* string */
-        maxFrameSize: new ForcedType('uint', 512), /* uint */
-        channelMax: new ForcedType('ushort', 10), /* ushort */
-        idleTimeout: new ForcedType('uint', 1000), /* milliseconds */
-        outgoingLocales: new ForcedType('symbol', 'en-US'), /* ietf-language-tag (symbol) */
-        incomingLocales: new ForcedType('symbol', 'en-US'), /* ietf-language-tag (symbol) */
-        offeredCapabilities: null, /* symbol */
-        desiredCapabilities: null, /* symbol */
-        properties: {}, /* fields (map) */
-        encodeOrdering: ['id', 'hostname', 'maxFrameSize', 'channelMax', 'idleTimeout', 'outgoingLocales',
-          'incomingLocales', 'offeredCapabilities', 'desiredCapabilities', 'properties']
-      });
-      var expected = buildBuffer([0x00,
-        0x53, 0x10, // Descriptor
-        // 0xD0, Builder.prototype.appendUInt32BE, 0x0, Builder.prototype.appendUInt32BE, 0x0, // List (size & count)
-        0xC0, 0x34, 10,
-        0xA1, 0x6, Builder.prototype.appendString, 'client', // ID
-        0xA1, 0x9, Builder.prototype.appendString, 'localhost', // Hostname
-        0x70, Builder.prototype.appendUInt32BE, 512, // Max Frame Size
-        0x60, Builder.prototype.appendUInt16BE, 10, // Channel Max
-        0x70, Builder.prototype.appendUInt32BE, 1000, // Idle Timeout
-        0xA3, 0x5, Builder.prototype.appendString, 'en-US', // Outgoing Locales
-        0xA3, 0x5, Builder.prototype.appendString, 'en-US', // Incoming Locales
-        0x40, 0x40, 0xc1, 0x1, 0x0 // Capabilities & properties
-      ]);
-      var bufb = new Builder();
-      codec.encode(performative, bufb);
       tu.shouldBufEql(expected, bufb);
     });
   });
