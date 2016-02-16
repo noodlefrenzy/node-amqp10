@@ -13,7 +13,7 @@ var debugOutputFile = process.argv[2];
 var tryToConvert = true;
 
 var rxPrefix = 'amqp10:connection Rx:';
-var txPrefix = 'amqp10:framing Sending frame:';
+var txPrefix = 'amqp10:framing sending frame:';
 
 function s(cnt) {
   var r = '';
@@ -178,9 +178,9 @@ fs.readFile(debugOutputFile, function (err, data) {
     idxOfPrefix = line.indexOf(txPrefix);
     if (idxOfPrefix >= 0) {
       var rest = line.substr(idxOfPrefix + txPrefix.length + 1).trim();
-      var idxOfHexStart = rest.indexOf('}: ');
+      var idxOfHexStart = rest.indexOf('] : ');
       if (idxOfHexStart >= 0) {
-        var curTxHex = rest.substr(idxOfHexStart + '}: '.length);
+        var curTxHex = rest.substr(idxOfHexStart + '] : '.length);
         if (curTxHex.indexOf(' +') !== -1) {
           curTxHex = curTxHex.substr(0, curTxHex.indexOf(' +'));
         }
