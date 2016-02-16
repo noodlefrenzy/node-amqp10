@@ -137,6 +137,11 @@ describe('Types', function() {
             expectedOutput: buf([0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00])
           },
           {
+            name: 'ulong (largest in js)', type: 'ulong',
+            value: (Math.pow(2, 53) - 1),
+            expectedOutput: buf([0x80, 0x00, 0x1f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff])
+          },
+          {
             name: 'ulong (int64)', type: 'ulong',
             value: new Int64(0x11111111, 0x11111111),
             expectedOutput: buf([0x80, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11])
@@ -168,6 +173,16 @@ describe('Types', function() {
           {
             name: 'long', value: 129,
             expectedOutput: buf([0x81, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x81])
+          },
+          {
+            name: 'long (largest in js)', type: 'long',
+            value: (Math.pow(2, 53) - 1),
+            expectedOutput: buf([0x81, 0x00, 0x1f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff])
+          },
+          {
+            name: 'long (smallest in js)', type: 'long',
+            value: -(Math.pow(2, 53) - 1),
+            expectedOutput: buf([0x81, 0xff, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01])
           },
           {
             name: 'long (int64)', type: 'long',
@@ -508,6 +523,11 @@ describe('Types', function() {
             expectedOutput: new Int64(0x01010101, 0x23456789)
           },
           {
+            name: 'ulong (largest in js)',
+            value: buf([0x80, 0x00, 0x1f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]),
+            expectedOutput: (Math.pow(2, 53) - 1)
+          },
+          {
             name: 'smallulong', value: buf([0x53, 0x01]),
             expectedOutput: 0x01
           },
@@ -529,6 +549,16 @@ describe('Types', function() {
             name: 'long',
             value: buf([0x81, 0x01, 0x01, 0x01, 0x01, 0x23, 0x45, 0x67, 0x89]),
             expectedOutput: new Int64(0x01010101, 0x23456789)
+          },
+          {
+            name: 'long (largest in js)',
+            value: buf([0x81, 0x00, 0x1f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]),
+            expectedOutput: (Math.pow(2, 53) - 1)
+          },
+          {
+            name: 'long (smallest in js)',
+            value: buf([0x81, 0xff, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01]),
+            expectedOutput: -(Math.pow(2, 53) - 1)
           },
           { name: 'smalllong', value: buf([0x55, 0x23]), expectedOutput: 0x23 },
           {
