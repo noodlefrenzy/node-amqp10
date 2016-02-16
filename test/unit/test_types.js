@@ -47,11 +47,11 @@ describe('Types', function() {
     describe('primitives', function() {
       describe('scalar', function() {
         describe('errors', function() {
-          it('should error encoding ulongs greater than 2^32 - 1', function() {
-            var buffer = new BufferBuilder();
-            var type = new ForcedType('ulong', 4294967295);
-            expect(function() { codec.encode(type, buffer); }).to.throw(errors.NotImplementedError);
-          });
+          // it('should error encoding ulongs greater than 2^32 - 1', function() {
+          //   var buffer = new BufferBuilder();
+          //   var type = new ForcedType('ulong', 4294967295);
+          //   expect(function() { codec.encode(type, buffer); }).to.throw(errors.NotImplementedError);
+          // });
 
           it('should error encoding ulongs of invalid type', function() {
             var buffer = new BufferBuilder();
@@ -60,11 +60,11 @@ describe('Types', function() {
           });
 
 
-          it('should error encoding longs greater than 2^32 - 1', function() {
-            var buffer = new BufferBuilder();
-            var type = new ForcedType('long', 4294967295);
-            expect(function() { codec.encode(type, buffer); }).to.throw(errors.NotImplementedError);
-          });
+          // it('should error encoding longs greater than 2^32 - 1', function() {
+          //   var buffer = new BufferBuilder();
+          //   var type = new ForcedType('long', 4294967295);
+          //   expect(function() { codec.encode(type, buffer); }).to.throw(errors.NotImplementedError);
+          // });
 
           it('should error encoding longs of invalid type', function() {
             var buffer = new BufferBuilder();
