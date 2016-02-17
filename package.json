@@ -8,10 +8,10 @@
   },
   "dependencies": {
     "buffer-builder": "^0.2.0",
-    "bl": "^1.0.2",
-    "bluebird": "^3.2.2",
+    "bl": "^1.1.2",
+    "bluebird": "^3.3.1",
     "debug": "^2.2.0",
-    "lodash": "^4.2.1",
+    "lodash": "^4.5.0",
     "node-amqp-encoder": "^0.0.2",
     "node-int64": "^0.4.0",
     "stately.js": "^1.3.0",
@@ -24,7 +24,7 @@
     "jsdoc-to-markdown": "^1.3.3",
     "jshint": "^2.9.1",
     "mocha": "^2.4.5",
-    "qmf2": "^0.1.2",
+    "qmf2": "^0.1.5",
     "stream-buffers": "^3.0.0"
   },
   "scripts": {},
