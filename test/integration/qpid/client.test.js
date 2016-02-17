@@ -149,7 +149,7 @@ describe('Client', function() {
             ttl: 150,
             firstAcquirer: true,
 
-            deliveryCount: undefined  // TODO: what is going on here?
+            deliveryCount: undefined  // @todo: what is going on here?
           }
         }
       },
