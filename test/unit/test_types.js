@@ -38,7 +38,7 @@ describe('Types', function() {
         var invalidType = new ForcedType('bazookas', 'hello world');
         var invalid = function() { codec.encode(invalidType, new BufferBuilder()); };
         expect(invalid).to.throw(errors.EncodingError);
-        expect(invalid).to.throw(/bazookas/);
+        expect(invalid).to.throw(/unknown type/);
       });
     });
 
