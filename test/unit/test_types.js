@@ -326,14 +326,14 @@ describe('Types', function() {
           array32.push(1);
           array32Buffer.push(0x01);
 
-          list32Buffer.push(0x54);
+          list32Buffer.push(0x52);
           list32Buffer.push(0x01);
 
           var key = 'elt' + (100 +i);
           map32[key] = 456;
           map32Buffer = map32Buffer.concat([
-            0xA1, 0x06, builder.prototype.appendString, key,
-            0x71, builder.prototype.appendInt32BE, 456,
+            0xa1, 0x06, builder.prototype.appendString, key,
+            0x70, builder.prototype.appendInt32BE, 456,
           ]);
         }
 
@@ -350,7 +350,7 @@ describe('Types', function() {
         ].concat(list32Buffer);
 
         var map32ExpectedBuffer = [
-          0xD1,
+          0xd1,
           builder.prototype.appendUInt32BE, 3332, builder.prototype.appendUInt32BE, 512,
         ].concat(map32Buffer);
 
@@ -373,8 +373,8 @@ describe('Types', function() {
               0xe0,
               0x12, 0x02,
               0xc0,
-                0x07, 0x03, 0x54, 0x01, 0x54, 0x02, 0x54, 0x03,
-                0x07, 0x03, 0x54, 0x01, 0x54, 0x02, 0x54, 0x03])
+                0x07, 0x03, 0x52, 0x01, 0x52, 0x02, 0x52, 0x03,
+                0x07, 0x03, 0x52, 0x01, 0x52, 0x02, 0x52, 0x03])
           },
           {
             name: 'array8 (of maps)', type: 'array',
@@ -403,19 +403,18 @@ describe('Types', function() {
             name: 'list8', type: 'list',
             value: [456, 789],
             expectedOutput: buf([
-              0xC0,
-              0xB, 0x2,
-              0x71, builder.prototype.appendInt32BE, 456,
-              0x71, builder.prototype.appendInt32BE, 789
+              0xc0, 0xb, 0x2,
+              0x70, builder.prototype.appendInt32BE, 456,
+              0x70, builder.prototype.appendInt32BE, 789
             ])
           },
           {
-            name: 'list8 (by code)', type: 0xC0,
+            name: 'list8 (by code)', type: 0xc0,
             value: [456, 789],
             expectedOutput: buf([
               0xB, 0x2,
-              0x71, builder.prototype.appendInt32BE, 456,
-              0x71, builder.prototype.appendInt32BE, 789
+              0x70, builder.prototype.appendInt32BE, 456,
+              0x70, builder.prototype.appendInt32BE, 789
             ])
           },
           { name: 'list32', type: 'list', value: list32, expectedOutput: list32ExpectedBuffer },
@@ -428,22 +427,21 @@ describe('Types', function() {
             name: 'map8', type: 'map',
             value: { foo: 456, bar: 45.6 },
             expectedOutput: buf([
-              0xC1,
-              0x19, 0x04,
-              0xA1, 0x03, builder.prototype.appendString, 'foo',
-              0x71, builder.prototype.appendInt32BE, 456,
-              0xA1, 0x03, builder.prototype.appendString, 'bar',
+              0xc1, 0x19, 0x04,
+              0xa1, 0x03, builder.prototype.appendString, 'foo',
+              0x70, builder.prototype.appendInt32BE, 456,
+              0xa1, 0x03, builder.prototype.appendString, 'bar',
               0x82, builder.prototype.appendDoubleBE, 45.6
             ])
           },
           {
-            name: 'map8 (by code)', type: 0xC1,
+            name: 'map8 (by code)', type: 0xc1,
             value: { foo: 456, bar: 45.6 },
             expectedOutput: buf([
               0x19, 0x04,
-              0xA1, 0x03, builder.prototype.appendString, 'foo',
-              0x71, builder.prototype.appendInt32BE, 456,
-              0xA1, 0x03, builder.prototype.appendString, 'bar',
+              0xa1, 0x03, builder.prototype.appendString, 'foo',
+              0x70, builder.prototype.appendInt32BE, 456,
+              0xa1, 0x03, builder.prototype.appendString, 'bar',
               0x82, builder.prototype.appendDoubleBE, 45.6
             ])
           },

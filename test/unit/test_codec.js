@@ -218,7 +218,7 @@ describe('Codec', function() {
     });
     it('should encode lists', function() {
       var list = [1, 'foo'];
-      var expected = buildBuffer([0xC0, (1 + 2 + 5), 2, 0x54, 1, 0xA1, 3, Builder.prototype.appendString, 'foo']);
+      var expected = buildBuffer([0xc0, (1 + 2 + 5), 2, 0x52, 1, 0xa1, 3, Builder.prototype.appendString, 'foo']);
       var bufb = new Builder();
       codec.encode(list, bufb);
       tu.shouldBufEql(expected, bufb);
