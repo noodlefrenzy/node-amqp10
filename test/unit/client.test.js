@@ -221,18 +221,20 @@ describe('Client', function() {
       var expectedFrames = [], idx = 0;
       for (var i = 0; i < messageCount; ++i) {
         var frame = new frames.TransferFrame({
-          channel: 1, handle: 0, deliveryId: 1, settled: false, deliveryTag: deliveryTag, more: true,
+          channel: 1, handle: 0, deliveryId: 1, settled: false,
+          deliveryTag: deliveryTag, more: ((i < messageCount - 1) ? true : false),
         });
         frame.payload = messageBuffer.slice(idx, idx + idealMessageSize);
         expectedFrames.push(frame);
         idx += idealMessageSize;
       }
 
-      // 1. It is an error if the delivery-id on a continuation transfer differs
-      // from the delivery-id on the first transfer of a delivery.
-
-      // 2. It is an error if the delivery-tag on a continuation transfer differs
-      // from the delivery-tag on the first transfer of a delivery.
+      /*
+        1. It is an error if the delivery-id on a continuation transfer differs
+           from the delivery-id on the first transfer of a delivery.
+        2. It is an error if the delivery-tag on a continuation transfer differs
+           from the delivery-tag on the first transfer of a delivery.
+      */
       test.server.setExpectedFrameSequence([
         false, false, false, false,
         expectedFrames[0], expectedFrames[1], expectedFrames[2], expectedFrames[3], expectedFrames[4],
