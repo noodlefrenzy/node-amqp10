@@ -1,7 +1,6 @@
 'use strict';
-var AMQPClient = require('../../..').Client,
-    Message = require('../../../lib/types/message'),
-    Promise = require('bluebird'),
+var Promise = require('bluebird'),
+    AMQPClient = require('../../..').Client,
     config = require('./config'),
     expect = require('chai').expect;
 
@@ -93,11 +92,11 @@ describe('Client', function() {
   describe('Messages', function() {
     [
       {
-        option: 'properties', type: Message.Properties,
-        options: {
+        section: 'properties',
+        data: {
           properties: {
             messageId: 42,
-            userId: 'user',
+            userId: new Buffer('user'),
             to: 'mom',
             subject: 'hello!',
             replyTo: 'amq.topic',
@@ -116,25 +115,25 @@ describe('Client', function() {
         }
       },
       {
-        option: 'applicationProperties', type: Message.ApplicationProperties,
-        options: {
+        section: 'applicationProperties',
+        data: {
           applicationProperties: {
             something: "special"
           }
         }
       },
       {
-        option: 'annotations', type: Message.Annotations,
-        options: {
-          annotations: {
+        section: 'messageAnnotations',
+        data: {
+          messageAnnotations: {
             "x-foo" : 5,
             "x-bar" : "wibble"
           }
         }
       },
       {
-        option: 'deliveryAnnotations', type: Message.DeliveryAnnotations,
-        options: {
+        section: 'deliveryAnnotations',
+        data: {
           deliveryAnnotations: {
             "x-foo" : 5,
             "x-bar" : "wibble"
@@ -142,19 +141,21 @@ describe('Client', function() {
         }
       },
       {
-        option: 'header', type: Message.Header,
-        options: {
+        section: 'header',
+        data: {
           header: {
             durable: true,
             priority: 2,
             ttl: 150,
-            firstAcquirer: true
+            firstAcquirer: true,
+
+            deliveryCount: undefined  // @todo: what is going on here?
           }
         }
       },
       {
-        option: 'footer', type: Message.Footer,
-        options: {
+        section: 'footer',
+        data: {
           footer: {
             "x-foo" : 5,
             "x-bar" : "wibble"
@@ -162,7 +163,7 @@ describe('Client', function() {
         }
       }
     ].forEach(function(testCase) {
-      it('should send and receive ' + testCase.option + ' options', function(done) {
+      it('should send and receive ' + testCase.section + ' sections', function(done) {
         test.client.connect(config.address)
           .then(function() {
             return Promise.all([
@@ -173,25 +174,27 @@ describe('Client', function() {
           .spread(function(receiver, sender) {
             receiver.on('message', function(message) {
               expect(message).to.exist;
-              var expected = new testCase.type(testCase.options[testCase.option]);
-              if (testCase.option === 'header') {
+              // console.log('received: ', message);
+
+              var expected = testCase.data[testCase.section];
+              if (testCase.section === 'header') {
                 // NOTE: this is flakey because the TTL will be decremented by
                 //       the server. So, pull it out, check that its close and delete
-                expect(message[testCase.option].ttl).to.be.closeTo(149, 5);
+                expect(message[testCase.section].ttl).to.be.closeTo(149, 5);
 
                 delete expected.ttl;
-                delete message[testCase.option].ttl;
-              } else if (testCase.option === 'properties') {
-                message[testCase.option].absoluteExpiryTime =
-                  message[testCase.option].absoluteExpiryTime.getTime();
+                delete message[testCase.section].ttl;
+              } else if (testCase.section === 'properties') {
+                message[testCase.section].absoluteExpiryTime =
+                  message[testCase.section].absoluteExpiryTime.getTime();
                 expected.creationTime = new Date(expected.creationTime);
               }
 
-              expect(message[testCase.option]).to.eql(expected);
+              expect(message[testCase.section]).to.eql(expected);
               done();
             });
 
-            return sender.send('test-' + testCase.option, testCase.options);
+           return sender.send('test-' + testCase.section, testCase.data);
           });
       });
     });

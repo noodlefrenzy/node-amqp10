@@ -1,19 +1,12 @@
 'use strict';
 
 var expect = require('chai').expect,
-
     constants = require('../../lib/constants'),
-
+    frames = require('../../lib/frames'),
     DefaultPolicy = require('../../lib/policies/default_policy'),
-
     MockServer = require('./mock_amqp'),
     AMQPError = require('../../lib/types/amqp_error'),
-
-    CloseFrame = require('../../lib/frames/close_frame'),
-    OpenFrame = require('../../lib/frames/open_frame'),
-
     Connection = require('../../lib/connection'),
-
     tu = require('./testing_utils');
 
 DefaultPolicy.connect.options.containerId = 'test';
@@ -33,10 +26,10 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        new OpenFrame(DefaultPolicy.connect.options)
+        new frames.OpenFrame(DefaultPolicy.connect.options)
       ], [
         constants.amqpVersion,
-        new CloseFrame()
+        new frames.CloseFrame()
       ]);
 
       var connection = new Connection(DefaultPolicy.connect);
@@ -54,10 +47,10 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        new OpenFrame(DefaultPolicy.connect.options)
+        new frames.OpenFrame(DefaultPolicy.connect.options)
       ], [
         [ true, constants.amqpVersion ],
-        new CloseFrame()
+        new frames.CloseFrame()
       ]);
 
       var connection = new Connection(DefaultPolicy.connect);
@@ -104,12 +97,16 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        new OpenFrame(DefaultPolicy.connect.options),
-        new CloseFrame()
+        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.CloseFrame()
       ], [
         constants.amqpVersion,
-        new OpenFrame(DefaultPolicy.connect.options),
-        [ true, new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
+        new frames.OpenFrame(DefaultPolicy.connect.options),
+        [ true,
+          new frames.CloseFrame({
+            error: new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test' })
+          })
+        ]
       ]);
 
       var connection = new Connection(DefaultPolicy.connect);
@@ -126,12 +123,16 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        new OpenFrame(DefaultPolicy.connect.options),
-        new CloseFrame()
+        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.CloseFrame()
       ], [
         constants.amqpVersion,
-        new OpenFrame(DefaultPolicy.connect.options),
-        [ true, new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
+        new frames.OpenFrame(DefaultPolicy.connect.options),
+        [ true,
+          new frames.CloseFrame({
+            error: new AMQPError({ condition: AMQPError.ConnectionForced, decription: 'test' })
+          })
+        ]
       ]);
 
       var connection = new Connection(DefaultPolicy.connect);
@@ -167,12 +168,16 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        new OpenFrame(DefaultPolicy.connect.options),
-        new CloseFrame()
+        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.CloseFrame()
       ], [
         'BOGUS_HEADER',
-        new OpenFrame(DefaultPolicy.connect.options),
-        [ true, new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
+        new frames.OpenFrame(DefaultPolicy.connect.options),
+        [ true,
+          new frames.CloseFrame({
+            error: new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test' })
+          })
+        ]
       ]);
 
       var connection = new Connection(DefaultPolicy.connect);
@@ -209,12 +214,16 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        new OpenFrame(DefaultPolicy.connect.options),
-        new CloseFrame()
+        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.CloseFrame()
       ], [
         constants.saslVersion,
-        new OpenFrame(DefaultPolicy.connect.options),
-        [ true, new CloseFrame(new AMQPError(AMQPError.ConnectionForced, 'test')) ]
+        new frames.OpenFrame(DefaultPolicy.connect.options),
+        [ true,
+          new frames.CloseFrame({
+            error: new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test' })
+          })
+        ]
       ]);
 
       var connection = new Connection(DefaultPolicy.connect);

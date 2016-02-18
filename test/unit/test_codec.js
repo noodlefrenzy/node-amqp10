@@ -6,10 +6,8 @@ var Int64 = require('node-int64'),
 
     codec = require('../../lib/codec'),
     AMQPArray = require('../../lib/types/amqp_composites').Array,
-    AMQPError = require('../../lib/types/amqp_error'),
     DescribedType = require('../../lib/types/described_type'),
     ForcedType = require('../../lib/types/forced_type'),
-    AMQPSymbol = require('../../lib/types/amqp_symbol'),
 
     tu = require('./testing_utils');
 
@@ -116,8 +114,7 @@ describe('Codec', function() {
     it('should decode forced-type values', function() {
       var buffer = buildBuffer([0x03, Builder.prototype.appendString, 'URL']);
       var actual = codec.decode(buffer, 0, 0xA3);
-      expect(actual[0]).to.be.an.instanceOf(AMQPSymbol);
-      expect(actual[0].contents).to.eql('URL');
+      expect(actual[0]).to.eql('URL');
       expect(actual[1]).to.eql(4); // Count + contents
     });
 
@@ -133,7 +130,7 @@ describe('Codec', function() {
         Builder.prototype.appendString, 'Rafael H. Schloming',
         0x40]);
       var actual = codec.decode(newBuffer(buffer));
-      expect(actual[0]).to.eql(new DescribedType(new AMQPSymbol('example:book:list'),
+      expect(actual[0]).to.eql(new DescribedType('example:book:list',
           [
            'AMQP for & by Dummies',
            ['Rob J. Godfrey', 'Rafael H. Schloming'],
@@ -152,19 +149,24 @@ describe('Codec', function() {
       expect(actual[0]).to.eql(new DescribedType(0x10, ['', '', 0x00100000]));
     });
 
+    /*
+    // @todo: no longer relevant?
     it('should decode known type (AMQPError) from described type', function() {
-      var buffer = buildBuffer([0x00, 0x53, 0x1D,
+      var buffer = buildBuffer([
+        0x00, 0x53, 0x1D,
         0xD0, Builder.prototype.appendUInt32BE, (4 + 2 + 19 + 2 + 4 + 3), Builder.prototype.appendUInt32BE, 3,
         0xA3, 19, Builder.prototype.appendString, 'amqp:internal-error',
         0xA1, 4, Builder.prototype.appendString, 'test',
         0xC1, 1, 0x0 // empty info map
       ]);
+
       var actual = codec.decode(newBuffer(buffer));
       expect(actual).to.exist;
-      expect(actual[0]).to.be.an.instanceOf(AMQPError);
+      expect(actual[0]).to.be.an.instanceOf(types.error);
       expect(actual[0].condition.contents).to.eql('amqp:internal-error');
       expect(actual[0].description).to.eql('test');
     });
+    */
   });
 
   describe('#encode(buffer-builder)', function() {
@@ -175,7 +177,7 @@ describe('Codec', function() {
     });
     it('should encode symbols', function() {
       var bufb = new Builder();
-      codec.encode(new AMQPSymbol('FOO'), bufb);
+      codec.encode(new ForcedType('symbol', 'FOO'), bufb);
       tu.shouldBufEql([0xA3, 0x03, 0x46, 0x4F, 0x4F], bufb);
     });
     it('should encode buffers', function() {
@@ -216,7 +218,7 @@ describe('Codec', function() {
     });
     it('should encode lists', function() {
       var list = [1, 'foo'];
-      var expected = buildBuffer([0xC0, (1 + 2 + 5), 2, 0x54, 1, 0xA1, 3, Builder.prototype.appendString, 'foo']);
+      var expected = buildBuffer([0xc0, (1 + 2 + 5), 2, 0x52, 1, 0xa1, 3, Builder.prototype.appendString, 'foo']);
       var bufb = new Builder();
       codec.encode(list, bufb);
       tu.shouldBufEql(expected, bufb);
@@ -237,17 +239,6 @@ describe('Codec', function() {
       var bufb = new Builder();
       codec.encode(new DescribedType(0x26), bufb);
       var expected = buildBuffer([0x00, 0x53, 0x26, 0x45]);
-      tu.shouldBufEql(expected, bufb);
-    });
-    it('should encode objects as lists when asked', function() {
-      var toEncode = {
-        foo: 'V1',
-        bar: 'V2',
-        encodeOrdering: ['foo', 'bar']
-      };
-      var expected = buildBuffer([0xC0, 0x9, 0x2, 0xA1, 0x2, Builder.prototype.appendString, 'V1', 0xA1, 0x2, Builder.prototype.appendString, 'V2']);
-      var bufb = new Builder();
-      codec.encode(toEncode, bufb);
       tu.shouldBufEql(expected, bufb);
     });
     it('should encode forced-types when asked', function() {
@@ -294,44 +285,12 @@ describe('Codec', function() {
         Builder.prototype.appendString, 'Rafael H. Schloming',
         0x40]);
       var bufb = new Builder();
-      codec.encode(new DescribedType(new AMQPSymbol('example:book:list'),
+      codec.encode(new DescribedType('example:book:list',
           [
            'AMQP for & by Dummies',
            new AMQPArray(['Rob J. Godfrey', 'Rafael H. Schloming'], 0xA1),
            null
           ]), bufb);
-      tu.shouldBufEql(expected, bufb);
-    });
-    it('should encode frame performative correctly', function() {
-      var performative = new DescribedType(0x10, {
-        id: 'client', /* string */
-        hostname: 'localhost', /* string */
-        maxFrameSize: new ForcedType('uint', 512), /* uint */
-        channelMax: new ForcedType('ushort', 10), /* ushort */
-        idleTimeout: new ForcedType('uint', 1000), /* milliseconds */
-        outgoingLocales: new AMQPSymbol('en-US'), /* ietf-language-tag (symbol) */
-        incomingLocales: new AMQPSymbol('en-US'), /* ietf-language-tag (symbol) */
-        offeredCapabilities: null, /* symbol */
-        desiredCapabilities: null, /* symbol */
-        properties: {}, /* fields (map) */
-        encodeOrdering: ['id', 'hostname', 'maxFrameSize', 'channelMax', 'idleTimeout', 'outgoingLocales',
-          'incomingLocales', 'offeredCapabilities', 'desiredCapabilities', 'properties']
-      });
-      var expected = buildBuffer([0x00,
-        0x53, 0x10, // Descriptor
-        // 0xD0, Builder.prototype.appendUInt32BE, 0x0, Builder.prototype.appendUInt32BE, 0x0, // List (size & count)
-        0xC0, 0x34, 10,
-        0xA1, 0x6, Builder.prototype.appendString, 'client', // ID
-        0xA1, 0x9, Builder.prototype.appendString, 'localhost', // Hostname
-        0x70, Builder.prototype.appendUInt32BE, 512, // Max Frame Size
-        0x60, Builder.prototype.appendUInt16BE, 10, // Channel Max
-        0x70, Builder.prototype.appendUInt32BE, 1000, // Idle Timeout
-        0xA3, 0x5, Builder.prototype.appendString, 'en-US', // Outgoing Locales
-        0xA3, 0x5, Builder.prototype.appendString, 'en-US', // Incoming Locales
-        0x40, 0x40, 0xc1, 0x1, 0x0 // Capabilities & properties
-      ]);
-      var bufb = new Builder();
-      codec.encode(performative, bufb);
       tu.shouldBufEql(expected, bufb);
     });
   });

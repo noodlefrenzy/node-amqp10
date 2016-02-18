@@ -7,8 +7,6 @@ var expect = require('chai').expect,
 
     codec = require('../../lib/codec'),
     ForcedType = require('../../lib/types/forced_type'),
-
-    AMQPSymbol = require('../../lib/types/amqp_symbol'),
     AMQPArray = require('../../lib/types/amqp_composites').Array,
 
     errors = require('../../lib/errors'),
@@ -40,7 +38,7 @@ describe('Types', function() {
         var invalidType = new ForcedType('bazookas', 'hello world');
         var invalid = function() { codec.encode(invalidType, new BufferBuilder()); };
         expect(invalid).to.throw(errors.EncodingError);
-        expect(invalid).to.throw(/bazookas/);
+        expect(invalid).to.throw(/unknown type/);
       });
     });
 
@@ -139,6 +137,11 @@ describe('Types', function() {
             expectedOutput: buf([0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00])
           },
           {
+            name: 'ulong (largest in js)', type: 'ulong',
+            value: (Math.pow(2, 53) - 1),
+            expectedOutput: buf([0x80, 0x00, 0x1f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff])
+          },
+          {
             name: 'ulong (int64)', type: 'ulong',
             value: new Int64(0x11111111, 0x11111111),
             expectedOutput: buf([0x80, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11])
@@ -170,6 +173,16 @@ describe('Types', function() {
           {
             name: 'long', value: 129,
             expectedOutput: buf([0x81, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x81])
+          },
+          {
+            name: 'long (largest in js)', type: 'long',
+            value: (Math.pow(2, 53) - 1),
+            expectedOutput: buf([0x81, 0x00, 0x1f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff])
+          },
+          {
+            name: 'long (smallest in js)', type: 'long',
+            value: -(Math.pow(2, 53) - 1),
+            expectedOutput: buf([0x81, 0xff, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01])
           },
           {
             name: 'long (int64)', type: 'long',
@@ -256,16 +269,16 @@ describe('Types', function() {
             expectedOutput: buf(str32Utf8StringExpectedBuffer)
           },
           {
-            name: 'sym8', type: 'symbol', value: new AMQPSymbol('foo'),
+            name: 'sym8', type: 'symbol', value: 'foo',
             expectedOutput: buf([0xa3, 3, builder.prototype.appendString, 'foo'])
           },
           {
             name: 'sym8 (empty)', type: 'symbol',
-            value: new AMQPSymbol(''),
+            value: '',
             expectedOutput: buf([0xa3, 0]) },
           {
             name: 'sym32', type: 'symbol',
-            value: new AMQPSymbol(sym32String),
+            value: sym32String,
             expectedOutput: buf(sym32StringExpectedBuffer)
           }
         ].forEach(testEncoding);
@@ -313,14 +326,14 @@ describe('Types', function() {
           array32.push(1);
           array32Buffer.push(0x01);
 
-          list32Buffer.push(0x54);
+          list32Buffer.push(0x52);
           list32Buffer.push(0x01);
 
           var key = 'elt' + (100 +i);
           map32[key] = 456;
           map32Buffer = map32Buffer.concat([
-            0xA1, 0x06, builder.prototype.appendString, key,
-            0x71, builder.prototype.appendInt32BE, 456,
+            0xa1, 0x06, builder.prototype.appendString, key,
+            0x70, builder.prototype.appendInt32BE, 456,
           ]);
         }
 
@@ -337,7 +350,7 @@ describe('Types', function() {
         ].concat(list32Buffer);
 
         var map32ExpectedBuffer = [
-          0xD1,
+          0xd1,
           builder.prototype.appendUInt32BE, 3332, builder.prototype.appendUInt32BE, 512,
         ].concat(map32Buffer);
 
@@ -360,8 +373,8 @@ describe('Types', function() {
               0xe0,
               0x12, 0x02,
               0xc0,
-                0x07, 0x03, 0x54, 0x01, 0x54, 0x02, 0x54, 0x03,
-                0x07, 0x03, 0x54, 0x01, 0x54, 0x02, 0x54, 0x03])
+                0x07, 0x03, 0x52, 0x01, 0x52, 0x02, 0x52, 0x03,
+                0x07, 0x03, 0x52, 0x01, 0x52, 0x02, 0x52, 0x03])
           },
           {
             name: 'array8 (of maps)', type: 'array',
@@ -390,19 +403,18 @@ describe('Types', function() {
             name: 'list8', type: 'list',
             value: [456, 789],
             expectedOutput: buf([
-              0xC0,
-              0xB, 0x2,
-              0x71, builder.prototype.appendInt32BE, 456,
-              0x71, builder.prototype.appendInt32BE, 789
+              0xc0, 0xb, 0x2,
+              0x70, builder.prototype.appendInt32BE, 456,
+              0x70, builder.prototype.appendInt32BE, 789
             ])
           },
           {
-            name: 'list8 (by code)', type: 0xC0,
+            name: 'list8 (by code)', type: 0xc0,
             value: [456, 789],
             expectedOutput: buf([
               0xB, 0x2,
-              0x71, builder.prototype.appendInt32BE, 456,
-              0x71, builder.prototype.appendInt32BE, 789
+              0x70, builder.prototype.appendInt32BE, 456,
+              0x70, builder.prototype.appendInt32BE, 789
             ])
           },
           { name: 'list32', type: 'list', value: list32, expectedOutput: list32ExpectedBuffer },
@@ -415,22 +427,21 @@ describe('Types', function() {
             name: 'map8', type: 'map',
             value: { foo: 456, bar: 45.6 },
             expectedOutput: buf([
-              0xC1,
-              0x19, 0x04,
-              0xA1, 0x03, builder.prototype.appendString, 'foo',
-              0x71, builder.prototype.appendInt32BE, 456,
-              0xA1, 0x03, builder.prototype.appendString, 'bar',
+              0xc1, 0x19, 0x04,
+              0xa1, 0x03, builder.prototype.appendString, 'foo',
+              0x70, builder.prototype.appendInt32BE, 456,
+              0xa1, 0x03, builder.prototype.appendString, 'bar',
               0x82, builder.prototype.appendDoubleBE, 45.6
             ])
           },
           {
-            name: 'map8 (by code)', type: 0xC1,
+            name: 'map8 (by code)', type: 0xc1,
             value: { foo: 456, bar: 45.6 },
             expectedOutput: buf([
               0x19, 0x04,
-              0xA1, 0x03, builder.prototype.appendString, 'foo',
-              0x71, builder.prototype.appendInt32BE, 456,
-              0xA1, 0x03, builder.prototype.appendString, 'bar',
+              0xa1, 0x03, builder.prototype.appendString, 'foo',
+              0x70, builder.prototype.appendInt32BE, 456,
+              0xa1, 0x03, builder.prototype.appendString, 'bar',
               0x82, builder.prototype.appendDoubleBE, 45.6
             ])
           },
@@ -510,6 +521,11 @@ describe('Types', function() {
             expectedOutput: new Int64(0x01010101, 0x23456789)
           },
           {
+            name: 'ulong (largest in js)',
+            value: buf([0x80, 0x00, 0x1f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]),
+            expectedOutput: (Math.pow(2, 53) - 1)
+          },
+          {
             name: 'smallulong', value: buf([0x53, 0x01]),
             expectedOutput: 0x01
           },
@@ -531,6 +547,16 @@ describe('Types', function() {
             name: 'long',
             value: buf([0x81, 0x01, 0x01, 0x01, 0x01, 0x23, 0x45, 0x67, 0x89]),
             expectedOutput: new Int64(0x01010101, 0x23456789)
+          },
+          {
+            name: 'long (largest in js)',
+            value: buf([0x81, 0x00, 0x1f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]),
+            expectedOutput: (Math.pow(2, 53) - 1)
+          },
+          {
+            name: 'long (smallest in js)',
+            value: buf([0x81, 0xff, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01]),
+            expectedOutput: -(Math.pow(2, 53) - 1)
           },
           { name: 'smalllong', value: buf([0x55, 0x23]), expectedOutput: 0x23 },
           {
@@ -608,13 +634,13 @@ describe('Types', function() {
           {
             name: 'sym8',
             value: buf([0xa3, 3, builder.prototype.appendString, 'foo']),
-            expectedOutput: new AMQPSymbol('foo')
+            expectedOutput: 'foo'
           },
-          { name: 'sym8 (empty)', value: buf([0xa3, 0]), expectedOutput: new AMQPSymbol('') },
+          { name: 'sym8 (empty)', value: buf([0xa3, 0]), expectedOutput: '' },
           {
             name: 'sym32',
             value: buf([0xb3, builder.prototype.appendUInt32BE, 3, builder.prototype.appendString, 'foo']),
-            expectedOutput: new AMQPSymbol('foo')
+            expectedOutput: 'foo'
           },
         ].forEach(testDecoding);
       });
