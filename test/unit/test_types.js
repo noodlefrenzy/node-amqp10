@@ -87,6 +87,23 @@ describe('Types', function() {
 
         });
 
+        it('should encode/decode the same as node-int64', function() {
+          var tests = [
+            { type: 'long', code: 0x81, value: 5000 },
+            { type: 'ulong', code: 0x80, value: 5000 }
+          ];
+
+          tests.forEach(function(test) {
+            var buffer = new BufferBuilder();
+            codec.encode(new ForcedType(test.type, test.value), buffer);
+            var int64 = new Int64(buffer.get().slice(1));
+            expect(int64.toNumber()).to.equal(test.value);
+            var fromInt64Buffer = Buffer.concat([new Buffer([test.code]), int64.toBuffer()]);
+            var fromInt64 = codec.decode(fromInt64Buffer);
+            expect(fromInt64[0]).to.equal(test.value);
+          });
+        });
+
         var vbin32Buffer = [];
         var str32Utf8String;
         var sym32String;
