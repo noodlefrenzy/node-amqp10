@@ -103,7 +103,7 @@ If you find any issues, please report them via GitHub.
     ```bash
     bash# export DEBUG=amqp*
     ```
-    
+
     ```bash
     C:\> set DEBUG=amqp*
     ```
@@ -122,5 +122,7 @@ If you find any issues, please report them via GitHub.
       amqp10:client Decoding 5340 +0ms
       [...]
     ```
+
++   Many thanks to Gordon Sim for inspiration on the type system, gleaned from his project [rhea](https://github.com/grs/rhea).
 
 Further, detailed implementation notes are available in the [API Readme](api/).
