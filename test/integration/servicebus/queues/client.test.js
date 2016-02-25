@@ -11,7 +11,6 @@ describe('ServiceBus', function() {
 describe('Queues', function() {
   beforeEach(function() {
     if (!!test.client) test.client = undefined;
-    test.client = new AMQPClient(Policy.ServiceBusQueue);
   });
 
   afterEach(function() {
@@ -23,6 +22,7 @@ describe('Queues', function() {
     expect(config.serviceBusHost, 'Required env vars not found in ' + Object.keys(process.env)).to.exist;
 
     var msgVal = uuid.v4();
+    test.client = new AMQPClient(Policy.ServiceBusQueue);
     return test.client.connect(config.address)
       .then(function() {
         return Promise.all([
@@ -42,6 +42,44 @@ describe('Queues', function() {
 
         return sender.send({ DataString: 'From Node v2', DataValue: msgVal });
       });
+  });
+
+  it('should throttle based on link credit policy', function(done) {
+    expect(config.serviceBusHost, 'Required env vars not found in ' + Object.keys(process.env)).to.exist;
+
+    test.client = new AMQPClient(Policy.Utils.RenewOnSettle(1, 1, Policy.ServiceBusQueue));
+    var count = 0;
+    var acked = false;
+    return test.client.connect(config.address)
+      .then(function() {
+        return Promise.all([
+          test.client.createReceiver(config.defaultLink),
+          test.client.createSender(config.defaultLink)
+        ]);
+      })
+      .spread(function(receiver, sender) {
+        receiver.on('message', function(message) {
+          expect(message).to.exist;
+          expect(message.body).to.exist;
+          ++count;
+          if (count > 1) {
+            expect(acked).to.be.true;
+            done();
+          } else {
+            setTimeout(function () {
+              // Wait a second, and then "ack" the message.
+              acked = true;
+              receiver.accept(message);
+            }, 1000);
+          }
+        });
+
+        return Promise.all([
+          sender.send({ DataString: 'From Node v2', DataValue: uuid.v4() }),
+          sender.send({ DataString: 'From Node v2', DataValue: uuid.v4() })
+        ]);
+      });
+
   });
 }); // Queues
 }); // ServiceBus

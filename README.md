@@ -63,7 +63,9 @@ We've provided a convenience helper for throttling your receiver links to only r
 
     var AMQPClient = require('amqp10').Client,
         Policy = require('amqp10').Policy;
-    var client = new AMQPClient(Policy.Utils.RenewOnSettle(1, Policy.ServiceBusQueue));
+    var client = new AMQPClient(Policy.Utils.RenewOnSettle(1, 1, Policy.ServiceBusQueue));
+    
+Where the first number is the initial credit, and the second is the _threshold_ - once remaining credit goes below that, we will give out more credit by the number of messages we've settled. In this case we're setting up the client for one-by-one message processing.
 
 ## Supported Servers ##
 
