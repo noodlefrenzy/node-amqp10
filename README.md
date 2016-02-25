@@ -42,24 +42,30 @@ server would look like:
       });
 
 By default send promises are resolved when a disposition frame is received from the remote link for the
-send message, at this point the message is considered "settled".  To tune this behavior, you can tweak
+sent message, at this point the message is considered "settled".  To tune this behavior, you can tweak
 the policy you give to AMQPClient on construction.  For instance, to force send promises to be resolved
 immediately on successful sending of the payload, you would build AMQPClient like so:
 
-    var AMQPClient = require('amqp10').Client;
-    var client = new AMQPClient(AMQPClient.policies.merge({
+    var AMQPClient = require('amqp10').Client,
+        Policy = require('amqp10').Policy;
+    var client = new AMQPClient(Policy.merge({
       senderLinkPolicy: {
-        callbackPolicy: AMQPClient.policies.utils.SenderCallbackPolicies.OnSent
+        callbackPolicy: Policy.Utils.SenderCallbackPolicies.OnSent
       }
-    }, AMQPClient.policies.PolicyBase));
+    }, Policy.DefaultPolicy));
 
 In addition to the above, you can also tune how message link credit is doled out (for throttling), as
 well as most other AMQP behaviors, all through policy overrides.  See [DefaultPolicy](https://github.com/noodlefrenzy/node-amqp10/blob/master/lib/policies/default_policy.js)
 and the [policy utilities](https://github.com/noodlefrenzy/node-amqp10/blob/master/lib/policies/policy_utilities.js)
 for more details on altering various behaviors.
 
-## Documentation ##
-- [API Reference](https://github.com/noodlefrenzy/node-amqp10/tree/master/api)
+We've provided a convenience helper for throttling your receiver links to only renew credits on messages they've "settled". To use this with Azure ServiceBus Queues for instance, it would look like:
+
+    var AMQPClient = require('amqp10').Client,
+        Policy = require('amqp10').Policy;
+    var client = new AMQPClient(Policy.Utils.RenewOnSettle(1, 1, Policy.ServiceBusQueue));
+    
+Where the first number is the initial credit, and the second is the _threshold_ - once remaining credit goes below that, we will give out more credit by the number of messages we've settled. In this case we're setting up the client for one-by-one message processing.
 
 ## Supported Servers ##
 
@@ -124,5 +130,3 @@ If you find any issues, please report them via GitHub.
     ```
 
 +   Many thanks to Gordon Sim for inspiration on the type system, gleaned from his project [rhea](https://github.com/grs/rhea).
-
-Further, detailed implementation notes are available in the [API Readme](api/).
