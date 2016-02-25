@@ -59,13 +59,44 @@ well as most other AMQP behaviors, all through policy overrides.  See [DefaultPo
 and the [policy utilities](https://github.com/noodlefrenzy/node-amqp10/blob/master/lib/policies/policy_utilities.js)
 for more details on altering various behaviors.
 
-We've provided a convenience helper for throttling your receiver links to only renew credits on messages they've "settled". To use this with Azure ServiceBus Queues for instance, it would look like:
+## Flow Control and Message Dispositions ##
+
+Flow control in AMQP occurs at both the `Session` and `Link` layers. Using our default policy, we start out with some sensible Session windows and Link credits, and renew those every time they get to the half-way point. In addition, receiver links start in "auto-settle" mode, which means that the sender side can consider the message "settled" as soon as it's sent. However, _all_ of those settings are easily tune-able through Policy overrides (`Policy.merge(<overrides>, <base policy>)`).
+
+For instance. we've provided a convenience helper for throttling your receiver links to only renew credits on messages they've "settled". To use this with Azure ServiceBus Queues for instance, it would look like:
 
     var AMQPClient = require('amqp10').Client,
         Policy = require('amqp10').Policy;
     var client = new AMQPClient(Policy.Utils.RenewOnSettle(1, 1, Policy.ServiceBusQueue));
     
-Where the first number is the initial credit, and the second is the _threshold_ - once remaining credit goes below that, we will give out more credit by the number of messages we've settled. In this case we're setting up the client for one-by-one message processing.
+Where the first number is the initial credit, and the second is the _threshold_ - once remaining credit goes below that, we will give out more credit by the number of messages we've settled. In this case we're setting up the client for one-by-one message processing. Behind the scenes, this does the following:
+
+1) Sets the Link's creditQuantum to the first number (1), which you can do for yourself via the Policy mix-in `{ receiverLink: { creditQuantum: 1 } }`
+2) Sets the Link to not auto-settle messages at the sender, which you can do for yourself via `{ receiverLink: { attach: { receiverSettleMode: 1 } } }`
+ Where did that magic "1" come from? Well, that's the value from the spec, but you could use the constant we've defined at `require('amqp10').Constants.receiverSettleMode.settleOnDisposition`
+3) Sets the Link's credit renewal policy to a custom method that renews only when the link credit is below the threshold and we've settled some messages. You can do this yourself by using your own custom method:
+```
+{
+  receiverLink: {
+    credit: function (link, options) {
+      // If the receiver link was just connected, set the initial link credit to the quantum. Otherwise, give more credit for every message we've settled.
+      var creditQuantum = (!!options && options.initial) ? link.policy.creditQuantum : link.settledMessagesSinceLastCredit;
+      if (creditQuantum > 0 && link.linkCredit < threshold) {
+        link.addCredits(creditQuantum);
+      }
+    }
+  }
+}
+```
+
+Note that once you've set the policy to not auto-settle messages, you'll need to settle them yourself. We've tried to make that easy by providing messages on the receiver link for each of the possible "disposition states" that AMQP allows:
+
+* `link.accept(message)` will tell the sender that you've accepted and processed the message.
+* `link.reject(message, [error])` will reject the message with the given error (if provided). The sender is free to re-deliver, so this can be used to indicate transient errors.
+* `link.modify(message, [options])` will tell the sender to modify the message and re-deliver. You can tell it you can't accept the message by using `link.modify(message, { undeliverableHere: true })`
+* `link.release(message)` will tell the sender that you haven't processed the message and it's free to re-deliver - even back to you.
+
+All of these methods accept an array of messages, allowing you to settle many at once.
 
 ## Supported Servers ##
 
