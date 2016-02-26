@@ -4,7 +4,6 @@ var expect = require('chai').expect,
 
     constants = require('../../lib/constants'),
     frames = require('../../lib/frames'),
-//    errors = require('../../lib/errors'),
     u = require('../../lib/utilities'),
     tu = require('./testing_utils'),
     _ = require('lodash'),
@@ -15,6 +14,7 @@ var expect = require('chai').expect,
     Session = require('../../lib/session'),
 
     AMQPError = require('../../lib/types/amqp_error'),
+    ErrorCondition = require('../../lib/types/error_condition'),
     MockServer = require('./mock_amqp');
 
 DefaultPolicy.connect.options.containerId = 'test';
@@ -84,7 +84,7 @@ describe('Session', function() {
         new MockBeginFrame({ remoteChannel: 1 }, 5),
         [ true,
           new MockEndFrame({
-            error: new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test'})
+            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test'})
           }, 5)
         ],
         [ true, new frames.CloseFrame() ]
@@ -138,7 +138,7 @@ describe('Session', function() {
         new MockBeginFrame({ remoteChannel: 1 }, 5),
         [ true,
           new MockEndFrame({
-            error: new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test' })
+            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
           }, 5)
         ],
         [ true, new frames.CloseFrame() ]
@@ -190,12 +190,12 @@ describe('Session', function() {
         [ true,
           new MockDetachFrame({
             handle: 3,
-            error: new AMQPError({ condition: AMQPError.LinkDetachForced, description: 'test' })
+            error: new AMQPError({ condition: ErrorCondition.LinkDetachForced, description: 'test' })
           }, 5)
         ],
         [ true,
           new MockEndFrame({
-            error: new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test' })
+            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
           }, 5)
         ],
         [ true, new frames.CloseFrame() ]
@@ -235,7 +235,7 @@ describe('Session', function() {
           var opts = u.deepMerge({ attach: { name: 'test', source: src(), target: tgt() } }, DefaultPolicy.senderLink);
           var link = session.createLink(opts);
           link.on('errorReceived', function(err) {
-//            expect(err).to.eql(errors.wrapProtocolError(new AMQPError(AMQPError.LinkDetachForced, 'test', '')));
+//            expect(err).to.eql(errors.wrapProtocolError(new AMQPError(ErrorCondition.LinkDetachForced, 'test', '')));
           });
 
           link.linkSM.bind(tu.assertTransitions(expected.link, function(transitions) {
