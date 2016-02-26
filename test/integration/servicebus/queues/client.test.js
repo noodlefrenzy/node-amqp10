@@ -82,11 +82,11 @@ describe('Queues', function() {
 
   });
 
-  it('should allow you to reject messages', function(done) {
+  it('should allow you to reject messages and continue to receive subsequent', function(done) {
     expect(config.serviceBusHost, 'Required env vars not found in ' + Object.keys(process.env)).to.exist;
 
-    var msgVal = uuid.v4();
-    var rejected = false;
+    var msgVal1 = uuid.v4();
+    var msgVal2 = uuid.v4();
     test.client = new AMQPClient(Policy.merge({ receiverLink: { attach: { receiverSettleMode: 1 }}}, Policy.ServiceBusQueue));
     return test.client.connect(config.address)
       .then(function() {
@@ -100,16 +100,20 @@ describe('Queues', function() {
           expect(message).to.exist;
           expect(message.body).to.exist;
           // Ignore messages that aren't from us.
-          if (!!message.body.DataValue && message.body.DataValue === msgVal) {
-            if (rejected) {
+          if (!!message.body.DataValue && (message.body.DataValue === msgVal1 || message.body.DataValue === msgVal2)) {
+            if (message.body.DataValue === msgVal1) {
+              receiver.reject(message, 'internal-error');
+              sender.send({ DataString: 'From Node v2', DataValue: msgVal2 });
+            } else if (message.body.DataValue === msgVal2) {
+              receiver.accept(message);
               done();
-            } else {
-              receiver.reject(message, 'Testing rejection');
             }
+          } else {
+            receiver.accept(message);
           }
         });
 
-        return sender.send({ DataString: 'From Node v2', DataValue: msgVal });
+        return sender.send({ DataString: 'From Node v2', DataValue: msgVal1 });
       });
 
   });
