@@ -11,6 +11,7 @@ var _ = require('lodash'),
 
     DefaultPolicy = require('../../lib/policies/default_policy'),
     AMQPError = require('../../lib/types/amqp_error'),
+    ErrorCondition = require('../../lib/types/error_condition'),
     m = require('../../lib/types/message'),
     DeliveryState = require('../../lib/types/delivery_state'),
 
@@ -54,7 +55,7 @@ describe('Client', function() {
           handleMax: 4294967295
         }),
         new frames.CloseFrame({
-          error: new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test' })
+          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
         })
       ]);
 
@@ -90,7 +91,7 @@ describe('Client', function() {
           return txFrame;
         },
         new frames.CloseFrame({
-          error: new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test' })
+          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
         })
       ]);
 
@@ -156,7 +157,7 @@ describe('Client', function() {
           }
         ],
         new frames.CloseFrame({
-          error: new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test' })
+          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
         })
       ]);
 
@@ -204,7 +205,7 @@ describe('Client', function() {
           state: new DeliveryState.Accepted()
         }),
         new frames.CloseFrame({
-          error: new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test' })
+          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
         })
       ]);
 
@@ -276,7 +277,7 @@ describe('Client', function() {
           handleMax: 4294967295
         }),
         new frames.CloseFrame({
-          error: new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test' })
+          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
         })
       ]);
 
@@ -313,7 +314,7 @@ describe('Client', function() {
           handleMax: 4294967295
         }),
         new frames.CloseFrame({
-          error: new AMQPError({ condition: AMQPError.ConnectionForced, description: 'test' })
+          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
         })
       ]);
 
