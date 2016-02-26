@@ -89,7 +89,7 @@ Where the first number is the initial credit, and the second is the _threshold_ 
 }
 ```
 
-Note that once you've set the policy to not auto-settle messages, you'll need to settle them yourself. We've tried to make that easy by providing messages on the receiver link for each of the possible "disposition states" that AMQP allows:
+Note that once you've set the policy to not auto-settle messages, you'll need to settle them yourself. We've tried to make that easy by providing methods on the receiver link for each of the possible "disposition states" that AMQP allows:
 
 * `link.accept(message)` will tell the sender that you've accepted and processed the message.
 * `link.reject(message, [error])` will reject the message with the given error (if provided). The sender is free to re-deliver, so this can be used to indicate transient errors.
