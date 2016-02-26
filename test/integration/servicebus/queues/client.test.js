@@ -81,5 +81,41 @@ describe('Queues', function() {
       });
 
   });
+
+  it('should allow you to reject messages and continue to receive subsequent', function(done) {
+    expect(config.serviceBusHost, 'Required env vars not found in ' + Object.keys(process.env)).to.exist;
+
+    var msgVal1 = uuid.v4();
+    var msgVal2 = uuid.v4();
+    test.client = new AMQPClient(Policy.merge({ receiverLink: { attach: { receiverSettleMode: 1 }}}, Policy.ServiceBusQueue));
+    return test.client.connect(config.address)
+      .then(function() {
+        return Promise.all([
+          test.client.createReceiver(config.defaultLink),
+          test.client.createSender(config.defaultLink)
+        ]);
+      })
+      .spread(function(receiver, sender) {
+        receiver.on('message', function(message) {
+          expect(message).to.exist;
+          expect(message.body).to.exist;
+          // Ignore messages that aren't from us.
+          if (!!message.body.DataValue && (message.body.DataValue === msgVal1 || message.body.DataValue === msgVal2)) {
+            if (message.body.DataValue === msgVal1) {
+              receiver.reject(message, 'internal-error');
+              sender.send({ DataString: 'From Node v2', DataValue: msgVal2 });
+            } else if (message.body.DataValue === msgVal2) {
+              receiver.accept(message);
+              done();
+            }
+          } else {
+            receiver.accept(message);
+          }
+        });
+
+        return sender.send({ DataString: 'From Node v2', DataValue: msgVal1 });
+      });
+
+  });
 }); // Queues
 }); // ServiceBus
