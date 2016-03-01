@@ -27,7 +27,7 @@ describe('ReceiverStream', function() {
       .map(function(a) { return Math.floor(Math.random() * 100); });
 
     return Promise.all([
-      test.client.createReceiver(config.defaultLink, { stream: true }),
+      test.client.createReceiverStream(config.defaultLink),
       test.client.createSender(config.defaultLink)
     ])
     .spread(function(stream, sender) {
@@ -56,7 +56,7 @@ describe('SenderStream', function() {
 
     return Promise.all([
       test.client.createReceiver(config.defaultLink),
-      test.client.createSender(config.defaultLink, { stream: true })
+      test.client.createSenderStream(config.defaultLink)
     ])
     .spread(function(receiver, stream) {
       var count = 0;
@@ -82,8 +82,8 @@ describe('Both', function() {
 
     return Promise.all([
       test.client.createReceiver(config.defaultLink),
-      test.client.createReceiver('test.streams.queue', { stream: true }),
-      test.client.createSender(config.defaultLink, { stream: true }),
+      test.client.createReceiverStream('test.streams.queue'),
+      test.client.createSenderStream(config.defaultLink),
     ])
     .spread(function(receiver, receiverStream, senderStream) {
       var count = 0;
