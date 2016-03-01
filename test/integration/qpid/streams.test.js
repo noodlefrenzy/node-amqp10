@@ -44,7 +44,7 @@ describe('ReceiverStream', function() {
       return Promise.all(promises);
     });
   });
-}); // ReadableStream
+}); // ReceiverStream
 
 describe('SenderStream', function() {
   beforeEach(setup);
@@ -71,6 +71,29 @@ describe('SenderStream', function() {
       }
     });
   });
+
+  it('should honor the sender link callback policy', function(done) {
+    var expected = Array.apply(null, new Array(100))
+      .map(function(a) { return Math.floor(Math.random() * 100); });
+
+    return Promise.all([
+      test.client.createReceiver(config.defaultLink),
+      test.client.createSenderStream(config.defaultLink, { callback: 'sent' })
+    ])
+    .spread(function(receiver, stream) {
+      var count = 0;
+      receiver.on('message', function(data) {
+        expect(expected[count]).to.eql(data.body);
+        count++;
+        if (count === expected.length) done();
+      });
+
+      for (var i = 0; i < expected.length; ++i) {
+        stream.write(expected[i]);
+      }
+    });
+  });
+
 }); // SenderStream
 
 describe('Both', function() {
