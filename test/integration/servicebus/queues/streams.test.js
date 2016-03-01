@@ -27,7 +27,7 @@ describe('ServiceBus', function() {
 
     it('should let you create a receiver link as a readable stream', function(done) {
       var dataString = uuid.v4().replace(/-/g, ''),
-          expected = Array.apply(null, new Array(100))
+          expected = Array.apply(null, new Array(20))
             .map(function(a) { return Math.floor(Math.random() * 100); });
 
       return Promise.all([
@@ -56,7 +56,7 @@ describe('ServiceBus', function() {
 
     it('should let you create a sender link as a writable stream', function(done) {
       var dataString = uuid.v4().replace(/-/g, ''),
-          expected = Array.apply(null, new Array(100))
+          expected = Array.apply(null, new Array(20))
             .map(function(a) { return Math.floor(Math.random() * 100); });
 
       return Promise.all([
