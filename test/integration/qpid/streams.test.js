@@ -43,6 +43,12 @@ describe('QPID', function() {
       });
     });
 
+    it('should set the highWaterMark to creditQuantum', function() {
+      return test.client.createReceiverStream(config.defaultLink, { creditQuantum: 42 })
+        .then(function(stream) {
+          expect(stream._readableState.highWaterMark).to.equal(42);
+        });
+    });
   }); // ReceiverStream
 
   describe('SenderStream', function() {
