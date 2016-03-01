@@ -375,6 +375,18 @@ describe('AMQPValue', function() {
     expect(actual.get()).to.eql(expected);
   });
 
+  it('should encode the value zero', function() {
+    var message = { body: 0 };
+    var expected = tu.buildBuffer([
+      0x00, 0x53, 0x77,
+        0x43  // uint0
+    ]);
+
+    var actual = new Builder();
+    m.encodeMessage(message, actual);
+    expect(expected).to.eql(actual.get());
+  });
+
   it('should decode the section', function() {
     var buffer = tu.newBuffer([
       0x00, 0x53, 0x77,
