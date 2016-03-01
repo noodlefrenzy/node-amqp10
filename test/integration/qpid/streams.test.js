@@ -37,12 +37,10 @@ describe('ReceiverStream', function() {
         if (count === expected.length) done();
       });
 
-      var promises = [];
-      for (var i = 0; i < expected.length; ++i)
-        promises.push(sender.send(expected[i]));
-      return Promise.all(promises);
+      return Promise.mapSeries(expected, function(v) { return sender.send(v); });
     });
   });
+
 }); // ReceiverStream
 
 describe('SenderStream', function() {
@@ -110,6 +108,7 @@ describe('Both', function() {
     .spread(function(receiver, receiverStream, senderStream) {
       var count = 0;
       receiver.on('message', function(message) {
+        expect(expected[count]).to.eql(message.body);
         count++;
         if (count === expected.length) done();
       });
@@ -118,10 +117,7 @@ describe('Both', function() {
       return test.client.createSender('test.streams.queue');
     })
     .then(function(sender) {
-      var promises = [];
-      for (var i = 0; i < expected.length; ++i)
-        promises.push(sender.send(i));
-      return Promise.all(promises);
+      return Promise.mapSeries(expected, function(v) { return sender.send(v); });
     });
   });
 }); // Both

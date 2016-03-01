@@ -38,10 +38,7 @@ describe('ReceiverStream', function() {
         if (count === expected.length) done();
       });
 
-      var promises = [];
-      for (var i = 0; i < expected.length; ++i)
-        promises.push(sender.send(expected[i]));
-      return Promise.all(promises);
+      return Promise.mapSeries(expected, function(v) { return sender.send(v); });
     });
   });
 }); // ReceiverStream
@@ -72,5 +69,34 @@ describe('SenderStream', function() {
     });
   });
 }); // SenderStream
+
+describe('Both', function() {
+  beforeEach(setup);
+  afterEach(teardown);
+  it('should allow you to stream from sender to receiver', function(done) {
+    var expected = Array.apply(null, new Array(100))
+      .map(function(a) { return Math.floor(Math.random() * 100); });
+
+    return Promise.all([
+      test.client.createReceiver(config.defaultLink),
+      test.client.createReceiverStream('test.streams.queue'),
+      test.client.createSenderStream(config.defaultLink),
+    ])
+    .spread(function(receiver, receiverStream, senderStream) {
+      var count = 0;
+      receiver.on('message', function(message) {
+        expect(expected[count]).to.eql(message.body);
+        count++;
+        if (count === expected.length) done();
+      });
+
+      receiverStream.pipe(senderStream);
+      return test.client.createSender('test.streams.queue');
+    })
+    .then(function(sender) {
+      return Promise.mapSeries(expected, function(v) { return sender.send(v); });
+    });
+  });
+}); // Both
 
 }); // Streams
