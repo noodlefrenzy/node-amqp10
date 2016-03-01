@@ -17,7 +17,6 @@ function teardown() {
 }
 
 describe('Streams', function() {
-
 describe('ReceiverStream', function() {
   beforeEach(setup);
   afterEach(teardown);
@@ -127,4 +126,4 @@ describe('Both', function() {
   });
 }); // Both
 
-});
+}); // Streams
