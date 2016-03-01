@@ -29,6 +29,7 @@ before_script:
 
   # remove these when we can specify link properties
   - sudo qpid-config add queue test.disposition.queue
+  - sudo qpid-config add queue test.streams.queue
 
 script:
   - make coverage
