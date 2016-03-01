@@ -87,7 +87,6 @@ describe('Streams', function() {
           var count = 0;
 
           receiver.on('message', function(data) {
-            console.log('Expected %s, received %s', expected[count], data.body);
             expect(expected[count]).to.eql(data.body);
             count++;
             if (count === expected.length) done();
