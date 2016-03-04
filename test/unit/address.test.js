@@ -9,6 +9,24 @@ describe('Address Parsing', function() {
   describe('default', function() {
     [
       {
+        description: 'a plain host (1)',
+        address: 'localhost',
+        expected: {
+          protocol: 'amqp', host: 'localhost', port: 5672, path: '/',
+          rootUri: 'amqp://localhost:5672',
+          href: 'localhost'
+        }
+      },
+      {
+        description: 'a plain host (2)',
+        address: '192.168.1.9',
+        expected: {
+          protocol: 'amqp', host: '192.168.1.9', port: 5672, path: '/',
+          rootUri: 'amqp://192.168.1.9:5672',
+          href: '192.168.1.9'
+        }
+      },
+      {
         description: 'amqp no port no route',
         address: 'amqp://127.0.0.1',
         expected: {
