@@ -1,7 +1,8 @@
 'use strict';
-var DefaultPolicy = require('../../lib/policies/default_policy'),
-    QpidJavaPolicy = require('../../lib/policies/qpid_java_policy'),
-    ActiveMQPolicy = require('../../lib/policies/activemq_policy'),
+var Policies = require('../../lib').Policy,
+    DefaultPolicy = Policies.Default,
+    QpidJavaPolicy = Policies.QpidJava,
+    ActiveMQPolicy = Policies.ActiveMQ,
     expect = require('chai').expect,
     u = require('../../lib/utilities');
 

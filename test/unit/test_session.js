@@ -8,7 +8,7 @@ var expect = require('chai').expect,
     tu = require('./../testing_utils'),
     _ = require('lodash'),
 
-    DefaultPolicy = require('../../lib/policies/default_policy'),
+    DefaultPolicy = require('../../lib').Policy.Default,
     pu = require('../../lib/policies/policy_utilities'),
 
     Connection = require('../../lib/connection'),

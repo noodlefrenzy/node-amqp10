@@ -1,9 +1,8 @@
 'use strict';
-
 var expect = require('chai').expect,
     constants = require('../../lib/constants'),
     frames = require('../../lib/frames'),
-    DefaultPolicy = require('../../lib/policies/default_policy'),
+    DefaultPolicy = require('../../lib').Policy.Default,
     pu = require('../../lib/policies/policy_utilities'),
     MockServer = require('./mock_amqp'),
     AMQPError = require('../../lib/types/amqp_error'),

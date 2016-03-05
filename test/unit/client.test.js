@@ -9,8 +9,7 @@ var _ = require('lodash'),
     constants = require('../../lib/constants'),
     frames = require('../../lib/frames'),
 
-    DefaultPolicy = require('../../lib/policies/default_policy'),
-    pu = require('../../lib/policies/policy_utilities'),
+    Policy = require('../../lib/policies/policy'),
     AMQPError = require('../../lib/types/amqp_error'),
     ErrorCondition = require('../../lib/types/error_condition'),
     m = require('../../lib/types/message'),
@@ -18,10 +17,10 @@ var _ = require('lodash'),
 
     test = require('./test-fixture');
 
-var TestPolicy = pu.Merge({
+var TestPolicy = new Policy({
   connect: { options: { containerId: 'test' } },
   reconnect: { retries: 0, forever: false }
-}, DefaultPolicy);
+});
 
 function encodeMessagePayload(message) {
   var tmpBuf = new Builder();
@@ -287,9 +286,10 @@ describe('Client', function() {
       setTimeout(function() { return test.server.setup(); }, 10);
 
       var address = test.server.address();
-      test.client.policy.reconnect = {
-        retries: 5, strategy: 'fibonacci', forever: true
-      };
+      test.client.policy = test.client.policy = new Policy({
+        connect: { options: { containerId: 'test' } },
+        reconnect: { retries: 5, strategy: 'fibonacci', forever: true }
+      });
 
       return test.server.teardown()
         .then(function() { return test.client.connect(address); })
@@ -321,9 +321,10 @@ describe('Client', function() {
       ]);
 
       var address = test.server.address();
-      test.client.policy.reconnect = {
-        retries: 5, strategy: 'fibonacci', forever: true
-      };
+      test.client.policy = new Policy({
+        connect: { options: { containerId: 'test' } },
+        reconnect: { retries: 5, strategy: 'fibonacci', forever: true }
+      });
 
       return test.client.connect(address)
         // destroy the client to simulate a forced disconnect

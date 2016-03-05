@@ -44,7 +44,8 @@ describe('Queues', function() {
   });
 
   it('should throttle based on link credit policy', function(done) {
-    test.client = new AMQPClient(Policy.Utils.RenewOnSettle(1, 1, Policy.ServiceBusQueue));
+    test.client = new AMQPClient(Policy.ServiceBusQueue, Policy.Utils.RenewOnSettle(1, 1));
+
     var count = 0;
     var acked = false;
     return test.client.connect(config.address)
@@ -82,7 +83,10 @@ describe('Queues', function() {
   it('should allow you to reject messages and continue to receive subsequent', function(done) {
     var msgVal1 = uuid.v4();
     var msgVal2 = uuid.v4();
-    test.client = new AMQPClient(Policy.merge({ receiverLink: { attach: { receiverSettleMode: 1 }}}, Policy.ServiceBusQueue));
+    test.client = new AMQPClient(Policy.ServiceBusQueue, {
+      receiverLink: { attach: { receiverSettleMode: 1 } }
+    });
+
     return test.client.connect(config.address)
       .then(function() {
         return Promise.all([
