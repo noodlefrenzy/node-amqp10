@@ -7,6 +7,15 @@ var Promise = require('bluebird'),
     uuid = require('uuid');
 
 var test = {};
+if (process.version.match(/v0.10/))
+  test.partition = 1;
+else if (process.version.match(/v0.12/))
+  test.partition = 2;
+else if (process.version.match(/v4/))
+  test.partition = 3;
+else
+  test.partition = Math.floor(Math.random() * config.partitionCount);
+
 function setup() {
   if (!!test.client) delete test.client;
   test.client = new AMQPClient(Policy.ServiceBusQueue);
@@ -26,13 +35,16 @@ describe('ServiceBus', function() {
     afterEach(teardown);
 
     it('should let you create a receiver link as a readable stream', function(done) {
+      expect(config.partitionSenderLinkPrefix,
+        'Required env vars not found in ' + Object.keys(process.env)).to.exist;
+
       var dataString = uuid.v4().replace(/-/g, ''),
           expected = Array.apply(null, new Array(20))
             .map(function(a) { return Math.floor(Math.random() * 100); });
 
       return Promise.all([
-        test.client.createReceiverStream(config.defaultLink),
-        test.client.createSender(config.defaultLink)
+        test.client.createReceiverStream(config.receiverLinkPrefix + test.partition),
+        test.client.createSender(config.partitionSenderLinkPrefix + test.partition)
       ])
       .spread(function(stream, sender) {
         var count = 0;
@@ -60,8 +72,8 @@ describe('ServiceBus', function() {
             .map(function(a) { return Math.floor(Math.random() * 100); });
 
       return Promise.all([
-        test.client.createReceiver(config.defaultLink),
-        test.client.createSenderStream(config.defaultLink)
+        test.client.createReceiver(config.receiverLinkPrefix + test.partition),
+        test.client.createSenderStream(config.partitionSenderLinkPrefix + test.partition)
       ])
       .spread(function(receiver, stream) {
         var count = 0;
