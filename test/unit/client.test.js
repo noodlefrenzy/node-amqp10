@@ -286,7 +286,7 @@ describe('Client', function() {
       setTimeout(function() { return test.server.setup(); }, 10);
 
       var address = test.server.address();
-      test.client.policy = test.client.policy = new Policy({
+      test.client.policy = new Policy({
         connect: { options: { containerId: 'test' } },
         reconnect: { retries: 5, strategy: 'fibonacci', forever: true }
       });
