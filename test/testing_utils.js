@@ -9,7 +9,10 @@ var Builder = require('buffer-builder'),
 
 function populateConfig(configKeyMap, cb) {
   var processVersion = process.version;
-  expect(process.env).to.contain.all.keys(['ValidProcessVersions'].concat(Object.keys(configKeyMap).map(function(x) { return configKeyMap[x]; })));
+  expect(process.env.ValidProcessVersions, 'Missing env ValidProcessVersions').to.exist;
+  Object.keys(configKeyMap).forEach(function (k) {
+    expect(process.env[configKeyMap[k]], 'Missing env ' + k).to.exist;
+  });
   var versions = process.env.ValidProcessVersions.split('|').map(function(x) { return new RegExp(x, 'i'); });
   var idx = 0;
   for (var i = 0; i < versions.length; ++i) {
