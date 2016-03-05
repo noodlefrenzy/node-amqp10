@@ -1,5 +1,4 @@
 'use strict';
-
 var Builder = require('buffer-builder'),
     BufferList = require('bl'),
     expect = require('chai').expect,

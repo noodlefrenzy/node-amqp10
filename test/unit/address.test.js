@@ -1,7 +1,8 @@
-"use strict";
-var DefaultPolicy = require('../../lib/policies/default_policy'),
-    QpidJavaPolicy = require('../../lib/policies/qpid_java_policy'),
-    ActiveMQPolicy = require('../../lib/policies/activemq_policy'),
+'use strict';
+var Policies = require('../../lib').Policy,
+    DefaultPolicy = Policies.Default,
+    QpidJavaPolicy = Policies.QpidJava,
+    ActiveMQPolicy = Policies.ActiveMQ,
     expect = require('chai').expect,
     u = require('../../lib/utilities');
 
@@ -94,7 +95,8 @@ describe('Address Parsing', function() {
       }
     ].forEach(function(testCase) {
       it('should match ' + testCase.description, function() {
-        expect(DefaultPolicy.parseAddress(testCase.address))
+        var policy = DefaultPolicy;
+        expect(policy.parseAddress(testCase.address))
           .to.eql(testCase.expected);
       });
     });
@@ -102,8 +104,10 @@ describe('Address Parsing', function() {
 
   describe('Qpid Java', function() {
     it('should parse vhosts', function() {
-      var address = 'amqps://username:password@192.168.1.1:1234/some-vhost/topic/and/more';
-      expect(QpidJavaPolicy.parseAddress(address)).to.eql({
+      var address = 'amqps://username:password@192.168.1.1:1234/some-vhost/topic/and/more',
+          policy = QpidJavaPolicy;
+
+      expect(policy.parseAddress(address)).to.eql({
         host: '192.168.1.1',
         pass: 'password',
         path: '/topic/and/more',
@@ -119,8 +123,10 @@ describe('Address Parsing', function() {
 
   describe('ActiveMQ', function() {
     it('should parse link names with `topic://` and `queue://` prefixes', function() {
-      var address = 'amqps://username:password@192.168.1.1:1234/topic://mytopic';
-      expect(ActiveMQPolicy.parseAddress(address)).to.eql({
+      var address = 'amqps://username:password@192.168.1.1:1234/topic://mytopic',
+          policy = ActiveMQPolicy;
+
+      expect(policy.parseAddress(address)).to.eql({
         host: '192.168.1.1',
         pass: 'password',
         path: '/topic://mytopic',

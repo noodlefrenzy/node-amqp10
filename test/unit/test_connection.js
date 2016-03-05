@@ -1,16 +1,20 @@
 'use strict';
-
 var expect = require('chai').expect,
     constants = require('../../lib/constants'),
     frames = require('../../lib/frames'),
-    DefaultPolicy = require('../../lib/policies/default_policy'),
+    DefaultPolicy = require('../../lib').Policy.Default,
+    pu = require('../../lib/policies/policy_utilities'),
     MockServer = require('./mock_amqp'),
     AMQPError = require('../../lib/types/amqp_error'),
     ErrorCondition = require('../../lib/types/error_condition'),
     Connection = require('../../lib/connection'),
     tu = require('./../testing_utils');
 
-DefaultPolicy.connect.options.containerId = 'test';
+var test = {
+  policy: pu.Merge({
+    connect: { options: { containerId: 'test' } }
+  }, DefaultPolicy)
+};
 
 describe('Connection', function() {
   describe('#_open()', function() {
@@ -27,13 +31,13 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        new frames.OpenFrame(DefaultPolicy.connect.options)
+        new frames.OpenFrame(test.policy.connect.options)
       ], [
         constants.amqpVersion,
         new frames.CloseFrame()
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect);
+      var connection = new Connection(test.policy.connect);
       server.setup(connection);
 
       var expected = ['DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'DISCONNECTED'];
@@ -48,13 +52,13 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        new frames.OpenFrame(DefaultPolicy.connect.options)
+        new frames.OpenFrame(test.policy.connect.options)
       ], [
         [ true, constants.amqpVersion ],
         new frames.CloseFrame()
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect);
+      var connection = new Connection(test.policy.connect);
       server.setup(connection);
 
       var expected = ['DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'DISCONNECTED'];
@@ -70,7 +74,7 @@ describe('Connection', function() {
         'disconnect'
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect);
+      var connection = new Connection(test.policy.connect);
       server.setup(connection);
 
       var expected = ['DISCONNECTED', 'START', 'HDR_SENT', 'DISCONNECTED'];
@@ -86,7 +90,7 @@ describe('Connection', function() {
         'error'
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect);
+      var connection = new Connection(test.policy.connect);
       server.setup(connection);
 
       var expected = ['DISCONNECTED', 'START', 'HDR_SENT', 'DISCONNECTED'];
@@ -98,11 +102,11 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.OpenFrame(test.policy.connect.options),
         new frames.CloseFrame()
       ], [
         constants.amqpVersion,
-        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.OpenFrame(test.policy.connect.options),
         [ true,
           new frames.CloseFrame({
             error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
@@ -110,7 +114,7 @@ describe('Connection', function() {
         ]
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect);
+      var connection = new Connection(test.policy.connect);
       server.setup(connection);
       var expected = [
         'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH', 'OPEN_SENT', 'OPENED',
@@ -124,11 +128,11 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.OpenFrame(test.policy.connect.options),
         new frames.CloseFrame()
       ], [
         constants.amqpVersion,
-        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.OpenFrame(test.policy.connect.options),
         [ true,
           new frames.CloseFrame({
             error: new AMQPError({ condition: ErrorCondition.ConnectionForced, decription: 'test' })
@@ -136,7 +140,7 @@ describe('Connection', function() {
         ]
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect);
+      var connection = new Connection(test.policy.connect);
       server.setup(connection);
 
       var events = [];
@@ -169,11 +173,11 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.OpenFrame(test.policy.connect.options),
         new frames.CloseFrame()
       ], [
         'BOGUS_HEADER',
-        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.OpenFrame(test.policy.connect.options),
         [ true,
           new frames.CloseFrame({
             error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
@@ -181,7 +185,7 @@ describe('Connection', function() {
         ]
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect);
+      var connection = new Connection(test.policy.connect);
       server.setup(connection);
 
       var events = [];
@@ -215,11 +219,11 @@ describe('Connection', function() {
       server = new MockServer();
       server.setSequence([
         constants.amqpVersion,
-        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.OpenFrame(test.policy.connect.options),
         new frames.CloseFrame()
       ], [
         constants.saslVersion,
-        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.OpenFrame(test.policy.connect.options),
         [ true,
           new frames.CloseFrame({
             error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
@@ -227,7 +231,7 @@ describe('Connection', function() {
         ]
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect);
+      var connection = new Connection(test.policy.connect);
       server.setup(connection);
 
       var events = [];

@@ -9,7 +9,7 @@ var expect = require('chai').expect,
     Link = require('../../lib/link'),
 
     Mock = require('./mocks'),
-    defaultPolicy = require('../../lib/policies/default_policy');
+    defaultPolicy = require('../../lib').Policy.Default;
 
 var chai = require('chai');
 chai.config.includeStack = true; // turn on stack trace
