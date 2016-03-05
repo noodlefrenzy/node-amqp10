@@ -9,7 +9,7 @@ var Int64 = require('node-int64'),
     DescribedType = require('../../lib/types/described_type'),
     ForcedType = require('../../lib/types/forced_type'),
 
-    tu = require('./testing_utils');
+    tu = require('./../testing_utils');
 
 var buildBuffer = tu.buildBuffer;
 var newBuffer = tu.newBuffer;

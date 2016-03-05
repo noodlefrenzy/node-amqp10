@@ -3,7 +3,7 @@ var AMQPError = require('../../../lib/types/amqp_error'),
     ErrorCondition = require('../../../lib/types/error_condition'),
     frames = require('../../../lib/frames'),
     builder = require('buffer-builder'),
-    tu = require('../testing_utils'),
+    tu = require('../../testing_utils'),
     expect = require('chai').expect;
 
 describe('Types(Errors)', function() {

@@ -8,7 +8,7 @@ var expect = require('chai').expect,
     AMQPError = require('../../lib/types/amqp_error'),
     ErrorCondition = require('../../lib/types/error_condition'),
     Connection = require('../../lib/connection'),
-    tu = require('./testing_utils');
+    tu = require('./../testing_utils');
 
 DefaultPolicy.connect.options.containerId = 'test';
 

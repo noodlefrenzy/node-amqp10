@@ -5,7 +5,36 @@ var Builder = require('buffer-builder'),
     expect = require('chai').expect,
     _ = require('lodash'),
     sb = require('stream-buffers'),
-    frames = require('../../lib/frames');
+    frames = require('../lib/frames');
+
+function populateConfig(configKeyMap, cb) {
+  var processVersion = process.version;
+  expect(process.env.ValidProcessVersions, 'Missing env ValidProcessVersions').to.exist;
+  Object.keys(configKeyMap).forEach(function (k) {
+    expect(process.env[configKeyMap[k]], 'Missing env ' + k).to.exist;
+  });
+  var versions = process.env.ValidProcessVersions.split('|').map(function(x) { return new RegExp(x, 'i'); });
+  var idx = 0;
+  for (var i = 0; i < versions.length; ++i) {
+    var v = versions[i];
+    if (v.test(processVersion)) {
+      idx = i;
+      break;
+    }
+  }
+
+  var config = {};
+  for (var key in configKeyMap) {
+    var configEnv = configKeyMap[key];
+    var configVals = process.env[configEnv].split('|');
+    // If only one value, assume it applies across all process versions.
+    config[key] = configVals.length === 1 ? configVals[0] : configVals[idx];
+  }
+
+  return !!cb ? cb(config) : config;
+}
+
+module.exports.populateConfig = populateConfig;
 
 function buildBuffer(contents) {
   var bufb = new Builder();

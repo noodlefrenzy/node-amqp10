@@ -3,7 +3,7 @@
 var frames = require('../../lib/frames'),
     builder = require('buffer-builder'),
     constants = require('../../lib/constants'),
-    tu = require('./testing_utils'),
+    tu = require('./../testing_utils'),
     expect = require('chai').expect,
 
     DeliveryState = require('../../lib/types/delivery_state'),

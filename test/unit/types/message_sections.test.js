@@ -1,7 +1,7 @@
 'use strict';
 var Builder = require('buffer-builder'),
     m = require('../../../lib/types/message'),
-    tu = require('../testing_utils'),
+    tu = require('../../testing_utils'),
     expect = require('chai').expect;
 
 describe('Message Sections', function() {

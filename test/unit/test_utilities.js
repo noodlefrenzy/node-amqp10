@@ -1,7 +1,7 @@
 'use strict';
 var expect = require('chai').expect,
     u = require('../../lib/utilities'),
-    tu = require('./testing_utils');
+    tu = require('./../testing_utils');
 
 describe('Utilities', function() {
   describe('#contains()', function() {
