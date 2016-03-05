@@ -5,6 +5,7 @@ var builder = require('buffer-builder'),
     constants = require('../../lib/constants'),
     frames = require('../../lib/frames'),
     DefaultPolicy = require('../../lib/policies/default_policy'),
+    pu = require('../../lib/policies/policy_utilities'),
 
     MockServer = require('./mock_amqp'),
     AMQPError = require('../../lib/types/amqp_error'),
@@ -15,14 +16,18 @@ var builder = require('buffer-builder'),
 
     tu = require('./../testing_utils');
 
-DefaultPolicy.connect.options.containerId = 'test';
-
 function MockSaslInitFrame() {
   return new frames.SaslInitFrame({
     mechanism: 'PLAIN',
     initialResponse: tu.buildBuffer([0, builder.prototype.appendString, 'user', 0, builder.prototype.appendString, 'pass'])
   });
 }
+
+var test = {
+  policy: pu.Merge({
+    connect: { options: { containerId: 'test' } }
+  }, DefaultPolicy)
+};
 
 describe('Sasl', function() {
   describe('Connection.open()', function() {
@@ -42,14 +47,14 @@ describe('Sasl', function() {
         constants.saslVersion,
         new MockSaslInitFrame(),
         constants.amqpVersion,
-        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.OpenFrame(test.policy.connect.options),
         new frames.CloseFrame()
       ], [
         constants.saslVersion,
         [ true, new frames.SaslMechanismsFrame({ saslServerMechanisms: ['PLAIN'] }) ],
         new frames.SaslOutcomeFrame({ code: constants.saslOutcomes.ok }),
         constants.amqpVersion,
-        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.OpenFrame(test.policy.connect.options),
         [ true,
           new frames.CloseFrame({
             error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
@@ -57,7 +62,7 @@ describe('Sasl', function() {
         ]
       ]);
 
-      var connection = new Connection(DefaultPolicy.connect);
+      var connection = new Connection(test.policy.connect);
       server.setup(connection);
 
       var expected = [

@@ -10,6 +10,7 @@ var _ = require('lodash'),
     frames = require('../../lib/frames'),
 
     DefaultPolicy = require('../../lib/policies/default_policy'),
+    pu = require('../../lib/policies/policy_utilities'),
     AMQPError = require('../../lib/types/amqp_error'),
     ErrorCondition = require('../../lib/types/error_condition'),
     m = require('../../lib/types/message'),
@@ -17,9 +18,10 @@ var _ = require('lodash'),
 
     test = require('./test-fixture');
 
-DefaultPolicy.connect.options.containerId = 'test';
-DefaultPolicy.reconnect.retries = 0;
-DefaultPolicy.reconnect.forever = false;
+var TestPolicy = pu.Merge({
+  connect: { options: { containerId: 'test' } },
+  reconnect: { retries: 0, forever: false }
+}, DefaultPolicy);
 
 function encodeMessagePayload(message) {
   var tmpBuf = new Builder();
@@ -32,7 +34,7 @@ describe('Client', function() {
     beforeEach(function() {
       if (!!test.server) test.server = undefined;
       if (!!test.client) test.client = undefined;
-      test.client = new AMQPClient();
+      test.client = new AMQPClient(TestPolicy);
       test.server = new MockServer();
       return test.server.setup();
     });
@@ -48,7 +50,7 @@ describe('Client', function() {
     it('should connect then disconnect', function() {
       test.server.setResponseSequence([
         constants.amqpVersion,
-        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.OpenFrame(test.client.policy.connect.options),
         new frames.BeginFrame({
           remoteChannel: 1, nextOutgoingId: 0,
           incomingWindow: 2147483647, outgoingWindow: 2147483647,
@@ -68,7 +70,7 @@ describe('Client', function() {
       var messageBuf = encodeMessagePayload(message);
       test.server.setResponseSequence([
         constants.amqpVersion,
-        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.OpenFrame(test.client.policy.connect.options),
         new frames.BeginFrame({
           remoteChannel: 1, nextOutgoingId: 0,
           incomingWindow: 2147483647, outgoingWindow: 2147483647,
@@ -116,7 +118,7 @@ describe('Client', function() {
       var buf3 = messageBuf.slice(15);
       test.server.setResponseSequence([
         constants.amqpVersion,
-        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.OpenFrame(test.client.policy.connect.options),
         new frames.BeginFrame({
           remoteChannel: 1, nextOutgoingId: 0,
           incomingWindow: 2147483647, outgoingWindow: 2147483647,
@@ -178,7 +180,7 @@ describe('Client', function() {
       var testMaxFrameSize = 512;
       test.server.setResponseSequence([
         constants.amqpVersion,
-        new frames.OpenFrame(_.extend(DefaultPolicy.connect.options, {
+        new frames.OpenFrame(_.extend(test.client.policy.connect.options, {
           maxFrameSize: testMaxFrameSize // <-- the important part
         })),
         new frames.BeginFrame({
@@ -254,7 +256,7 @@ describe('Client', function() {
     beforeEach(function() {
       if (!!test.server) test.server = undefined;
       if (!!test.client) test.client = undefined;
-      test.client = new AMQPClient();
+      test.client = new AMQPClient(TestPolicy);
       test.server = new MockServer();
       return test.server.setup();
     });
@@ -270,7 +272,7 @@ describe('Client', function() {
     it('should resolve the connect promise on reconnect if initial connection fails', function() {
       test.server.setResponseSequence([
         constants.amqpVersion,
-        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.OpenFrame(test.client.policy.connect.options),
         new frames.BeginFrame({
           remoteChannel: 1, nextOutgoingId: 0,
           incomingWindow: 2147483647, outgoingWindow: 2147483647,
@@ -298,7 +300,7 @@ describe('Client', function() {
       test.server.setResponseSequence([
         // first connect
         constants.amqpVersion,
-        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.OpenFrame(test.client.policy.connect.options),
         new frames.BeginFrame({
           remoteChannel: 1, nextOutgoingId: 0,
           incomingWindow: 2147483647, outgoingWindow: 2147483647,
@@ -307,7 +309,7 @@ describe('Client', function() {
 
         // second connect
         constants.amqpVersion,
-        new frames.OpenFrame(DefaultPolicy.connect.options),
+        new frames.OpenFrame(test.client.policy.connect.options),
         new frames.BeginFrame({
           remoteChannel: 1, nextOutgoingId: 0,
           incomingWindow: 2147483647, outgoingWindow: 2147483647,
