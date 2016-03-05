@@ -334,4 +334,56 @@ describe('Client', function() {
     });
 
   });
+
+  describe('#reattach', function() {
+    beforeEach(function() {
+      if (!!test.server) test.server = undefined;
+      if (!!test.client) test.client = undefined;
+      test.client = new AMQPClient(TestPolicy, {
+        senderLink: { reattach: { retries: 5, forever: true } },
+        receiverLink: { reattach: { retries: 5, forever: true } }
+      });
+
+      test.server = new MockServer();
+      return test.server.setup();
+    });
+
+    afterEach(function() {
+      if (!test.server) return;
+      return test.server.teardown()
+        .then(function() {
+          test.server = undefined;
+        });
+    });
+
+    it('should cut off link reattachment on forced remote disconnect', function() {
+      test.server.setResponseSequence([
+        constants.amqpVersion,
+        new frames.OpenFrame(test.client.policy.connect.options),
+        new frames.BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0,
+          incomingWindow: 2147483647, outgoingWindow: 2147483647,
+          handleMax: 4294967295
+        }),
+        function (prev) {
+          var rxAttach = frames.readFrame(prev[prev.length-1]);
+          return new frames.AttachFrame({
+            name: rxAttach.name, handle: 1,
+            role: constants.linkRole.sender,
+            source: {}, target: {},
+            initialDeliveryCount: 0
+          });
+        },
+        [ // force detach from remote server, and force close of the connection
+          new frames.DetachFrame({ handle: 1, closed: true, error: 'internal-error' }),
+          new frames.CloseFrame({
+            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+          })
+        ]
+      ]);
+
+      return test.client.connect(test.server.address())
+        .then(function() { return test.client.createReceiver('testing'); });
+    });
+  });
 });
