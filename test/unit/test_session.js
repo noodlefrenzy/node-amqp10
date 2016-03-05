@@ -5,7 +5,7 @@ var expect = require('chai').expect,
     constants = require('../../lib/constants'),
     frames = require('../../lib/frames'),
     u = require('../../lib/utilities'),
-    tu = require('./testing_utils'),
+    tu = require('./../testing_utils'),
     _ = require('lodash'),
 
     DefaultPolicy = require('../../lib/policies/default_policy'),

@@ -6,7 +6,7 @@ var _ = require('lodash'),
     expect = require('chai').expect,
     debug = require('debug')('amqp10:mock:server'),
     frames = require('../../../lib/frames'),
-    tu = require('../testing_utils');
+    tu = require('../../testing_utils');
 
 function MockServer(options) {
   this._server = null;

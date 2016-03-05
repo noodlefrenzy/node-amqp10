@@ -19,8 +19,7 @@ describe('Queues', function() {
   });
 
   it('should connect, send, and receive a message', function(done) {
-    expect(config.serviceBusHost, 'Required env vars not found in ' + Object.keys(process.env)).to.exist;
-
+    expect(config.address).to.exist;
     var msgVal = uuid.v4();
     test.client = new AMQPClient(Policy.ServiceBusQueue);
     return test.client.connect(config.address)
@@ -45,8 +44,7 @@ describe('Queues', function() {
   });
 
   it('should throttle based on link credit policy', function(done) {
-    expect(config.serviceBusHost, 'Required env vars not found in ' + Object.keys(process.env)).to.exist;
-
+    expect(config.address).to.exist;
     test.client = new AMQPClient(Policy.Utils.RenewOnSettle(1, 1, Policy.ServiceBusQueue));
     var count = 0;
     var acked = false;
@@ -83,8 +81,7 @@ describe('Queues', function() {
   });
 
   it('should allow you to reject messages and continue to receive subsequent', function(done) {
-    expect(config.serviceBusHost, 'Required env vars not found in ' + Object.keys(process.env)).to.exist;
-
+    expect(config.address).to.exist;
     var msgVal1 = uuid.v4();
     var msgVal2 = uuid.v4();
     test.client = new AMQPClient(Policy.merge({ receiverLink: { attach: { receiverSettleMode: 1 }}}, Policy.ServiceBusQueue));

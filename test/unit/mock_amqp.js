@@ -5,7 +5,7 @@ var BufferList = require('bl'),
     net = require('net'),
     expect = require('chai').expect,
     frames = require('../../lib/frames'),
-    tu = require('./testing_utils');
+    tu = require('./../testing_utils');
 
 var MockServer = function(port) {
   this.server = null;

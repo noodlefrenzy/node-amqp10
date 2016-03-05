@@ -13,7 +13,7 @@ var builder = require('buffer-builder'),
     Connection = require('../../lib/connection'),
     Sasl = require('../../lib/sasl'),
 
-    tu = require('./testing_utils');
+    tu = require('./../testing_utils');
 
 DefaultPolicy.connect.options.containerId = 'test';
 

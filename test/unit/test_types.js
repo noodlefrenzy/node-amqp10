@@ -10,7 +10,7 @@ var expect = require('chai').expect,
     AMQPArray = require('../../lib/types/amqp_composites').Array,
 
     errors = require('../../lib/errors'),
-    tu = require('./testing_utils');
+    tu = require('./../testing_utils');
 
 var buf = tu.buildBuffer;
 
