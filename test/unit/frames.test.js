@@ -176,7 +176,7 @@ describe('AttachFrame', function() {
     var attach = new frames.AttachFrame({
       name: 'test',
       handle: 1,
-      role: constants.linkRole.sender,
+      role: 'sender',
       source: { address: null, dynamic: true },
       target: { address: 'testtgt' },
       initialDeliveryCount: 1,
@@ -584,6 +584,45 @@ describe('TransferFrame', function() {
     tu.shouldBufEql(expected, actual);
   });
 
+  it('should encode performative correctly (with requires)', function() {
+    var transfer = new frames.TransferFrame({
+      handle: 1,
+      deliveryId: 1,
+      deliveryTag: tu.buildBuffer([1]),
+      messageFormat: 20000,
+      settled: true,
+      receiverSettleMode: 'auto'
+    });
+    transfer.channel = 1;
+    transfer.payload = new Buffer([0x00, 0x53, 0x77, 0x52, 10]);
+
+    var actual = tu.convertFrameToBuffer(transfer);
+    var payloadSize = 12;
+    var listSize = 1 + 2 + 2 + 3 + 5 + 1 + 1 + 2 + 1 + 1 + 1 + 1;
+    var frameSize = 1 + 1 + 2 + 2 + listSize + payloadSize;
+    var expected = tu.buildBuffer([
+      0x00, 0x00, 0x00, frameSize,
+      0x02, 0x00, 0x00, 0x01,
+      0x00, 0x53, 0x14,
+        0xc0, listSize, 11,
+        0x52, 1, // handle
+        0x52, 1, // delivery-id
+        0xA0, 1, 1, // delivery-tag
+        0x70, builder.prototype.appendUInt32BE, 20000, // message-format
+        0x41, // settled
+        0x42, // more
+        0x50, 0, // rcv-settle-mode
+        0x40, // state
+        0x42, 0x42, 0x42, // resume/aborted/batchable
+
+        // Message Body - amqp-value of uint(10)
+        0x00, 0x53, 0x77,
+        0x52, 10
+    ]);
+
+    tu.shouldBufEql(expected, actual);
+  });
+
   /*
   it('should decode the performative correctly (trivial message body)', function() {
     var listSize = 1 + 2 + 2 + 3 + 3 + 2 + 4;
@@ -632,6 +671,31 @@ describe('DispositionFrame', function() {
   it('should encode the performative correctly', function() {
     var disposition = new frames.DispositionFrame({
       role: constants.linkRole.receiver,
+      first: 1,
+      settled: true,
+      state: new DeliveryState.Accepted()
+    });
+
+    var actual = tu.convertFrameToBuffer(disposition);
+    var expected = tu.buildBuffer([
+      0x00, 0x00, 0x00, 0x18,
+      0x02, 0x00, 0x00, 0x00,
+      0x00, 0x53, 0x15,
+        0xc0, 0x0b, 0x06,
+        0x41,
+        0x52, 0x01,
+        0x40,
+        0x41,
+        0x00, 0x53, 0x24, 0x45, // Accepted
+        0x42  // batchable
+    ]);
+
+    tu.shouldBufEql(expected, actual);
+  });
+
+  it('should encode the performative correctly (with requires)', function() {
+    var disposition = new frames.DispositionFrame({
+      role: 'receiver',
       first: 1,
       settled: true,
       state: new DeliveryState.Accepted()
