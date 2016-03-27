@@ -1,6 +1,7 @@
 'use strict';
 
 var _ = require('lodash'),
+    amqp = require('../../lib'),
     expect = require('chai').expect,
     Builder = require('buffer-builder'),
     AMQPClient = require('../../lib').Client,
@@ -29,6 +30,20 @@ function encodeMessagePayload(message) {
 }
 
 describe('Client', function() {
+  describe('#use', function() {
+    it('should allow users to plug-in Client behaviors', function(done) {
+      var plugin = function(Client) {
+        Client.prototype.thing = function() {
+          done();
+        };
+      };
+
+      amqp.use(plugin);
+      var client = new amqp.Client();
+      client.thing();
+    });
+  });
+
   describe('#connect()', function() {
     beforeEach(function() {
       if (!!test.server) test.server = undefined;
