@@ -100,6 +100,12 @@ Note that once you've set the policy to not auto-settle messages, you'll need to
 
 All of these methods accept an array of messages, allowing you to settle many at once.
 
+## Plugins ##
+
+The amqp10 module now supports pluggable Client behaviors with the exported `use` method. Officially supported plugins include:
+
++ [amqp10-link-cache](https://github.com/mbroadst/amqp10-link-cache) - caches links with optional purging based on ttl
+
 ## Supported Servers ##
 
 We are currently actively running integration tests against the following servers:
