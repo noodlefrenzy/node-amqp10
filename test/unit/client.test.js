@@ -264,6 +264,31 @@ describe('Client', function() {
         .then(function() { return test.client.disconnect(); });
     });
 
+    it('should connect and respect the idleTimeout (issue 229)', function() {
+      var policy = new Policy({
+        connect: { options: { containerId: 'test', idleTimeout: 42 } },
+        reconnect: { retries: 0, forever: false }
+      });
+
+      test.server.setResponseSequence([
+        constants.amqpVersion,
+        new frames.OpenFrame(policy.connect.options),
+        new frames.BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0,
+          incomingWindow: 2147483647, outgoingWindow: 2147483647,
+          handleMax: 4294967295
+        }),
+        new frames.CloseFrame({
+          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+        })
+      ]);
+
+      return test.client.connect(test.server.address())
+        .then(function() {
+          expect(test.client._connection._params.idleTimeout).to.equal(42);
+          return test.client.disconnect();
+        });
+    });
   });
 
   describe('#reconnect()', function() {
