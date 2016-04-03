@@ -160,8 +160,8 @@ describe('Connection', function() {
         process.nextTick(function() {
           expect(events).to.have.length(3);
           expect(events[0]).to.eql(Connection.Connected);
-          expect(events[1]).to.eql(Connection.Disconnected);
-          expect(events[2][0]).to.eql(Connection.ErrorReceived);
+          expect(events[1][0]).to.eql(Connection.ErrorReceived);
+          expect(events[2]).to.eql(Connection.Disconnected);
           done();
         });
       }));

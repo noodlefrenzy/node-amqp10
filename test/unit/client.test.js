@@ -79,6 +79,40 @@ describe('Client', function() {
         .then(function() { return test.client.disconnect(); });
     });
 
+    it('should emit errors with proper conditions (issue #230)', function(done) {
+      test.server.setResponseSequence([
+        constants.amqpVersion,
+        new frames.OpenFrame(test.client.policy.connect.options),
+        new frames.BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0,
+          incomingWindow: 2147483647, outgoingWindow: 2147483647,
+          handleMax: 4294967295
+        }),
+        function (prev) {
+          var rxAttach = frames.readFrame(prev[prev.length-1]);
+          return new frames.AttachFrame({
+            name: rxAttach.name, handle: 1,
+            role: constants.linkRole.sender,
+            source: {}, target: {},
+            initialDeliveryCount: 0
+          });
+        },
+        new frames.CloseFrame({
+          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+        })
+      ]);
+
+      return test.client.connect(test.server.address())
+        .tap(function() {
+          test.client._connection.on('connection:errorReceived', function(err) {
+            expect(err.condition).to.eql('amqp:connection:forced');
+            expect(err.description).to.eql('test');
+            done();
+          });
+        })
+        .then(function() { return test.client.createReceiver('testing'); });
+    });
+
     it('should connect and receive', function(done) {
       var message = { body: { test: 'testing' } };
       var messageBuf = encodeMessagePayload(message);
@@ -264,7 +298,7 @@ describe('Client', function() {
         .then(function() { return test.client.disconnect(); });
     });
 
-    it('should connect and respect the idleTimeout (issue 229)', function() {
+    it('should connect and respect the idleTimeout (issue #229)', function() {
       var policy = new Policy({
         connect: { options: { containerId: 'test', idleTimeout: 42 } },
         reconnect: { retries: 0, forever: false }
