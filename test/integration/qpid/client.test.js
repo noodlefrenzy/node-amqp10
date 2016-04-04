@@ -89,6 +89,16 @@ describe('Client', function() {
       });
   });
 
+  it('should append dynamic link names with `dynamic_`', function() {
+    return test.client.connect(config.address)
+      .then(function() {
+        return test.client.createReceiver(null, { attach: { source: { dynamic: true } } });
+      })
+      .then(function(receiver) {
+        expect(receiver.name).to.startWith('dynamic_');
+      });
+  });
+
   describe('Messages', function() {
     [
       {
