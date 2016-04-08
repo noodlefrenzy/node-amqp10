@@ -29,7 +29,10 @@ test-servicebus: jshint
 
 test: test-unit test-qpid test-servicebus
 
+changelog:
+	${NPM_BIN}/conventional-changelog -p angular -i CHANGELOG.md -s
+
 apidoc: jshint
 	$(NPM_BIN)/jsdoc2md --src lib/**/*.js > api/README.md
 
-.PHONY: jshint fixjsstyle coverage test
+.PHONY: jshint fixjsstyle coverage test changelog apidoc
