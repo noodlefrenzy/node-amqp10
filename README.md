@@ -68,7 +68,7 @@ For instance. we've provided a convenience helper for throttling your receiver l
     var AMQPClient = require('amqp10').Client,
         Policy = require('amqp10').Policy;
     var client = new AMQPClient(Policy.Utils.RenewOnSettle(1, 1, Policy.ServiceBusQueue));
-    
+
 Where the first number is the initial credit, and the second is the _threshold_ - once remaining credit goes below that, we will give out more credit by the number of messages we've settled. In this case we're setting up the client for one-by-one message processing. Behind the scenes, this does the following:
 
 1. Sets the Link's creditQuantum to the first number (1), which you can do for yourself via the Policy mix-in `{ receiverLink: { creditQuantum: 1 } }`
@@ -105,6 +105,7 @@ All of these methods accept an array of messages, allowing you to settle many at
 The amqp10 module now supports pluggable Client behaviors with the exported `use` method. Officially supported plugins include:
 
 + [amqp10-link-cache](https://github.com/mbroadst/amqp10-link-cache) - caches links with optional purging based on ttl
++ [amqp10-rpc](https://github.com/mbroadst/amqp10-rpc) - an rpc server/client implementation on top of amqp10
 
 ## Supported Servers ##
 
