@@ -41,6 +41,28 @@ describe('SenderLink', function() {
       });
   });
 
+  it('should merge default subject if sent message is raw', function(done) {
+    return test.client.connect(config.address)
+      .then(function() {
+        return Promise.all([
+          test.client.createReceiver('amq.topic/not-news'),
+          test.client.createReceiver('amq.topic/news'),
+          test.client.createSender('amq.topic/news')
+        ]);
+      })
+      .spread(function(receiverWithoutSubject, receiverWithSubject, sender) {
+        receiverWithoutSubject.on('message', function(message) {
+          expect(message).to.not.exist;
+        });
+
+        receiverWithSubject.on('message', function(message) {
+          done();
+        });
+
+        return sender.send({ body: 'test message' });
+      });
+  });
+
   it('should accept messages as the first parameter', function(done) {
     return test.client.connect(config.address)
       .then(function() {
