@@ -1,3 +1,13 @@
+<a name="3.1.5"></a>
+## [3.1.5](https://github.com/noodlefrenzy/node-amqp10/compare/v3.1.4...v3.1.5) (2016-05-31)
+
+
+### Bug Fixes
+
+* **sender-link:** raw message payloads should merge link options ([8e48a3f](https://github.com/noodlefrenzy/node-amqp10/commit/8e48a3f))
+
+
+
 <a name="3.1.4"></a>
 ## [3.1.4](https://github.com/noodlefrenzy/node-amqp10/compare/v3.1.3...v3.1.4) (2016-04-04)
 
@@ -60,6 +70,7 @@
 * **types:** fixed issues based on peer review ([2b00efc](https://github.com/noodlefrenzy/node-amqp10/commit/2b00efc))
 * **types:** temporary paths for incorporating new types as known ([0b4a412](https://github.com/noodlefrenzy/node-amqp10/commit/0b4a412))
 * **ulong:** decode smallulong and ulong0 as normal numbers ([b2416a0](https://github.com/noodlefrenzy/node-amqp10/commit/b2416a0))
+
 
 ### Features
 
@@ -146,6 +157,7 @@
 * **travis:** get code climate working again ([976cb25](https://github.com/noodlefrenzy/node-amqp10/commit/976cb25))
 * **typo:** attachingListner => attachingListener ([4781f1d](https://github.com/noodlefrenzy/node-amqp10/commit/4781f1d))
 
+
 ### Features
 
 * **ActiveMQ:** add ActiveMQ policy ([5a718a3](https://github.com/noodlefrenzy/node-amqp10/commit/5a718a3))
@@ -184,6 +196,7 @@
 * **utilities:** add dispositionRange method ([0f5963a](https://github.com/noodlefrenzy/node-amqp10/commit/0f5963a))
 * **uuid:** add support for encoding/decoding uuid types ([7363a17](https://github.com/noodlefrenzy/node-amqp10/commit/7363a17))
 * **vhosts:** add vhosts specified in address to sasl init frame ([c95b741](https://github.com/noodlefrenzy/node-amqp10/commit/c95b741))
+
 
 ### Performance Improvements
 
