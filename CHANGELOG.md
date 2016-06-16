@@ -1,3 +1,18 @@
+<a name="3.1.6"></a>
+## [3.1.6](https://github.com/noodlefrenzy/node-amqp10/compare/v3.1.5...v3.1.6) (2016-06-16)
+
+
+### Bug Fixes
+
+* **errors:** typo in utilities.wrapProtocolError, errorInfo => info ([91e229f](https://github.com/noodlefrenzy/node-amqp10/commit/91e229f))
+
+
+### Features
+
+* **ssl:** allow user to pass ssl options directly to transport ([68c4a91](https://github.com/noodlefrenzy/node-amqp10/commit/68c4a91))
+
+
+
 <a name="3.1.5"></a>
 ## [3.1.5](https://github.com/noodlefrenzy/node-amqp10/compare/v3.1.4...v3.1.5) (2016-05-31)
 
