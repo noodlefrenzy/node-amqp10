@@ -29,7 +29,9 @@
     "qmf2": "^0.1.5",
     "stream-buffers": "^3.0.0"
   },
-  "scripts": {},
+  "scripts": {
+    "version": "make changelog && git add CHANGELOG.md"
+  },
   "author": {
     "name": "noodlefrenzy",
     "email": "milanz@microsoft.com",
