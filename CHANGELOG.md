@@ -1,3 +1,13 @@
+<a name="3.2.0"></a>
+# [3.2.0](https://github.com/noodlefrenzy/node-amqp10/compare/v3.1.6...v3.2.0) (2016-06-22)
+
+
+### Features
+
+* **connected-disconnected:** add signals for connection state ([4f8d4ff](https://github.com/noodlefrenzy/node-amqp10/commit/4f8d4ff))
+
+
+
 <a name="3.1.6"></a>
 ## [3.1.6](https://github.com/noodlefrenzy/node-amqp10/compare/v3.1.5...v3.1.6) (2016-06-16)
 
