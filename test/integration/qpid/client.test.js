@@ -1,6 +1,7 @@
 'use strict';
 var Promise = require('bluebird'),
     AMQPClient = require('../../..').Client,
+    Policy = require('../../..').Policy,
     config = require('./config'),
     expect = require('chai').expect;
 
@@ -208,6 +209,32 @@ describe('Client', function() {
           });
       });
     });
+  });
+
+  it('should make a deep copy session policy', function() {
+    var clientA = new AMQPClient(Policy.ActiveMQ),
+        clientB = new AMQPClient(Policy.ActiveMQ);
+    return Promise.all([ clientA.connect(config.address), clientB.connect(config.address) ])
+      .then(function() {
+        expect(clientA._session.policy.options.outgoingWindow).to.eql(100);
+        expect(clientB._session.policy.options.outgoingWindow).to.eql(100);
+        expect(Policy.ActiveMQ.session.options.outgoingWindow).to.eql(100);
+        expect(clientA._session._sessionParams.outgoingWindow).to.eql(100);
+        expect(clientB._session._sessionParams.outgoingWindow).to.eql(100);
+        return Promise.all([ clientA.createSender('amq.topic'), clientB.createSender('amq.topic') ]);
+      })
+      .spread(function(senderA, senderB) {
+        return Promise.all([
+          senderA.send({ test: 'data' }), senderA.send({ test: 'data' }), senderB.send({ test: 'data' })
+        ]);
+      })
+      .then(function() {
+        expect(clientA._session.policy.options.outgoingWindow).to.eql(100);
+        expect(clientB._session.policy.options.outgoingWindow).to.eql(100);
+        expect(Policy.ActiveMQ.session.options.outgoingWindow).to.eql(100);
+        expect(clientA._session._sessionParams.outgoingWindow).to.eql(98);
+        expect(clientB._session._sessionParams.outgoingWindow).to.eql(99);
+      });
   });
 
 });
