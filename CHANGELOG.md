@@ -1,3 +1,13 @@
+<a name="3.2.1"></a>
+## [3.2.1](https://github.com/noodlefrenzy/node-amqp10/compare/v3.2.0...v3.2.1) (2016-07-08)
+
+
+### Bug Fixes
+
+* **session:** ensure deep copies are made from policies ([2cb0797](https://github.com/noodlefrenzy/node-amqp10/commit/2cb0797))
+
+
+
 <a name="3.2.0"></a>
 # [3.2.0](https://github.com/noodlefrenzy/node-amqp10/compare/v3.1.6...v3.2.0) (2016-06-22)
 
