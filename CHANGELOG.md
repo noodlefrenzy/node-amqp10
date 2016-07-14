@@ -1,3 +1,13 @@
+<a name="3.2.2"></a>
+## [3.2.2](https://github.com/noodlefrenzy/node-amqp10/compare/v3.2.1...v3.2.2) (2016-07-14)
+
+
+### Bug Fixes
+
+* **session:** force detach links in all possible active states ([3a7272d](https://github.com/noodlefrenzy/node-amqp10/commit/3a7272d))
+
+
+
 <a name="3.2.1"></a>
 ## [3.2.1](https://github.com/noodlefrenzy/node-amqp10/compare/v3.2.0...v3.2.1) (2016-07-08)
 
