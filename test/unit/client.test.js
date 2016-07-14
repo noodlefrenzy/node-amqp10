@@ -459,5 +459,43 @@ describe('Client', function() {
       return test.client.connect(test.server.address())
         .then(function() { return test.client.createReceiver('testing'); });
     });
+
+
+    it('should not reattach after session unmapped and connection closed (issue #237)', function() {
+      test.server.setResponseSequence([
+        constants.amqpVersion,
+        new frames.OpenFrame(test.client.policy.connect.options),
+        new frames.BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0,
+          incomingWindow: 2147483647, outgoingWindow: 2147483647,
+          handleMax: 4294967295
+        }),
+        function (prev) {
+          var rxAttach = frames.readFrame(prev[prev.length-1]);
+          return new frames.AttachFrame({
+            name: rxAttach.name, handle: 1,
+            role: constants.linkRole.sender,
+            source: {}, target: {},
+            initialDeliveryCount: 0
+          });
+        },
+        [ // force detach from remote server, and force close of the connection
+          new frames.DetachFrame({ handle: 1, closed: true }),
+          new frames.EndFrame(),
+          new frames.CloseFrame()
+        ]
+      ]);
+
+      return test.client.connect(test.server.address())
+        .then(function() {
+          var $terminate = test.client._connection._terminate.bind(test.client._connection);
+          test.client._connection._terminate = function() {
+            setTimeout(function() { $terminate(); }, 500);
+          };
+        })
+        .then(function() { return test.client.createReceiver('testing'); })
+        .delay(500);
+    });
+
   });
 });
