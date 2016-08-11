@@ -32,6 +32,23 @@ describe('Header', function() {
     expect(expected).to.eql(actual.get());
   });
 
+  it('should encode default value for priority as ubyte', function() {
+    var message = { header: { durable: true } };
+    var expected = tu.buildBuffer([
+      0x00, 0x53, 0x70,
+        0xc0, 0x07, 0x05,
+        0x41,
+        0x50, 0x04,
+        0x40,
+        0x42,
+        0x43
+    ]);
+
+    var actual = new Builder();
+    m.encodeMessage(message, actual);
+    expect(expected).to.eql(actual.get());
+  });
+
   it('should decode the section', function() {
     var buffer = tu.newBuffer([
       0x00, 0x53, 0x70,
