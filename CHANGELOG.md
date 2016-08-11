@@ -1,3 +1,13 @@
+<a name="3.2.3"></a>
+## [3.2.3](https://github.com/noodlefrenzy/node-amqp10/compare/v3.2.2...v3.2.3) (2016-08-11)
+
+
+### Bug Fixes
+
+* **encoding:** defaults for composite types should use type def ([8e76ae5](https://github.com/noodlefrenzy/node-amqp10/commit/8e76ae5))
+
+
+
 <a name="3.2.2"></a>
 ## [3.2.2](https://github.com/noodlefrenzy/node-amqp10/compare/v3.2.1...v3.2.2) (2016-07-14)
 
