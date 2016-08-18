@@ -237,5 +237,14 @@ describe('Client', function() {
       });
   });
 
+  it('should emit a detached event when link is force detached locally', function(done) {
+    test.client.connect(config.address)
+      .then(function() { return test.client.createReceiver(config.defaultLink); })
+      .then(function(link) {
+        link.on('detached', function() { done(); });
+        return test.client.disconnect();
+      });
+  });
+
 });
 });
