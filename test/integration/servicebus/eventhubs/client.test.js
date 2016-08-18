@@ -31,7 +31,7 @@ describe('EventHubs', function () {
     expect(config.senderLink, 'Required env vars not found in ' + Object.keys(process.env)).to.exist;
 
     var msgVal = uuid.v4();
-    return test.client.connect(config.address)
+    test.client.connect(config.address)
       .then(function() {
         return createPartitionReceivers(test.client, config.partitionCount, config.receiverLinkPrefix);
       })
@@ -62,7 +62,7 @@ describe('EventHubs', function () {
       } } }
     };
 
-    return test.client.connect(config.address)
+    test.client.connect(config.address)
       .then(function() {
         return createPartitionReceivers(test.client, config.partitionCount, config.receiverLinkPrefix, filterOptions);
       })

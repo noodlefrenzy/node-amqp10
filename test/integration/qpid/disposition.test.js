@@ -29,7 +29,8 @@ describe('Disposition', function() {
   it('should auto-settle messages received from queue', function(done) {
     var queueName = 'test.disposition.queue';
     var messageCount = 0;
-    return test.client.connect(config.address)
+
+    test.client.connect(config.address)
       .then(function() {
         test.broker = new BrokerAgent(test.client);
 
@@ -63,7 +64,7 @@ describe('Disposition', function() {
     var queueName = 'test.disposition.queue';
     var messageCount = 5, receivedCount = 0;
 
-    return test.client.connect(config.address)
+    test.client.connect(config.address)
       .then(function() {
         test.broker = new BrokerAgent(test.client);
         return Promise.all([
@@ -104,7 +105,8 @@ describe('Disposition', function() {
   it('should forward disposition frames by link role', function(done) {
     var queueName = 'test.disposition.queue';
     var called = { receiver: false, sender: false };
-    return test.client.connect(config.address)
+
+    test.client.connect(config.address)
       .then(function() {
         return Promise.all([
           test.client.createReceiver(queueName),

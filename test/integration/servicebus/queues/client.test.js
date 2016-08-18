@@ -22,7 +22,7 @@ describe('Queues', function() {
   it('should connect, send, and receive a message', function(done) {
     var msgVal = uuid.v4();
     test.client = new AMQPClient(Policy.ServiceBusQueue);
-    return test.client.connect(config.address)
+    test.client.connect(config.address)
       .then(function() {
         return Promise.all([
           test.client.createReceiver(config.defaultLink),
@@ -48,7 +48,7 @@ describe('Queues', function() {
 
     var count = 0;
     var acked = false;
-    return test.client.connect(config.address)
+    test.client.connect(config.address)
       .then(function() {
         return Promise.all([
           test.client.createReceiver(config.defaultLink),
@@ -87,7 +87,7 @@ describe('Queues', function() {
       receiverLink: { attach: { receiverSettleMode: 1 } }
     });
 
-    return test.client.connect(config.address)
+    test.client.connect(config.address)
       .then(function() {
         return Promise.all([
           test.client.createReceiver(config.defaultLink),

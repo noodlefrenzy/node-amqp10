@@ -102,7 +102,7 @@ describe('Client', function() {
         })
       ]);
 
-      return test.client.connect(test.server.address())
+      test.client.connect(test.server.address())
         .tap(function() {
           test.client._connection.on('connection:errorReceived', function(err) {
             expect(err.condition).to.eql('amqp:connection:forced');
@@ -145,7 +145,7 @@ describe('Client', function() {
         })
       ]);
 
-      return test.client.connect(test.server.address())
+      test.client.connect(test.server.address())
         .then(function() { return test.client.createReceiver('testing'); })
         .then(function (rxLink) {
           rxLink.on('message', function (msg) {
@@ -211,7 +211,7 @@ describe('Client', function() {
         })
       ]);
 
-      return test.client.connect(test.server.address())
+      test.client.connect(test.server.address())
         .then(function() { return test.client.createReceiver('testing'); })
         .then(function (rxLink) {
           rxLink.on('message', function (msg) {

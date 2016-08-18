@@ -42,7 +42,7 @@ describe('ServiceBus', function() {
           expected = Array.apply(null, new Array(20))
             .map(function(a) { return Math.floor(Math.random() * 100); });
 
-      return Promise.all([
+      Promise.all([
         test.client.createReceiverStream(config.receiverLinkPrefix + test.partition),
         test.client.createSender(config.partitionSenderLinkPrefix + test.partition)
       ])
@@ -71,7 +71,7 @@ describe('ServiceBus', function() {
           expected = Array.apply(null, new Array(20))
             .map(function(a) { return Math.floor(Math.random() * 100); });
 
-      return Promise.all([
+      Promise.all([
         test.client.createReceiver(config.receiverLinkPrefix + test.partition),
         test.client.createSenderStream(config.partitionSenderLinkPrefix + test.partition)
       ])

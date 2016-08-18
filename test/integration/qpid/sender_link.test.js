@@ -20,7 +20,7 @@ describe('SenderLink', function() {
   });
 
   it('should allow the definition of a default subject', function(done) {
-    return test.client.connect(config.address)
+    test.client.connect(config.address)
       .then(function() {
         return Promise.all([
           test.client.createReceiver('amq.topic/not-news'),
@@ -42,7 +42,7 @@ describe('SenderLink', function() {
   });
 
   it('should merge default subject if sent message is raw', function(done) {
-    return test.client.connect(config.address)
+    test.client.connect(config.address)
       .then(function() {
         return Promise.all([
           test.client.createReceiver('amq.topic/not-news'),
@@ -64,7 +64,7 @@ describe('SenderLink', function() {
   });
 
   it('should accept messages as the first parameter', function(done) {
-    return test.client.connect(config.address)
+    test.client.connect(config.address)
       .then(function() {
         return Promise.all([
           test.client.createReceiver('test.disposition.queue'),
@@ -93,7 +93,7 @@ describe('SenderLink', function() {
   }
 
   it('should send custom types', function(done) {
-    return test.client.connect(config.address)
+    test.client.connect(config.address)
       .then(function() {
         return Promise.all([
           test.client.createReceiver(config.defaultLink),
@@ -112,7 +112,7 @@ describe('SenderLink', function() {
 
   it('should send and receive multi-frame messages', function(done) {
     var messageData = new Array(2048).join('0');
-    return test.client.connect(config.address)
+    test.client.connect(config.address)
       .then(function() {
         return Promise.all([
           test.client.createReceiver(config.defaultLink),

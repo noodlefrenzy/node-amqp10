@@ -27,7 +27,7 @@ describe('QPID', function() {
       var expected = Array.apply(null, new Array(100))
         .map(function(a) { return Math.floor(Math.random() * 100); });
 
-      return Promise.all([
+      Promise.all([
         test.client.createReceiverStream(config.defaultLink),
         test.client.createSender(config.defaultLink)
       ])
@@ -59,7 +59,7 @@ describe('QPID', function() {
       var expected = Array.apply(null, new Array(100))
         .map(function(a) { return Math.floor(Math.random() * 100); });
 
-      return Promise.all([
+      Promise.all([
         test.client.createReceiver(config.defaultLink),
         test.client.createSenderStream(config.defaultLink)
       ])
@@ -81,7 +81,7 @@ describe('QPID', function() {
       var expected = Array.apply(null, new Array(100))
         .map(function(a) { return Math.floor(Math.random() * 100); });
 
-      return Promise.all([
+      Promise.all([
         test.client.createReceiver(config.defaultLink),
         test.client.createSenderStream(config.defaultLink, { callback: 'sent' })
       ])
@@ -108,7 +108,7 @@ describe('QPID', function() {
       var expected = Array.apply(null, new Array(100))
         .map(function(a) { return Math.floor(Math.random() * 100); });
 
-      return Promise.all([
+      Promise.all([
         test.client.createReceiver(config.defaultLink),
         test.client.createReceiverStream('test.streams.queue'),
         test.client.createSenderStream(config.defaultLink),

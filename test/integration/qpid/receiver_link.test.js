@@ -20,7 +20,7 @@ describe('ReceiverLink', function() {
   });
 
   it('should allow the definition of a default subject', function(done) {
-    return test.client.connect(config.address)
+    test.client.connect(config.address)
       .then(function() {
         return Promise.all([
           test.client.createReceiver('amq.topic/not-news'),
@@ -45,7 +45,7 @@ describe('ReceiverLink', function() {
     var throttledClient =
       new AMQPClient(Policy.Utils.RenewOnSettle(1, 1, Policy.Default));
 
-    return Promise.all([
+    Promise.all([
       test.client.connect(config.address),
       throttledClient.connect(config.address)
     ])
