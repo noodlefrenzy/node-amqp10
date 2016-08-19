@@ -1,3 +1,13 @@
+<a name="3.2.4"></a>
+## [3.2.4](https://github.com/noodlefrenzy/node-amqp10/compare/v3.2.3...v3.2.4) (2016-08-19)
+
+
+### Bug Fixes
+
+* **link:** emit `detached` event when force detached locally ([d2531ba](https://github.com/noodlefrenzy/node-amqp10/commit/d2531ba))
+
+
+
 <a name="3.2.3"></a>
 ## [3.2.3](https://github.com/noodlefrenzy/node-amqp10/compare/v3.2.2...v3.2.3) (2016-08-11)
 
