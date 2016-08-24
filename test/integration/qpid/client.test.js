@@ -1,13 +1,15 @@
 'use strict';
 var Promise = require('bluebird'),
-    AMQPClient = require('../../..').Client,
-    Policy = require('../../..').Policy,
+    amqp = require('../../..'),
+    AMQPClient = amqp.Client,
+    Policy = amqp.Policy,
+    Errors = amqp.Errors,
     config = require('./config'),
-    expect = require('chai').expect;
+    chai = require('chai'),
+    expect = chai.expect;
 
 var test = {};
 describe('QPID', function() {
-
 describe('Client', function() {
   beforeEach(function() {
     if (!!test.client) test.client = undefined;
@@ -243,6 +245,20 @@ describe('Client', function() {
       .then(function(link) {
         link.on('detached', function() { done(); });
         return test.client.disconnect();
+      });
+  });
+
+  it('should throw an error when `undefined` or `null` are used for default subjects', function() {
+    return test.client.connect(config.address)
+      .then(function() {
+        [ null, undefined ].forEach(function(value) {
+          expect(function() {
+            test.client.createReceiver(config.defaultLink + '/' + value);
+          }).to.throw(Errors.InvalidSubjectError);
+          expect(function() {
+            test.client.createSender(config.defaultLink + '/' + value);
+          }).to.throw(Errors.InvalidSubjectError);
+        });
       });
   });
 
