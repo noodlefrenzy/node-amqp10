@@ -1,3 +1,13 @@
+<a name="3.2.5"></a>
+## [3.2.5](https://github.com/noodlefrenzy/node-amqp10/compare/v3.2.4...v3.2.5) (2016-08-24)
+
+
+### Bug Fixes
+
+* **defaultSubjects:** throw error on invalid subjects ([314b495](https://github.com/noodlefrenzy/node-amqp10/commit/314b495))
+
+
+
 <a name="3.2.4"></a>
 ## [3.2.4](https://github.com/noodlefrenzy/node-amqp10/compare/v3.2.3...v3.2.4) (2016-08-19)
 
