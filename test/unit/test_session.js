@@ -195,6 +195,7 @@ describe('Session', function() {
         [ true,
           new MockDetachFrame({
             handle: 3,
+            closed: true,
             error: new AMQPError({ condition: ErrorCondition.LinkDetachForced, description: 'test' })
           }, 5)
         ],
