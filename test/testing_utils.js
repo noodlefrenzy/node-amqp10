@@ -12,14 +12,17 @@ function populateConfig(configKeyMap, cb) {
     return cb(new Error('Missing environment variable: ValidProcessVersions'));
   }
 
-  Object.keys(configKeyMap).every(function (k) {
+  var err;
+  if (!Object.keys(configKeyMap).every(function(k) {
     if (!process.env.hasOwnProperty(configKeyMap[k])) {
-      cb(new Error('Missing environment variable: ' + k));
+      err = new Error('Missing environment variable: ' + k);
       return false;
     }
 
     return true;
-  });
+  })) {
+    return cb(err);
+  }
 
   var versions = process.env.ValidProcessVersions.split('|')
     .map(function(x) { return new RegExp(x, 'i'); });
