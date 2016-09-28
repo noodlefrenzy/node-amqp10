@@ -72,7 +72,7 @@ describe('Link', function() {
       done();
     });
 
-    it.skip('should close a link by default', function(done) {
+    it('should close a link by default', function(done) {
       server = new MockServer();
       server.setSequence(
         [
@@ -129,7 +129,7 @@ describe('Link', function() {
       connection.open({protocol: 'amqp', host: 'localhost', port: server.port});
     });
 
-    it.skip('should detach a link without closing, if requested', function(done) {
+    it('should detach a link without closing, if requested', function(done) {
       server = new MockServer();
       server.setSequence(
         [
