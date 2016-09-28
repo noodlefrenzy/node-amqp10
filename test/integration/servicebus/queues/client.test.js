@@ -10,6 +10,7 @@ var test = {};
 describe('ServiceBus', function() {
 describe('Queues', function() {
   beforeEach(function() {
+    if (config instanceof Error) return this.skip(config);
     if (!!test.client) test.client = undefined;
     expect(config.address).to.exist;
   });

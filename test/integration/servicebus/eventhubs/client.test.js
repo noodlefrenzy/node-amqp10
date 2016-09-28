@@ -18,6 +18,7 @@ var test = {};
 describe('ServiceBus', function() {
 describe('EventHubs', function () {
   beforeEach(function () {
+    if (config instanceof Error) return this.skip(config);
     if (!!test.client) test.client = undefined;
     test.client = new AMQPClient(Policy.ServiceBusQueue);
   });
@@ -28,8 +29,6 @@ describe('EventHubs', function () {
   });
 
   it('should connect, send, and receive a message', function (done) {
-    expect(config.senderLink, 'Required env vars not found in ' + Object.keys(process.env)).to.exist;
-
     var msgVal = uuid.v4();
     test.client.connect(config.address)
       .then(function() {
@@ -50,8 +49,6 @@ describe('EventHubs', function () {
   });
 
   it('should create receiver with date-based x-header', function (done) {
-    expect(config.senderLink, 'Required env vars not found in ' + Object.keys(process.env)).to.exist;
-
     var msgVal = uuid.v4();
     var now = Date.now() - (1000 * 5); // 5 seconds ago
 
@@ -81,8 +78,6 @@ describe('EventHubs', function () {
   });
 
   it('should send to a specific partition', function (done) {
-    expect(config.partitionSenderLinkPrefix, 'Required env vars not found in ' + Object.keys(process.env)).to.exist;
-
     var msgVal = uuid.v4();
     var partition = '1';
     test.client.connect(config.address)
@@ -107,8 +102,6 @@ describe('EventHubs', function () {
   });
 
   it('should only receive messages after last offset when using offset-based x-header', function (done) {
-    expect(config.partitionSenderLinkPrefix, 'Required env vars not found in ' + Object.keys(process.env)).to.exist;
-
     var msgVal1 = uuid.v4();
     var msgVal2 = uuid.v4();
     var partition = '1';

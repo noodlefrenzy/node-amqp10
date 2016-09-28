@@ -17,6 +17,7 @@ else
   test.partition = Math.floor(Math.random() * config.partitionCount);
 
 function setup() {
+  if (config instanceof Error) return this.skip(config);  // jshint ignore:line
   if (!!test.client) delete test.client;
   test.client = new AMQPClient(Policy.ServiceBusQueue);
   return test.client.connect(config.address);

@@ -1,13 +1,20 @@
 'use strict';
-module.exports = {
+var tu = require('../../../testing_utils.js');
 
-  protocol: 'amqps',
-  serviceBusHost: process.env.ServiceBusNamespace,
-  senderLink: process.env.EventHubName,
-  partitionSenderLinkPrefix: process.env.EventHubName + '/Partitions/',
-  receiverLinkPrefix: process.env.EventHubName + '/ConsumerGroups/$default/Partitions/',
-  partitionCount: process.env.EventHubPartitionCount,
-  sasKeyName: process.env.EventHubKeyName,
-  sasKey: process.env.EventHubKey,
-  address: 'amqps' + '://' + encodeURIComponent(process.env.EventHubKeyName) + ':' + encodeURIComponent(process.env.EventHubKey) + '@' + process.env.ServiceBusNamespace + '.servicebus.windows.net'
-};
+module.exports = tu.populateConfig({
+  serviceBusHost: 'ServiceBusNamespace',
+  senderLink: 'EventHubName',
+  partitionCount: 'EventHubPartitionCount',
+  sasKeyName: 'EventHubKeyName',
+  sasKey: 'EventHubKey'
+}, function(err, config) {
+  if (!!err) return err;
+  config.protocol = 'amqps';
+  config.address = config.protocol + '://' +
+    encodeURIComponent(config.sasKeyName) + ':' + encodeURIComponent(config.sasKey) +
+      '@' + config.serviceBusHost + '.servicebus.windows.net';
+
+  config.partitionSenderLinkPrefix = config.senderLink + '/Partitions/';
+  config.receiverLinkPrefix = config.senderLink + '/ConsumerGroups/$default/Partitions/';
+  return config;
+});

@@ -8,11 +8,22 @@ var Builder = require('buffer-builder'),
 
 function populateConfig(configKeyMap, cb) {
   var processVersion = process.version;
-  expect(process.env.ValidProcessVersions, 'Missing env ValidProcessVersions').to.exist;
-  Object.keys(configKeyMap).forEach(function (k) {
-    expect(process.env[configKeyMap[k]], 'Missing env ' + k).to.exist;
+  if (!process.env.hasOwnProperty('ValidProcessVersions')) {
+    return cb(new Error('Missing environment variable: ValidProcessVersions'));
+  }
+
+  Object.keys(configKeyMap).every(function (k) {
+    if (!process.env.hasOwnProperty(configKeyMap[k])) {
+      cb(new Error('Missing environment variable: ' + k));
+      return false;
+    }
+
+    return true;
   });
-  var versions = process.env.ValidProcessVersions.split('|').map(function(x) { return new RegExp(x, 'i'); });
+
+  var versions = process.env.ValidProcessVersions.split('|')
+    .map(function(x) { return new RegExp(x, 'i'); });
+
   var idx = 0;
   for (var i = 0; i < versions.length; ++i) {
     var v = versions[i];
@@ -30,7 +41,7 @@ function populateConfig(configKeyMap, cb) {
     config[key] = configVals.length === 1 ? configVals[0] : configVals[idx];
   }
 
-  return !!cb ? cb(config) : config;
+  return !!cb ? cb(null, config) : config;
 }
 
 module.exports.populateConfig = populateConfig;

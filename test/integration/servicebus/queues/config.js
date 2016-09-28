@@ -6,7 +6,8 @@ module.exports = tu.populateConfig({
   defaultLink: 'ServiceBusQueueNames',
   sasKeyName: 'ServiceBusQueueKeyNames',
   sasKey: 'ServiceBusQueueKeys'
-}, function(config) {
+}, function(err, config) {
+  if (!!err) return err;
   config.protocol = 'amqps';
   config.address = config.protocol + '://' +
     encodeURIComponent(config.sasKeyName) + ':' + encodeURIComponent(config.sasKey) +
