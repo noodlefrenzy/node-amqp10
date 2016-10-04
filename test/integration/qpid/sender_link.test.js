@@ -129,5 +129,15 @@ describe('SenderLink', function() {
       });
   });
 
+  it('should resolve pending messages on disconnect', function(done) {
+    test.client.connect(config.address)
+      .then(function() { return test.client.createSender('amq.topic'); })
+      .then(function(sender) {
+        sender.linkCredit = 0;
+        sender.send({ test: 'data' }).catch(function(err) { done(); });
+        return test.client.disconnect();
+      });
+  });
+
 });
 });
