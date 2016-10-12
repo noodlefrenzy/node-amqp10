@@ -381,6 +381,84 @@ describe('Client', function() {
           return test.client.disconnect();
         });
     });
+
+
+    it('should reject send promises if links are detatched, and connection closed', function(done) {
+      test.server.setResponseSequence([
+        constants.amqpVersion,
+        new frames.OpenFrame(test.client.policy.connect.options),
+        new frames.BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0,
+          incomingWindow: 2147483647, outgoingWindow: 2147483647,
+          handleMax: 4294967295
+        }),
+        [
+          function (prev) {
+            var rxAttach = frames.readFrame(prev[prev.length - 1]);
+            return new frames.AttachFrame({
+              name: rxAttach.name, handle: 1,
+              role: constants.linkRole.receiver,
+              source: {}, target: {},
+              initialDeliveryCount: 0
+            });
+          },
+
+          { delay: 100 },
+
+          // force detach from remote server, and force close of the connection
+          new frames.DetachFrame({ handle: 1, closed: true, error: 'internal-error' }),
+          new frames.CloseFrame({
+            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+          })
+        ]
+      ]);
+
+      test.client.connect(test.server.address())
+        .then(function() { return test.client.createSender('testing'); })
+        .then(function(sender) {
+          sender.send('testing')
+            .then(function() { done('this should not happen'); })
+            .catch(function(err) { done(); });
+        });
+    });
+
+    it('should reject send promises if links are not detatched, and connection closed', function(done) {
+      test.server.setResponseSequence([
+        constants.amqpVersion,
+        new frames.OpenFrame(test.client.policy.connect.options),
+        new frames.BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0,
+          incomingWindow: 2147483647, outgoingWindow: 2147483647,
+          handleMax: 4294967295
+        }),
+        [
+          function (prev) {
+            var rxAttach = frames.readFrame(prev[prev.length - 1]);
+            return new frames.AttachFrame({
+              name: rxAttach.name, handle: 1,
+              role: constants.linkRole.receiver,
+              source: {}, target: {},
+              initialDeliveryCount: 0
+            });
+          },
+
+          { delay: 100 },
+
+          // force close of the connection
+          new frames.CloseFrame({
+            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+          })
+        ]
+      ]);
+
+      test.client.connect(test.server.address())
+        .then(function() { return test.client.createSender('testing'); })
+        .then(function(sender) {
+          sender.send('testing')
+            .then(function() { done('this should not happen'); })
+            .catch(function(err) { done(); });
+        });
+    });
   });
 
   describe('#reconnect()', function() {
@@ -517,7 +595,6 @@ describe('Client', function() {
       return test.client.connect(test.server.address())
         .then(function() { return test.client.createReceiver('testing'); });
     });
-
 
     it('should not reattach after session unmapped and connection closed (issue #237)', function() {
       test.server.setResponseSequence([
