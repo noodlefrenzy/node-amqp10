@@ -128,12 +128,25 @@ MockServer.prototype.setResponseSequence = function(responses) {
   this._responses = responses;
 };
 
+function isDelay(response) {
+  return (typeof response === 'object' && response.hasOwnProperty('delay'));
+}
+
 MockServer.prototype._sendNextResponse = function() {
   var self = this,
       response = this._responses.shift();
 
-  if (Array.isArray(response)) {
-    response.forEach(function(r) { self._sendResponse(r); });
+  if (isDelay(response)) {
+    setTimeout(function() { self._sendNextResponse(); }, response.delay);
+  } else if (Array.isArray(response)) {
+    (function delayableLoop(responses) {
+      var r = responses.shift();
+      var delay = isDelay(r) ? r.delay : 0;
+      setTimeout(function() {
+        if (!delay) self._sendResponse(r);
+        if (responses.length) delayableLoop(responses);
+      }, delay);
+    })(response);
   } else {
     self._sendResponse(response);
   }
