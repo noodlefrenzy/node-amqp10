@@ -75,5 +75,27 @@ describe('ReceiverLink', function() {
     });
   });
 
+  it('should emit the transfer frame, as well as message', function(done) {
+    var deliveryTag = new Buffer([0x00, 0x00, 0x00, 0x00]);
+    test.client.connect(config.address)
+      .then(function() {
+        return Promise.all([
+          test.client.createReceiver('amq.topic'),
+          test.client.createSender('amq.topic')
+        ]);
+      })
+      .spread(function(receiver, sender) {
+        receiver.on('message', function(msg, frame) {
+          expect(msg).to.exist;
+          expect(msg.body).to.eql('test message');
+          expect(frame).to.exist;
+          expect(frame.deliveryTag).to.eql(deliveryTag);
+          done();
+        });
+
+        return sender.send('test message');
+      });
+  });
+
 }); // ReceiverLink
 }); // QPID
