@@ -314,15 +314,15 @@ describe('Client', function() {
 
       return test.client.connect(test.server.address())
         .then(function() {
-          expect(test.client._connection._params.idleTimeout).to.equal(constants.defaultIdleTimeout);
+          expect(test.client._connection.remote.open.idleTimeout).to.equal(constants.defaultIdleTimeout);
           return test.client.disconnect();
         });
     });
 
-    it('should connect and flow the connectPolicy idleTimeout', function() {
+    it('should connect and track idleTimeout for local and remote', function() {
       test.server.setResponseSequence([
         constants.amqpVersion,
-        new frames.OpenFrame({ containerId: 'server' }),
+        new frames.OpenFrame({ containerId: 'server', idleTimeout: 57 }),
         new frames.BeginFrame({
           remoteChannel: 1, nextOutgoingId: 0,
           incomingWindow: 2147483647, outgoingWindow: 2147483647,
@@ -335,15 +335,16 @@ describe('Client', function() {
 
       return test.client.connect(test.server.address(), { options: { containerId: 'test', idleTimeout: 42 } })
         .then(function() {
-          expect(test.client._connection._params.idleTimeout).to.equal(42);
+          expect(test.client._connection.local.open.idleTimeout).to.equal(42);
+          expect(test.client._connection.remote.open.idleTimeout).to.equal(57);
           return test.client.disconnect();
         });
     });
 
-    it('should connect and flow zero idleTimeout', function() {
+    it('should allow zero as a idleTimeout value for both local and remote', function() {
       test.server.setResponseSequence([
         constants.amqpVersion,
-        new frames.OpenFrame({ containerId: 'server' }),
+        new frames.OpenFrame({ containerId: 'server', idleTimeout: 0 }),
         new frames.BeginFrame({
           remoteChannel: 1, nextOutgoingId: 0,
           incomingWindow: 2147483647, outgoingWindow: 2147483647,
@@ -356,15 +357,16 @@ describe('Client', function() {
 
       return test.client.connect(test.server.address(), { options: { containerId: 'test', idleTimeout: 0 } })
         .then(function() {
-          expect(test.client._connection._params.idleTimeout).to.equal(0);
+          expect(test.client._connection.local.open.idleTimeout).to.equal(0);
+          expect(test.client._connection.remote.open.idleTimeout).to.equal(0);
           return test.client.disconnect();
         });
     });
 
-    it('should connect and respect the remoteIdleTimeout', function() {
+    it('should not start a heartbeat timer if remote idleTimeout is 0', function() {
       test.server.setResponseSequence([
         constants.amqpVersion,
-        new frames.OpenFrame({ containerId: 'server', idleTimeout: 42 }),
+        new frames.OpenFrame({ containerId: 'server', idleTimeout: 0 }),
         new frames.BeginFrame({
           remoteChannel: 1, nextOutgoingId: 0,
           incomingWindow: 2147483647, outgoingWindow: 2147483647,
@@ -377,7 +379,8 @@ describe('Client', function() {
 
       return test.client.connect(test.server.address())
         .then(function() {
-          expect(test.client._connection._remoteIdleTimeout).to.equal(42);
+          expect(test.client._connection.remote.open.idleTimeout).to.equal(0);
+          expect(test.client._connection._heartbeatInterval).to.be.undefined;
           return test.client.disconnect();
         });
     });
