@@ -4,27 +4,26 @@ node_js:
   - '0.12'
   - '4'
 
+sudo: required
+dist: trusty
+
 branches:
   except:
     - gh-pages
 
-# addons:
-#   apt:
-#     sources:
-#       - rabbitmq-testing
-#       - qpid-testing
-#     packages:
-#       - rabbitmq-server
-#       - qpidd
+addons:
+  apt:
+   sources:
+   - sourceline: 'ppa:qpid/testing'
+   packages:
+   - qpidd
+   - qpid-tools
 
 before_install:
   - npm install -g codeclimate-test-reporter
-  - sudo add-apt-repository ppa:qpid/testing -y
-  - sudo apt-get update -q
-  - sudo apt-get install qpidd qpid-tools
-  - sudo sh -c 'echo "auth=no" >> /etc/qpid/qpidd.conf'
 
 before_script:
+  - sudo sh -c 'echo "auth=no" >> /etc/qpid/qpidd.conf'
   - sudo /etc/init.d/qpidd restart
 
   # remove these when we can specify link properties
