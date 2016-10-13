@@ -79,24 +79,17 @@ describe('Link', function() {
           constants.amqpVersion,
           new frames.OpenFrame(test.policy.connect.options),
           new MockBeginFrame({}, 1),
-          new MockAttachFrame({handle: 0, role: constants.linkRole.sender},
-                              1),
-          new MockDetachFrame({handle: 0, closed: true}, 1),
+          new MockAttachFrame({ handle: 0, role: constants.linkRole.sender }, 1),
+          new MockDetachFrame({ handle: 0, closed: true }, 1),
           new MockEndFrame(null, 1),
           new frames.CloseFrame()
         ],
         [
           constants.amqpVersion,
           new frames.OpenFrame(test.policy.connect.options),
-          new MockBeginFrame({remoteChannel: 1}, 5),
-          new MockAttachFrame({handle: 3, role: constants.linkRole.receiver},
-                              5),
-          new MockDetachFrame(
-            {
-              handle: 3,
-              closed: true,
-            },
-            5),
+          new MockBeginFrame({ remoteChannel: 1 }, 5),
+          new MockAttachFrame({ handle: 3, role: constants.linkRole.receiver }, 5),
+          new MockDetachFrame({ handle: 3, closed: true }, 5),
           new MockEndFrame(null, 5),
           new frames.CloseFrame()
         ]);
@@ -136,24 +129,17 @@ describe('Link', function() {
           constants.amqpVersion,
           new frames.OpenFrame(test.policy.connect.options),
           new MockBeginFrame({}, 1),
-          new MockAttachFrame({handle: 0, role: constants.linkRole.sender},
-                              1),
-          new MockDetachFrame({handle: 0, closed: false}, 1),
+          new MockAttachFrame({ handle: 0, role: constants.linkRole.sender }, 1),
+          new MockDetachFrame({ handle: 0, closed: false }, 1),
           new MockEndFrame(null, 1),
           new frames.CloseFrame()
         ],
         [
           constants.amqpVersion,
           new frames.OpenFrame(test.policy.connect.options),
-          new MockBeginFrame({remoteChannel: 1}, 5),
-          new MockAttachFrame({handle: 3, role: constants.linkRole.receiver},
-                              5),
-          new MockDetachFrame(
-            {
-              handle: 3,
-              closed: false,
-            },
-            5),
+          new MockBeginFrame({ remoteChannel: 1 }, 5),
+          new MockAttachFrame({ handle: 3, role: constants.linkRole.receiver }, 5),
+          new MockDetachFrame({ handle: 3, closed: false }, 5),
           new MockEndFrame(null, 5),
           new frames.CloseFrame()
         ]);

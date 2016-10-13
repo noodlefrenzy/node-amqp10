@@ -116,9 +116,11 @@ MockServer.prototype._sendUntil = function(toSend) {
 };
 
 MockServer.prototype._testData = function() {
-  expect(this.requestsExpected.length).to.be.greaterThan(0, 'More data received than expected');
-  var expected = this.requestsExpected[0];
-  if (this.buffer.length >= expected.length) {
+  while (this.buffer.length) {
+    expect(this.requestsExpected.length).to.be.greaterThan(0, 'More data received than expected');
+    var expected = this.requestsExpected[this.requestIdx];
+    if (this.buffer.length < expected.length) return;
+
     expected = this.requestsExpected[this.requestIdx++];
     var actual = this.buffer.slice(0, expected.length);
     this.buffer.consume(expected.length);
