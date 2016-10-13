@@ -47,7 +47,7 @@ describe('QpidJava Policy', function() {
           initialResponse: buildInitialResponseFor('user', 'pass')
         }),
         false,
-        new frames.OpenFrame({ containerId: "test", hostname:"my-special-vhost" })
+        new frames.OpenFrame({ containerId: 'test', hostname: 'my-special-vhost' })
       ]);
 
       test.server.setResponseSequence([
