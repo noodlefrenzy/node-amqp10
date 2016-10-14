@@ -12,7 +12,7 @@ amqp10 is a promise-based, AMQP 1.0 compliant node.js client
 
 ## Usage ##
 
-See `simple_eventhub_test.js`, `simple_activemq_test.js` or any of the other files in [examples](https://github.com/noodlefrenzy/node-amqp10/tree/master/examples).
+See `simple_eventhub_test.js`, `simple_activemq_test.js` or any of the other files in [examples](https://github.com/NodeMessengers/node-amqp10/tree/master/examples).
 
 The basic usage is to require the module, new up a client with the appropriate policy for the server you're
 connecting against, connect, and then send/receive as necessary.  So a simple example for a local Apache Qpid
@@ -55,8 +55,8 @@ immediately on successful sending of the payload, you would build AMQPClient lik
     }, Policy.DefaultPolicy));
 
 In addition to the above, you can also tune how message link credit is doled out (for throttling), as
-well as most other AMQP behaviors, all through policy overrides.  See [DefaultPolicy](https://github.com/noodlefrenzy/node-amqp10/blob/master/lib/policies/default_policy.js)
-and the [policy utilities](https://github.com/noodlefrenzy/node-amqp10/blob/master/lib/policies/policy_utilities.js)
+well as most other AMQP behaviors, all through policy overrides.  See [DefaultPolicy](https://github.com/NodeMessengers/node-amqp10/blob/master/lib/policies/default_policy.js)
+and the [policy utilities](https://github.com/NodeMessengers/node-amqp10/blob/master/lib/policies/policy_utilities.js)
 for more details on altering various behaviors.
 
 ## Flow Control and Message Dispositions ##

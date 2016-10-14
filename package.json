@@ -44,7 +44,7 @@
       "url": "https://github.com/mbroadst"
     }
   ],
-  "homepage": "https://github.com/noodlefrenzy/node-amqp10",
+  "homepage": "https://github.com/NodeMessengers/node-amqp10",
   "license": "MIT",
   "keywords": [
     "amqp",
@@ -56,6 +56,6 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/noodlefrenzy/node-amqp10.git"
+    "url": "https://github.com/NodeMessengers/node-amqp10.git"
   }
 }
