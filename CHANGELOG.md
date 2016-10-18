@@ -1,3 +1,25 @@
+<a name="3.3.0"></a>
+# [3.3.0](https://github.com/noodlefrenzy/node-amqp10/compare/v3.2.5...v3.3.0) (2016-10-18)
+
+
+### Bug Fixes
+
+* **connection:** use `connectPolicy` not `this.policy.connect` ([3a1d4a3](https://github.com/noodlefrenzy/node-amqp10/commit/3a1d4a3))
+* **detach:** don't always reject promise if !close ([8c2e79e](https://github.com/noodlefrenzy/node-amqp10/commit/8c2e79e))
+* **heartbeat:** local vs remote idleTimeouts ([8f20e2d](https://github.com/noodlefrenzy/node-amqp10/commit/8f20e2d))
+* **MockAmqp:** process batch socket data ([51c16b3](https://github.com/noodlefrenzy/node-amqp10/commit/51c16b3))
+* **sasl:** Make private saslMechanisms singular ([1ef4e17](https://github.com/noodlefrenzy/node-amqp10/commit/1ef4e17))
+* **sender-link:** settle send promises on client disconnect ([98bd734](https://github.com/noodlefrenzy/node-amqp10/commit/98bd734))
+
+
+### Features
+
+* **ReceiverLink:** emit transfer frame optionally on `message` ([cd59fec](https://github.com/noodlefrenzy/node-amqp10/commit/cd59fec))
+* **sasl:** Add support for SASL ANONYMOUS. ([d067202](https://github.com/noodlefrenzy/node-amqp10/commit/d067202)), closes [#250](https://github.com/noodlefrenzy/node-amqp10/issues/250)
+* **types:** allow DescribedType as message.body ([b470e2b](https://github.com/noodlefrenzy/node-amqp10/commit/b470e2b))
+
+
+
 <a name="3.2.5"></a>
 ## [3.2.5](https://github.com/noodlefrenzy/node-amqp10/compare/v3.2.4...v3.2.5) (2016-08-24)
 
