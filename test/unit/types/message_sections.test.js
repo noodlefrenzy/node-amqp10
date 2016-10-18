@@ -1,7 +1,9 @@
 'use strict';
 var Builder = require('buffer-builder'),
+    DescribedType = require('../../../lib/types/described_type'),
     m = require('../../../lib/types/message'),
     tu = require('../../testing_utils'),
+    errors = require('../../../lib/errors'),
     expect = require('chai').expect;
 
 describe('Message Sections', function() {
@@ -415,5 +417,43 @@ describe('AMQPValue', function() {
     expect(message.body).to.eql('this is a test');
   });
 }); // AMQPValue
+
+describe('Custom DescribedType as Body', function() {
+  it('should encode the section', function() {
+    var message = {
+      body: new DescribedType(0x77, new Buffer('this is a test'))
+    };
+
+    var expected = tu.buildBuffer([
+      0x00, 0x53, 0x77,
+        0xa0, 0x0e, 0x74, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x61, 0x20, 0x74, 0x65, 0x73, 0x74
+    ]);
+
+    var actual = new Builder();
+    m.encodeMessage(message, actual);
+    expect(actual.get()).to.eql(expected);
+  });
+
+  it('should decode the section', function() {
+    var buffer = tu.newBuffer([
+      0x00, 0x53, 0x77,
+        0xa0, 0x0e, 0x74, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x61, 0x20, 0x74, 0x65, 0x73, 0x74
+    ]);
+
+    var message = m.decodeMessage(buffer);
+    expect(message).to.have.keys('body');
+    expect(message.body).to.eql(new Buffer('this is a test'));
+  });
+
+  it('should reject an invalid type', function() {
+    var message = {
+      body: new DescribedType(0x07, 'this is a test')
+    };
+
+    expect(m.encodeMessage.bind(m, message, new Builder()))
+        .to.throw(errors.MalformedPayloadError);
+  });
+}); // Custom
+
 
 }); // Message Sections
