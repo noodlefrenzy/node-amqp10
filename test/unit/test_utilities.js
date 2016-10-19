@@ -81,6 +81,11 @@ describe('Utilities', function() {
       expect(merged).to.eql({ foo: { bar: 1, baz: 2, zoop: 1 }, bat: 3, dubin: { a: 1 }});
     });
 
+    it('should work with Buffers', function() {
+      var merged = u.deepMerge({}, { test: new Buffer([0xDE, 0xAD, 0xBE, 0xEF]) });
+      expect(merged.test).to.eql(new Buffer([0xDE, 0xAD, 0xBE, 0xEF]));
+    });
+
     // @todo Fix deepMerge to preserve object __proto__ identity.
     // it('should work for nested with custom types', function() {
     //   var nested = { foo: { bar: new AMQPSymbol('s1') } };
