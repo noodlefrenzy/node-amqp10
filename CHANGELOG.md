@@ -1,3 +1,14 @@
+<a name="3.3.1"></a>
+## [3.3.1](https://github.com/noodlefrenzy/node-amqp10/compare/v3.3.0...v3.3.1) (2016-10-20)
+
+
+### Bug Fixes
+
+* **deepMerge:** support copying Buffers ([db6295f](https://github.com/noodlefrenzy/node-amqp10/commit/db6295f)), closes [#268](https://github.com/noodlefrenzy/node-amqp10/issues/268)
+* **sasl:** pass errors to callback, don't throw ([c5b11ee](https://github.com/noodlefrenzy/node-amqp10/commit/c5b11ee))
+
+
+
 <a name="3.3.0"></a>
 # [3.3.0](https://github.com/noodlefrenzy/node-amqp10/compare/v3.2.5...v3.3.0) (2016-10-18)
 
