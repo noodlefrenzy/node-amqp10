@@ -1,5 +1,6 @@
 'use strict';
-var expect = require('chai').expect,
+var Policy = require('../../lib/policies/policy'),
+    expect = require('chai').expect,
     u = require('../../lib/utilities'),
     tu = require('./../testing_utils');
 
@@ -157,7 +158,8 @@ describe('Utilities', function() {
       }
     ].forEach(function(testCase) {
       it('should match ' + testCase.description, function() {
-        var result = u.parseLinkAddress(testCase.address);
+        var policy = new Policy();
+        var result = policy.parseLinkAddress(testCase.address);
         expect(result).to.eql(testCase.expected);
       });
     });

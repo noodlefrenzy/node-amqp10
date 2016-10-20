@@ -139,7 +139,8 @@ describe('Address Parsing', function() {
     });
 
     it('should support links with names prefixed with `topic://` and `queue://`', function() {
-      var address = u.parseLinkAddress('topic://mytopic', ActiveMQPolicy);
+      var policy = ActiveMQPolicy;
+      var address = policy.parseLinkAddress('topic://mytopic');
       expect(address.name).to.eql('topic://mytopic');
       var linkName = u.linkName(address.name, {});
       var nonUniqueLinkNamePart = linkName.split('_')[0];
