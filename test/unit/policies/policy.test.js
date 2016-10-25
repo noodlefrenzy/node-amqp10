@@ -43,6 +43,20 @@ describe('Default Policy', function() {
         });
     });
 
+    it('should allow redefinition of parseAddress', function() {
+      var policy = amqp.Policy.merge({}, amqp.Policy.DefaultPolicy);
+      policy.parseAddress = function() { return { name: 'llamas' }; };
+      var addr = policy.parseAddress('testing');
+      expect(addr).to.eql({ name: 'llamas' });
+    });
+
+    it('should allow redefinition of parseLinkAddress', function() {
+      var policy = amqp.Policy.merge({}, amqp.Policy.DefaultPolicy);
+      policy.parseLinkAddress = function() { return { name: 'llamas' }; };
+      var addr = policy.parseLinkAddress('testing');
+      expect(addr).to.eql({ name: 'llamas' });
+    });
+
     it('should not add a SASL layer for anonymous auth by default', function() {
       var policy = amqp.Policy.merge({
         connect: {
