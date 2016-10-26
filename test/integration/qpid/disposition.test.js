@@ -122,7 +122,8 @@ describe('Disposition', function() {
           done();
         });
 
-        return sender.send('test message');
+        return sender.send('test message')
+          .catch(function(err) { /* ignore disposition error */ });
       });
   });
 

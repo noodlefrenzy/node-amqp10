@@ -2,11 +2,13 @@
 
 var _ = require('lodash'),
     amqp = require('../../lib'),
-    expect = require('chai').expect,
+    chai = require('chai'),
+    expect = chai.expect,
     Builder = require('buffer-builder'),
     AMQPClient = require('../../lib').Client,
     MockServer = require('./mocks').Server,
 
+    errors = require('../../lib/errors'),
     constants = require('../../lib/constants'),
     frames = require('../../lib/frames'),
 
@@ -17,6 +19,8 @@ var _ = require('lodash'),
     DeliveryState = require('../../lib/types/delivery_state'),
 
     test = require('./test-fixture');
+
+chai.use(require('chai-as-promised'));
 
 var TestPolicy = new Policy({
   connect: { options: { containerId: 'test' } },
@@ -460,6 +464,84 @@ describe('Client', function() {
           sender.send('testing')
             .then(function() { done('this should not happen'); })
             .catch(function(err) { done(); });
+        });
+    });
+
+    it('should throw an error if attempting to send with no connection', function(done) {
+      test.server.setResponseSequence([
+        constants.amqpVersion,
+        new frames.OpenFrame(test.client.policy.connect.options),
+        new frames.BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0,
+          incomingWindow: 2147483647, outgoingWindow: 2147483647,
+          handleMax: 4294967295
+        }),
+        [
+          function (prev) {
+            var rxAttach = frames.readFrame(prev[prev.length - 1]);
+            return new frames.AttachFrame({
+              name: rxAttach.name, handle: 1,
+              role: constants.linkRole.receiver,
+              source: {}, target: {},
+              initialDeliveryCount: 0
+            });
+          },
+
+          { delay: 100 },
+
+          // force detach from remote server, and force close of the connection
+          new frames.DetachFrame({ handle: 1, closed: true, error: 'internal-error' }),
+          new frames.CloseFrame({
+            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+          })
+        ]
+      ]);
+
+      test.client.connect(test.server.address())
+        .then(function() { return test.client.createSender('testing'); })
+        .then(function(sender) {
+          setTimeout(function() {
+            expect(function() { sender.send('testing'); }).to.throw(errors.NotConnectedError);
+            done();
+          }, 200);
+        });
+    });
+
+    it('should reject unsettled sends on connection error', function() {
+      test.server.setResponseSequence([
+        constants.amqpVersion,
+        new frames.OpenFrame(test.client.policy.connect.options),
+        new frames.BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0,
+          incomingWindow: 2147483647, outgoingWindow: 2147483647,
+          handleMax: 4294967295
+        }),
+        [
+          function (prev) {
+            var rxAttach = frames.readFrame(prev[prev.length - 1]);
+            return new frames.AttachFrame({
+              name: rxAttach.name, handle: 1,
+              role: constants.linkRole.receiver,
+              source: {}, target: {},
+              initialDeliveryCount: 0
+            });
+          },
+
+          { delay: 1000 },
+
+          // force detach from remote server, and force close of the connection
+          new frames.CloseFrame({
+            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+          })
+        ]
+      ]);
+
+      return test.client.connect(test.server.address())
+        .then(function() { return test.client.createSender('testing'); })
+        .then(function(sender) {
+          sender.linkCredit = 1;
+          var sendPromise = sender.send('testing');
+          expect(sendPromise).to.eventually.be.rejectedWith(errors.ProtocolError);
         });
     });
   });
