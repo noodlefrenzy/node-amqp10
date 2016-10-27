@@ -1,3 +1,22 @@
+<a name="3.3.2"></a>
+## [3.3.2](https://github.com/noodlefrenzy/node-amqp10/compare/v3.3.1...v3.3.2) (2016-10-27)
+
+
+### Bug Fixes
+
+* **connection:** don't require parameters for address on open ([1f7f2a0](https://github.com/noodlefrenzy/node-amqp10/commit/1f7f2a0))
+* **policy:** remove sealing to allow extension of policy methods ([d0bdfc7](https://github.com/noodlefrenzy/node-amqp10/commit/d0bdfc7))
+* **sender-link:** missing `Object.keys` around unsettled dispatch ([b0580b9](https://github.com/noodlefrenzy/node-amqp10/commit/b0580b9))
+* **sender-link:** suppplement missing error in rejected dispo ([5c4f79a](https://github.com/noodlefrenzy/node-amqp10/commit/5c4f79a))
+* **sender-link:** throw an error if there is no active connection ([e5bac49](https://github.com/noodlefrenzy/node-amqp10/commit/e5bac49))
+
+
+### Features
+
+* **policy:** move `parseLinkAddress` into `Policy` ([d1ae649](https://github.com/noodlefrenzy/node-amqp10/commit/d1ae649)), closes [#267](https://github.com/noodlefrenzy/node-amqp10/issues/267)
+
+
+
 <a name="3.3.1"></a>
 ## [3.3.1](https://github.com/noodlefrenzy/node-amqp10/compare/v3.3.0...v3.3.1) (2016-10-20)
 
