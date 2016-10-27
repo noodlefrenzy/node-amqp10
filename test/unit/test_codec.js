@@ -80,6 +80,15 @@ describe('Codec', function() {
       expect(function() { codec.decode(buffer); }).to.throw(Error);
     });
 
+    it('should decode arrays', function() {
+        var buffer = newBuffer([0xe0, 0x0a, 0x01, 0x83, 0x00, 0x00, 0x01, 0x58, 0x06, 0xf2, 0xfb, 0xc7]);
+        var actual = codec.decode(buffer);
+        expect(actual[0]).to.be.instanceof(Array);
+        expect(actual[0][0]).to.be.instanceof(Date);
+        expect(actual[0][0].getTime()).to.eql(0x15806f2fbc7);
+        expect(actual[1]).to.eql(12);
+    });
+
     it('should decode described types', function() {
       var buffer = newBuffer([0x00, 0xA1, 0x03, Builder.prototype.appendString, 'URL', 0xA1, 0x1E, Builder.prototype.appendString, 'http://example.org/hello-world']);
       var actual = codec.decode(buffer);
