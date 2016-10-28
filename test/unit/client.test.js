@@ -162,6 +162,46 @@ describe('Client', function() {
         });
     });
 
+    it('should allow the target address to be overridden on receive', function(done) {
+      test.server.setResponseSequence([
+        constants.amqpVersion,
+        new frames.OpenFrame(test.client.policy.connect.options),
+        new frames.BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0,
+          incomingWindow: 2147483647, outgoingWindow: 2147483647,
+          handleMax: 4294967295
+        }),
+        function (prev) {
+          var rxAttach = frames.readFrame(prev[prev.length-1]);
+          return new frames.AttachFrame({
+            name: rxAttach.name, handle: 1,
+            role: constants.linkRole.sender,
+            source: {}, target: {},
+            initialDeliveryCount: 0
+          });
+        },
+        new frames.CloseFrame({
+          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+        })
+      ]);
+
+      var targetAddress = 'customTargetAddress';
+      test.client.connect(test.server.address())
+        .then(function() {
+          return test.client.createReceiver('testing', {
+            attach: {
+              target: { address: targetAddress }
+            }
+          });
+        })
+        .then(function (rxLink) {
+          expect(rxLink.policy.attach.target.address).to.eql(targetAddress);
+          test.client.disconnect().then(function() {
+            done();
+          });
+        });
+    });
+
     it('should receive multi-frame messages', function(done) {
       var message = { body: { test: 'Really long message' } };
       var messageBuf = encodeMessagePayload(message);
@@ -225,6 +265,49 @@ describe('Client', function() {
               done();
             });
           });
+        });
+    });
+
+    it('should allow the source address to be overridden on send', function() {
+      test.server.setResponseSequence([
+        constants.amqpVersion,
+        new frames.OpenFrame(test.client.policy.connect.options),
+        new frames.BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0, incomingWindow: 100000,
+          outgoingWindow: 2147483647, handleMax: 4294967295
+        }),
+        [
+          function (prev) {
+            var rxAttach = frames.readFrame(prev[prev.length-1]);
+            return new frames.AttachFrame({
+              name: rxAttach.name, handle: 1, role: constants.linkRole.receiver,
+              source: {}, target: {}, initialDeliveryCount: 0
+            });
+          },
+          new frames.FlowFrame({
+            handle: 1, deliveryCount: 1,
+            nextIncomingId: 1, incomingWindow: 2147483647,
+            nextOutgoingId: 0, outgoingWindow: 2147483647,
+            linkCredit: 500
+          })
+        ],
+        new frames.CloseFrame({
+          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+        })
+      ]);
+
+      var sourceAddress = 'customSourceAddress';
+      return test.client.connect(test.server.address())
+        .then(function() {
+          return test.client.createSender('test.link', {
+            attach: {
+              source: { address: sourceAddress }
+            }
+          });
+        })
+        .then(function(sender) {
+          expect(sender.policy.attach.source.address).to.eql(sourceAddress);
+          return test.client.disconnect();
         });
     });
 
