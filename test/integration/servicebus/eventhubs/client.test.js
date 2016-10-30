@@ -129,7 +129,7 @@ describe('EventHubs', function () {
           // Ignore messages that aren't from us.
           if (!!message.body.DataValue && message.body.DataValue === msgVal1) {
             var timestamp = message.messageAnnotations['x-opt-enqueued-time'].getTime();
-            receiver.detach().then(function() {
+            receiver.detach().delay(2000).then(function() {
               test.client.createReceiver(config.receiverLinkPrefix + partition, boundedFilter(1))
                 .then(function (receiver2) {
                   receiver2.on('message', function(msg) {
