@@ -9,10 +9,10 @@ var expect = require('chai').expect,
     frames = require('../../lib/frames'),
 
     Policy = require('../../lib/policies/policy'),
-    AMQPError = require('../../lib/types/amqp_error'),
-    ErrorCondition = require('../../lib/types/error_condition'),
     m = require('../../lib/types/message'),
 
+    u = require('../../lib/utilities'),
+    md = require('./mocks').Defaults,
     test = require('./test-fixture');
 
 var TestPolicy = new Policy({
@@ -43,37 +43,27 @@ describe('ReceiverLink', function() {
       });
   });
 
-  it('should emit optional transfer frames with `message` event', function(done) {
+  it('should emit optional transfer frames with `message` event', function() {
       var message = { body: { test: 'testing' } };
       var messageBuf = encodeMessagePayload(message);
       test.server.setResponseSequence([
         constants.amqpVersion,
         new frames.OpenFrame(test.client.policy.connect.options),
-        new frames.BeginFrame({
-          remoteChannel: 1, nextOutgoingId: 0,
-          incomingWindow: 2147483647, outgoingWindow: 2147483647,
-          handleMax: 4294967295
-        }),
+        new frames.BeginFrame(md.begin),
         function(prev) {
           var rxAttach = frames.readFrame(prev[prev.length-1]);
-          return new frames.AttachFrame({
-            name: rxAttach.name, handle: 1,
-            role: constants.linkRole.sender,
-            source: {}, target: {},
-            initialDeliveryCount: 0
-          });
+          return new frames.AttachFrame(u.deepMerge({ name: rxAttach.name }, md.attach));
         },
         function(prev) {
-          var txFrame = new frames.TransferFrame({ handle: 1, deliveryId: 1, deliveryTag: 'llamas' });
+          var txFrame =
+            new frames.TransferFrame({ handle: 1, deliveryId: 1, deliveryTag: 'llamas' });
           txFrame.payload = messageBuf;
           return txFrame;
         },
-        new frames.CloseFrame({
-          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
-        })
+        new frames.CloseFrame(md.close)
       ]);
 
-      test.client.connect(test.server.address())
+      return test.client.connect(test.server.address())
         .then(function() { return test.client.createReceiver('testing'); })
         .then(function(receiver) {
           receiver.on('message', function(msg, frame) {
@@ -82,11 +72,33 @@ describe('ReceiverLink', function() {
             expect(frame).to.not.be.null;
             expect(frame).to.be.an.instanceOf(frames.TransferFrame);
             expect(frame.deliveryTag).to.eql(new Buffer('llamas'));
-
-            test.client.disconnect().then(function() {
-              done();
-            });
+            return test.client.disconnect();
           });
         });
+  });
+
+  it('should allow the target address to be overridden on receive', function() {
+    test.server.setResponseSequence([
+      constants.amqpVersion,
+      new frames.OpenFrame(test.client.policy.connect.options),
+      new frames.BeginFrame(md.begin),
+      function (prev) {
+        var rxAttach = frames.readFrame(prev[prev.length-1]);
+        return new frames.AttachFrame(u.deepMerge({ name: rxAttach.name }, md.attach));
+      },
+      new frames.CloseFrame(md.close)
+    ]);
+
+    var targetAddress = 'customTargetAddress';
+    return test.client.connect(test.server.address())
+      .then(function() {
+        return test.client.createReceiver('testing', {
+          attach: { target: { address: targetAddress } }
+        });
+      })
+      .then(function(receiver) {
+        expect(receiver.policy.attach.target.address).to.eql(targetAddress);
+        return test.client.disconnect();
+      });
   });
 });
