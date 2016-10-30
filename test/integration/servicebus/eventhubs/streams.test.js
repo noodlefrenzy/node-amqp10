@@ -31,68 +31,68 @@ function teardown() {
 
 describe('ServiceBus', function() {
 
-  describe('Streams', function() {
-  describe('ReceiverStream', function() {
-    beforeEach(setup);
-    afterEach(teardown);
+describe('Streams', function() {
+describe('ReceiverStream', function() {
+  beforeEach(setup);
+  afterEach(teardown);
 
-    it('should let you create a receiver link as a readable stream', function(done) {
-      expect(config.partitionSenderLinkPrefix,
-        'Required env vars not found in ' + Object.keys(process.env)).to.exist;
+  it('should let you create a receiver link as a readable stream', function(done) {
+    expect(config.partitionSenderLinkPrefix,
+      'Required env vars not found in ' + Object.keys(process.env)).to.exist;
 
-      var dataString = u.uuidV4().replace(/-/g, ''),
-          expected = Array.apply(null, new Array(20))
-            .map(function(a) { return Math.floor(Math.random() * 100); });
+    var dataString = u.uuidV4().replace(/-/g, ''),
+        expected = Array.apply(null, new Array(20))
+          .map(function(a) { return Math.floor(Math.random() * 100); });
 
-      Promise.all([
-        test.client.createReceiverStream(config.receiverLinkPrefix + test.partition),
-        test.client.createSender(config.partitionSenderLinkPrefix + test.partition)
-      ])
-      .spread(function(stream, sender) {
-        var count = 0;
-        stream.on('data', function(data) {
-          if (data.body.DataString !== dataString) return;  // ignore previously run tests
-          expect(expected[count]).to.eql(data.body.DataValue);
-          count++;
-          if (count === expected.length) done();
-        });
+    Promise.all([
+      test.client.createReceiverStream(config.receiverLinkPrefix + test.partition),
+      test.client.createSender(config.partitionSenderLinkPrefix + test.partition, { callback: 'none' })
+    ])
+    .spread(function(stream, sender) {
+      var count = 0;
+      stream.on('data', function(data) {
+        if (data.body.DataString !== dataString) return;  // ignore previously run tests
+        expect(expected[count]).to.eql(data.body.DataValue);
+        count++;
+        if (count === expected.length) done();
+      });
 
-        return Promise.mapSeries(expected, function(v) {
-          return sender.send({ DataString: dataString, DataValue: v });
-        });
+      return Promise.mapSeries(expected, function(v) {
+        return sender.send({ DataString: dataString, DataValue: v });
       });
     });
-  }); // ReceiverStream
+  });
+}); // ReceiverStream
 
-  describe('SenderStream', function() {
-    beforeEach(setup);
-    afterEach(teardown);
+describe('SenderStream', function() {
+  beforeEach(setup);
+  afterEach(teardown);
 
-    it('should let you create a sender link as a writable stream', function(done) {
-      var dataString = u.uuidV4().replace(/-/g, ''),
-          expected = Array.apply(null, new Array(20))
-            .map(function(a) { return Math.floor(Math.random() * 100); });
+  it('should let you create a sender link as a writable stream', function(done) {
+    var dataString = u.uuidV4().replace(/-/g, ''),
+        expected = Array.apply(null, new Array(20))
+          .map(function(a) { return Math.floor(Math.random() * 100); });
 
-      Promise.all([
-        test.client.createReceiver(config.receiverLinkPrefix + test.partition),
-        test.client.createSenderStream(config.partitionSenderLinkPrefix + test.partition)
-      ])
-      .spread(function(receiver, stream) {
-        var count = 0;
-        receiver.on('message', function(data) {
-          if (data.body.DataString !== dataString) return;  // ignore previously run tests
-          expect(expected[count]).to.eql(data.body.DataValue);
-          count++;
-          if (count === expected.length) done();
-        });
-
-        for (var i = 0; i < expected.length; i++) {
-          stream.write({ DataString: dataString, DataValue: expected[i] });
-        }
+    Promise.all([
+      test.client.createReceiver(config.receiverLinkPrefix + test.partition),
+      test.client.createSenderStream(config.partitionSenderLinkPrefix + test.partition, { callback: 'none' })
+    ])
+    .spread(function(receiver, stream) {
+      var count = 0;
+      receiver.on('message', function(data) {
+        if (data.body.DataString !== dataString) return;  // ignore previously run tests
+        expect(expected[count]).to.eql(data.body.DataValue);
+        count++;
+        if (count === expected.length) done();
       });
-    });
-  }); // SenderStream
 
-  }); // Streams
+      for (var i = 0; i < expected.length; i++) {
+        stream.write({ DataString: dataString, DataValue: expected[i] });
+      }
+    });
+  });
+}); // SenderStream
+
+}); // Streams
 
 }); // ServiceBus

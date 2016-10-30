@@ -29,13 +29,14 @@ describe('QPID', function() {
 
       Promise.all([
         test.client.createReceiverStream(config.defaultLink),
-        test.client.createSender(config.defaultLink)
+        test.client.createSender(config.defaultLink, { callback: 'none' })
       ])
       .spread(function(stream, sender) {
         var count = 0;
         stream.on('data', function(data) {
           expect(expected[count]).to.eql(data.body);
           count++;
+
           if (count === expected.length) done();
         });
 
@@ -61,7 +62,7 @@ describe('QPID', function() {
 
       Promise.all([
         test.client.createReceiver(config.defaultLink),
-        test.client.createSenderStream(config.defaultLink)
+        test.client.createSenderStream(config.defaultLink, { callback: 'none' })
       ])
       .spread(function(receiver, stream) {
         var count = 0;
@@ -111,7 +112,7 @@ describe('QPID', function() {
       Promise.all([
         test.client.createReceiver(config.defaultLink),
         test.client.createReceiverStream('test.streams.queue'),
-        test.client.createSenderStream(config.defaultLink),
+        test.client.createSenderStream(config.defaultLink, { callback: 'none' }),
       ])
       .spread(function(receiver, receiverStream, senderStream) {
         var count = 0;
@@ -122,7 +123,7 @@ describe('QPID', function() {
         });
 
         receiverStream.pipe(senderStream);
-        return test.client.createSender('test.streams.queue');
+        return test.client.createSender('test.streams.queue', { callback: 'none' });
       })
       .then(function(sender) {
         return Promise.mapSeries(expected, function(v) { return sender.send(v); });
