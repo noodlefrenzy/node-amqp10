@@ -41,6 +41,30 @@ describe('SenderLink', function() {
       });
   });
 
+  it('should allow per-sender override of encoder', function(done) {
+    test.client.connect(config.address)
+      .then(function() {
+        return Promise.all([
+          test.client.createReceiver('amq.topic'),
+          test.client.createSender('amq.topic', { encoder: function(body) { return 'llama'; } }),
+          test.client.createSender('amq.topic'),
+        ]);
+      })
+      .spread(function(receiver, senderWithEncoder, sender) {
+        var received = [];
+        receiver.on('message', function(message) {
+          received.push(message.body);
+          if (received.length === 2) {
+            expect(received).to.include.members([ 'test', 'llama' ]);
+            done();
+          }
+        });
+
+        return Promise.all([ senderWithEncoder.send('test'), sender.send('test') ]);
+      });
+  });
+
+
   it('should merge default subject if sent message is raw', function(done) {
     test.client.connect(config.address)
       .then(function() {
