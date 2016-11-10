@@ -16,7 +16,7 @@ fixjsstyle:
 	fixjsstyle -r lib -r test --strict --jslint_error=all
 
 coverage: jshint
-	$(NPM_BIN)/istanbul cover $(NPM_BIN)/_mocha --report lcovonly -- --recursive -t $(TIMEOUT) --ui tdd $(UNIT_TESTS) $(QPID_INTEGRATION_TESTS) $(SERVICEBUS_INTEGRATION_TESTS)
+	$(NPM_BIN)/istanbul cover $(NPM_BIN)/_mocha -- --recursive -t $(TIMEOUT) --ui tdd $(UNIT_TESTS) $(QPID_INTEGRATION_TESTS) $(SERVICEBUS_INTEGRATION_TESTS)
 
 test-unit: jshint
 	$(NPM_BIN)/mocha --globals setImmediate,clearImmediate --recursive --check-leaks --colors -t $(TIMEOUT) --reporter $(REPORTER) $(UNIT_TESTS) $(GREPARG)
