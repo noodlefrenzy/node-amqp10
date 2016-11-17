@@ -14,7 +14,6 @@ var expect = require('chai').expect,
     Connection = require('../../lib/connection'),
     Session = require('../../lib/session'),
 
-    AMQPError = require('../../lib/types/amqp_error'),
     ErrorCondition = require('../../lib/types/error_condition'),
     MockServer = require('./mock_amqp');
 
@@ -89,7 +88,7 @@ describe('Session', function() {
         new MockBeginFrame({ remoteChannel: 1 }, 5),
         [ true,
           new MockEndFrame({
-            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test'})
+            error: { condition: ErrorCondition.ConnectionForced, description: 'test'}
           }, 5)
         ],
         [ true, new frames.CloseFrame() ]
@@ -143,7 +142,7 @@ describe('Session', function() {
         new MockBeginFrame({ remoteChannel: 1 }, 5),
         [ true,
           new MockEndFrame({
-            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+            error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
           }, 5)
         ],
         [ true, new frames.CloseFrame() ]
@@ -196,12 +195,12 @@ describe('Session', function() {
           new MockDetachFrame({
             handle: 3,
             closed: true,
-            error: new AMQPError({ condition: ErrorCondition.LinkDetachForced, description: 'test' })
+            error: { condition: ErrorCondition.LinkDetachForced, description: 'test' }
           }, 5)
         ],
         [ true,
           new MockEndFrame({
-            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+            error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
           }, 5)
         ],
         [ true, new frames.CloseFrame() ]

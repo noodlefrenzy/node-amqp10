@@ -5,7 +5,6 @@ var amqp = require('../../../lib'),
 
     constants = require('../../../lib/constants'),
     frames = require('../../../lib/frames'),
-    AMQPError = require('../../../lib/types/amqp_error'),
     ErrorCondition = require('../../../lib/types/error_condition'),
 
     test = require('../test-fixture');
@@ -63,8 +62,8 @@ describe('QpidJava Policy', function() {
           incomingWindow: 2147483647, outgoingWindow: 2147483647,
           handleMax: 4294967295
         }),
-        new frames.CloseFrame({ error:
-          new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+        new frames.CloseFrame({
+          error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
         })
       ]);
 

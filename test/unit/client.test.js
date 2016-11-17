@@ -13,7 +13,6 @@ var _ = require('lodash'),
     frames = require('../../lib/frames'),
 
     Policy = require('../../lib/policies/policy'),
-    AMQPError = require('../../lib/types/amqp_error'),
     ErrorCondition = require('../../lib/types/error_condition'),
     m = require('../../lib/types/message'),
     DeliveryState = require('../../lib/types/delivery_state'),
@@ -75,7 +74,7 @@ describe('Client', function() {
           handleMax: 4294967295
         }),
         new frames.CloseFrame({
-          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+          error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
         })
       ]);
 
@@ -102,7 +101,7 @@ describe('Client', function() {
           });
         },
         new frames.CloseFrame({
-          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+          error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
         })
       ]);
 
@@ -145,7 +144,7 @@ describe('Client', function() {
           return txFrame;
         },
         new frames.CloseFrame({
-          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+          error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
         })
       ]);
 
@@ -211,7 +210,7 @@ describe('Client', function() {
           }
         ],
         new frames.CloseFrame({
-          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+          error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
         })
       ]);
 
@@ -259,7 +258,7 @@ describe('Client', function() {
           state: new DeliveryState.Accepted()
         }),
         new frames.CloseFrame({
-          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+          error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
         })
       ]);
 
@@ -312,7 +311,7 @@ describe('Client', function() {
           handleMax: 4294967295
         }),
         new frames.CloseFrame({
-          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+          error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
         })
       ]);
 
@@ -333,7 +332,7 @@ describe('Client', function() {
           handleMax: 4294967295
         }),
         new frames.CloseFrame({
-          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+          error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
         })
       ]);
 
@@ -355,7 +354,7 @@ describe('Client', function() {
           handleMax: 4294967295
         }),
         new frames.CloseFrame({
-          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+          error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
         })
       ]);
 
@@ -377,7 +376,7 @@ describe('Client', function() {
           handleMax: 4294967295
         }),
         new frames.CloseFrame({
-          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+          error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
         })
       ]);
 
@@ -388,7 +387,6 @@ describe('Client', function() {
           return test.client.disconnect();
         });
     });
-
 
     it('should reject send promises if links are detatched, and connection closed', function(done) {
       test.server.setResponseSequence([
@@ -415,7 +413,7 @@ describe('Client', function() {
           // force detach from remote server, and force close of the connection
           new frames.DetachFrame({ handle: 1, closed: true, error: 'internal-error' }),
           new frames.CloseFrame({
-            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+            error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
           })
         ]
       ]);
@@ -453,7 +451,7 @@ describe('Client', function() {
 
           // force close of the connection
           new frames.CloseFrame({
-            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+            error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
           })
         ]
       ]);
@@ -492,7 +490,7 @@ describe('Client', function() {
           // force detach from remote server, and force close of the connection
           new frames.DetachFrame({ handle: 1, closed: true, error: 'internal-error' }),
           new frames.CloseFrame({
-            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+            error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
           })
         ]
       ]);
@@ -531,7 +529,7 @@ describe('Client', function() {
 
           // force detach from remote server, and force close of the connection
           new frames.CloseFrame({
-            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+            error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
           })
         ]
       ]);
@@ -573,7 +571,7 @@ describe('Client', function() {
           handleMax: 4294967295
         }),
         new frames.CloseFrame({
-          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+          error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
         })
       ]);
 
@@ -611,7 +609,7 @@ describe('Client', function() {
           handleMax: 4294967295
         }),
         new frames.CloseFrame({
-          error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+          error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
         })
       ]);
 
@@ -672,7 +670,7 @@ describe('Client', function() {
         [ // force detach from remote server, and force close of the connection
           new frames.DetachFrame({ handle: 1, closed: true, error: 'internal-error' }),
           new frames.CloseFrame({
-            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+            error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
           })
         ]
       ]);

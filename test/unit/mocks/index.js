@@ -1,6 +1,5 @@
 'use strict';
 var constants = require('../../../lib/constants'),
-    AMQPError = require('../../../lib/types/amqp_error'),
     ErrorCondition = require('../../../lib/types/error_condition');
 
 module.exports = {
@@ -31,7 +30,7 @@ module.exports = {
       linkCredit: 500
     },
     close: {
-      error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+      error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
     }
   }
 };

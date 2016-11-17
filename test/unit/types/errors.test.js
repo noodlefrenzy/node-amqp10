@@ -1,6 +1,5 @@
 'use strict';
-var AMQPError = require('../../../lib/types/amqp_error'),
-    ErrorCondition = require('../../../lib/types/error_condition'),
+var ErrorCondition = require('../../../lib/types/error_condition'),
     frames = require('../../../lib/frames'),
     builder = require('buffer-builder'),
     tu = require('../../testing_utils'),
@@ -33,7 +32,7 @@ describe('Types(Errors)', function() {
 
   it('should encode using direct type, enum error condition', function() {
     var close = new frames.CloseFrame({
-      error: new AMQPError({ condition: ErrorCondition.InternalError, description: 'test' })
+      error: { condition: ErrorCondition.InternalError, description: 'test' }
     });
 
     var actual = tu.convertFrameToBuffer(close);
@@ -42,7 +41,7 @@ describe('Types(Errors)', function() {
 
   it('should encode using direct type, string error condition', function() {
     var close = new frames.CloseFrame({
-      error: new AMQPError({ condition: 'internal-error', description: 'test' })
+      error: { condition: 'internal-error', description: 'test' }
     });
 
     var actual = tu.convertFrameToBuffer(close);

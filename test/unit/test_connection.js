@@ -5,7 +5,6 @@ var expect = require('chai').expect,
     DefaultPolicy = require('../../lib').Policy.Default,
     pu = require('../../lib/policies/policy_utilities'),
     MockServer = require('./mock_amqp'),
-    AMQPError = require('../../lib/types/amqp_error'),
     ErrorCondition = require('../../lib/types/error_condition'),
     Connection = require('../../lib/connection'),
     tu = require('./../testing_utils');
@@ -109,7 +108,7 @@ describe('Connection', function() {
         new frames.OpenFrame(test.policy.connect.options),
         [ true,
           new frames.CloseFrame({
-            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+            error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
           })
         ]
       ]);
@@ -135,7 +134,7 @@ describe('Connection', function() {
         new frames.OpenFrame(test.policy.connect.options),
         [ true,
           new frames.CloseFrame({
-            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, decription: 'test' })
+            error: { condition: ErrorCondition.ConnectionForced, decription: 'test' }
           })
         ]
       ]);
@@ -180,7 +179,7 @@ describe('Connection', function() {
         new frames.OpenFrame(test.policy.connect.options),
         [ true,
           new frames.CloseFrame({
-            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+            error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
           })
         ]
       ]);
@@ -226,7 +225,7 @@ describe('Connection', function() {
         new frames.OpenFrame(test.policy.connect.options),
         [ true,
           new frames.CloseFrame({
-            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+            error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
           })
         ]
       ]);

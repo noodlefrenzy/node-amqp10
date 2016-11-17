@@ -7,7 +7,6 @@ var amqp = require('../../../lib'),
     frames = require('../../../lib/frames'),
     errors = require('../../../lib/errors'),
     Sasl = require('../../../lib/sasl'),
-    AMQPError = require('../../../lib/types/amqp_error'),
     ErrorCondition = require('../../../lib/types/error_condition'),
 
     expect = require('chai').expect,
@@ -82,10 +81,7 @@ describe('Default Policy', function() {
           handleMax: 4294967295
         }),
         new frames.CloseFrame({
-          error: new AMQPError({
-            condition: ErrorCondition.ConnectionForced,
-            description: 'test'
-          })
+          error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
         })
       ]);
 
@@ -132,10 +128,7 @@ describe('Default Policy', function() {
           handleMax: 4294967295
         }),
         new frames.CloseFrame({
-          error: new AMQPError({
-            condition: ErrorCondition.ConnectionForced,
-            description: 'test'
-          })
+          error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
         })
       ]);
 
@@ -171,10 +164,7 @@ describe('Default Policy', function() {
           handleMax: 4294967295
         }),
         new frames.CloseFrame({
-          error: new AMQPError({
-            condition: ErrorCondition.ConnectionForced,
-            description: 'test'
-          })
+          error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
         })
       ]);
 

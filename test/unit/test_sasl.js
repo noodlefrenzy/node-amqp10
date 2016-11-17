@@ -8,7 +8,6 @@ var builder = require('buffer-builder'),
     pu = require('../../lib/policies/policy_utilities'),
 
     MockServer = require('./mock_amqp'),
-    AMQPError = require('../../lib/types/amqp_error'),
     ErrorCondition = require('../../lib/types/error_condition'),
 
     Connection = require('../../lib/connection'),
@@ -57,7 +56,7 @@ describe('Sasl', function() {
         new frames.OpenFrame(test.policy.connect.options),
         [ true,
           new frames.CloseFrame({
-            error: new AMQPError({ condition: ErrorCondition.ConnectionForced, description: 'test' })
+            error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
           })
         ]
       ]);
