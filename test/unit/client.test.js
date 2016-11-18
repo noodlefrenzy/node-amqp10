@@ -161,12 +161,31 @@ describe('Client', function() {
         });
     });
 
+    it('should disconnect if a framing error occurs', function() {
+      test.server.setResponseSequence([
+        constants.amqpVersion,
+        new Buffer([ 0x41, 0x4d, 0x51, 0x50, 0x01, 0x01, 0x00, 0x0a ])
+      ]);
+
+      test.server.setExpectedFrameSequence([
+        constants.amqpVersion,
+        false,
+        new frames.CloseFrame({
+          error: { condition: ErrorCondition.ConnectionFramingError, description: 'malformed header: Invalid DOFF' }
+        })
+      ]);
+
+      return expect(test.client.connect(test.server.address()))
+        .to.eventually.be.rejectedWith(errors.DisconnectedError);
+    });
+
     it('should receive multi-frame messages', function(done) {
       var message = { body: { test: 'Really long message' } };
       var messageBuf = encodeMessagePayload(message);
       var buf1 = messageBuf.slice(0, 10);
       var buf2 = messageBuf.slice(10, 15);
       var buf3 = messageBuf.slice(15);
+
       test.server.setResponseSequence([
         constants.amqpVersion,
         new frames.OpenFrame(test.client.policy.connect.options),
@@ -185,26 +204,17 @@ describe('Client', function() {
         },
         [
           function (prev) {
-            var txFrame = new frames.TransferFrame({
-              handle: 1, deliveryId: 1,
-              more: true
-            });
+            var txFrame = new frames.TransferFrame({ handle: 1, deliveryId: 1, more: true });
             txFrame.payload = buf1;
             return txFrame;
           },
           function (prev) {
-            var txFrame = new frames.TransferFrame({
-              handle: 1, deliveryId: 1,
-              more: true
-            });
+            var txFrame = new frames.TransferFrame({ handle: 1, deliveryId: 1, more: true });
             txFrame.payload = buf2;
             return txFrame;
           },
           function (prev) {
-            var txFrame = new frames.TransferFrame({
-              handle: 1,
-              more: false
-            });
+            var txFrame = new frames.TransferFrame({ handle: 1, more: false });
             txFrame.payload = buf3;
             return txFrame;
           }
@@ -575,7 +585,7 @@ describe('Client', function() {
         })
       ]);
 
-      // restart the server after 1s
+      // restart the server after 10ms
       setTimeout(function() { return test.server.setup(); }, 10);
 
       var address = test.server.address();

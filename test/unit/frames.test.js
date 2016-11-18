@@ -1,6 +1,7 @@
 'use strict';
 
 var frames = require('../../lib/frames'),
+    errors = require('../../lib/errors'),
     builder = require('buffer-builder'),
     constants = require('../../lib/constants'),
     tu = require('./../testing_utils'),
@@ -14,6 +15,13 @@ var frames = require('../../lib/frames'),
     translator = require('../../lib/adapters/translate_encoder');
 
 describe('Frames', function() {
+describe('errors', function() {
+  it('should throw an error on invalid DOFF', function() {
+    var actual = new Buffer([ 0x41, 0x4d, 0x51, 0x50, 0x01, 0x01, 0x00, 0x0a ]);
+    expect(function() { frames.readFrame(actual); }).to.throw(errors.MalformedHeaderError);
+  });
+}); // Errors
+
 describe('OpenFrame', function() {
   it('should encode performative correctly', function() {
     var open = new frames.OpenFrame({ containerId: 'test', hostname: 'localhost' });

@@ -67,23 +67,22 @@ MockServer.prototype.setup = function() {
 };
 
 MockServer.prototype._checkExpectations = function(data) {
-  if (this._expectedFrames.length) {
-    var idx = 0;
-    var expectedFrame = this._expectedFrames.shift();
-    while (true) {
-      if (data.length <= idx + expectedFrame.length) break;
-      if (expectedFrame === false || expectedFrame === undefined) break;
-      var actualFrame = data.slice(idx, idx + expectedFrame.length);
-      debug('expected(', expectedFrame.length, '): ' + expectedFrame.toString('hex'));
-      debug('  actual(', actualFrame.length, '): ', actualFrame.toString('hex'));
-      expect(actualFrame).to.eql(expectedFrame);
-
-      if (this._expectedFrames[0] === false) break;
-      if (idx >= data.length) break;
-
-      idx += expectedFrame.length;
-      expectedFrame = this._expectedFrames.shift();
+  var idx = 0, expectedFrame;
+  while (this._expectedFrames.length) {
+    expectedFrame = this._expectedFrames.shift();
+    if (data.length < idx + expectedFrame.length) {
+      this._expectedFrames.unshift(expectedFrame);
+      break;
     }
+
+    if (expectedFrame === false || expectedFrame === undefined) break;
+    var actualFrame = data.slice(idx, idx + expectedFrame.length);
+    debug('expected(', expectedFrame.length, '):', expectedFrame.toString('hex'));
+    debug('  actual(', actualFrame.length, '):', actualFrame.toString('hex'));
+    expect(actualFrame).to.eql(expectedFrame);
+    if (this._expectedFrames[0] === false) break;
+    if (idx >= data.length) break;
+    idx += expectedFrame.length;
   }
 
   this._seenFrames.push(new BufferList(data));
