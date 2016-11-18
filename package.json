@@ -7,10 +7,11 @@
     "node": ">= 0.10"
   },
   "dependencies": {
-    "buffer-builder": "^0.2.0",
     "bl": "^1.1.2",
     "bluebird": "^3.4.1",
+    "buffer-builder": "^0.2.0",
     "debug": "^2.2.0",
+    "dmd-clean": "^0.1.1",
     "lodash": "^4.15.0",
     "node-amqp-encoder": "^0.0.2",
     "node-int64": "^0.4.0",
