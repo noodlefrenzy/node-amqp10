@@ -45,6 +45,10 @@ describe('Client', function() {
       var client = new amqp.Client();
       client.thing();
     });
+
+    it('should throw an error if provided a plugin that is not a function', function() {
+      expect(function() { amqp.use({}); }).to.throw('Plugin is not a function');
+    });
   });
 
   describe('#connect()', function() {
