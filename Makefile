@@ -33,9 +33,6 @@ test: test-unit test-qpid test-servicebus
 changelog:
 	${NPM_BIN}/conventional-changelog -p angular -i CHANGELOG.md -s
 
-apidoc: jshint
-	$(NPM_BIN)/jsdoc2md --src lib/**/*.js > api/README.md
-
 docs: jshint
 	$(NPM_BIN)/jsdoc2md --plugin dmd-clean --src $(PUBLIC_API_SRC) > DOCUMENTATION.md
 
