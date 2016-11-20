@@ -9,6 +9,8 @@
 <dd></dd>
 <dt><a href="#SenderLink">SenderLink</a> ⇐ <code><a href="#Link">Link</a></code></dt>
 <dd></dd>
+<dt><a href="#Policy">Policy</a></dt>
+<dd></dd>
 </dl>
 
 <a name="AMQPClient"></a>
@@ -37,7 +39,7 @@
 
 | Param | Type | Description |
 | --- | --- | --- |
-| [policy] | <code>Policy</code> | Policy to use for connection, sessions, links, etc.  Defaults to DefaultPolicy. |
+| [policy] | <code>[Policy](#Policy)</code> | Policy to use for connection, sessions, links, etc.  Defaults to DefaultPolicy. |
 | [policyOverrides] | <code>Obeject</code> | Additional overrides for the provided policy |
 
 
@@ -427,4 +429,545 @@ Detached event
 
 
 Error received event
+
+<a name="Policy"></a>
+
+## Policy
+
+
+* [Policy](#user-content-Policy)
+  * _Methods_
+    * [parseAddress(address)](#user-content-Policy+parseAddress)
+    * [parseLinkAddress(address)](#user-content-Policy+parseLinkAddress)
+  * _Properties_
+    * [connect](#user-content-Policy.connect)
+      * _Properties_
+        * [options](#user-content-Policy.connect.options)
+          * _Properties_
+            * [channelMax](#user-content-Policy.connect.options.channelMax)
+            * [containerId](#user-content-Policy.connect.options.containerId)
+            * [desiredCapabilities](#user-content-Policy.connect.options.desiredCapabilities)
+            * [hostname](#user-content-Policy.connect.options.hostname)
+            * [idleTimeout](#user-content-Policy.connect.options.idleTimeout)
+            * [incomingLocales](#user-content-Policy.connect.options.incomingLocales)
+            * [maxFrameSize](#user-content-Policy.connect.options.maxFrameSize)
+            * [offeredCapabilities](#user-content-Policy.connect.options.offeredCapabilities)
+            * [outgoingLocales](#user-content-Policy.connect.options.outgoingLocales)
+            * [properties](#user-content-Policy.connect.options.properties)
+            * [sslOptions](#user-content-Policy.connect.options.sslOptions)
+              * _Properties_
+                * [caFile](#user-content-Policy.connect.options.sslOptions.caFile)
+                * [certFile](#user-content-Policy.connect.options.sslOptions.certFile)
+                * [keyFile](#user-content-Policy.connect.options.sslOptions.keyFile)
+        * [saslMechanism](#user-content-Policy.connect.saslMechanism)
+    * [defaultSubjects](#user-content-Policy.defaultSubjects)
+    * [receiverLink](#user-content-Policy.receiverLink)
+      * _Properties_
+        * [attach](#user-content-Policy.receiverLink.attach)
+          * _Properties_
+            * [initialDeliveryCount](#user-content-Policy.receiverLink.attach.initialDeliveryCount)
+            * [maxMessageSize](#user-content-Policy.receiverLink.attach.maxMessageSize)
+            * [name](#user-content-Policy.receiverLink.attach.name)
+            * [receiverSettleMode](#user-content-Policy.receiverLink.attach.receiverSettleMode)
+            * [role](#user-content-Policy.receiverLink.attach.role)
+        * [credit](#user-content-Policy.receiverLink.credit)
+        * [creditQuantum](#user-content-Policy.receiverLink.creditQuantum)
+        * [decoder](#user-content-Policy.receiverLink.decoder)
+        * [reattach](#user-content-Policy.receiverLink.reattach)
+    * [reconnect](#user-content-Policy.reconnect)
+      * _Properties_
+        * [forever](#user-content-Policy.reconnect.forever)
+        * [retries](#user-content-Policy.reconnect.retries)
+        * [strategy](#user-content-Policy.reconnect.strategy)
+    * [senderLink](#user-content-Policy.senderLink)
+      * _Properties_
+        * [attach](#user-content-Policy.senderLink.attach)
+          * _Properties_
+            * [initialDeliveryCount](#user-content-Policy.senderLink.attach.initialDeliveryCount)
+            * [maxMessageSize](#user-content-Policy.senderLink.attach.maxMessageSize)
+            * [name](#user-content-Policy.senderLink.attach.name)
+            * [role](#user-content-Policy.senderLink.attach.role)
+            * [senderSettleMode](#user-content-Policy.senderLink.attach.senderSettleMode)
+        * [callback](#user-content-Policy.senderLink.callback)
+        * [encoder](#user-content-Policy.senderLink.encoder)
+        * [reattach](#user-content-Policy.senderLink.reattach)
+    * [session](#user-content-Policy.session)
+      * _Properties_
+        * [enableSessionFlowControl](#user-content-Policy.session.enableSessionFlowControl)
+        * [options](#user-content-Policy.session.options)
+          * _Properties_
+            * [incomingWindow](#user-content-Policy.session.options.incomingWindow)
+            * [nextOutgoingId](#user-content-Policy.session.options.nextOutgoingId)
+            * [outgoingWindow](#user-content-Policy.session.options.outgoingWindow)
+        * [window](#user-content-Policy.session.window)
+        * [windowQuantum](#user-content-Policy.session.windowQuantum)
+
+<a name="new_Policy_new"></a>
+
+### new Policy(overrides)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| overrides | <code>object</code> | override values for the default policy |
+
+
+The default policy for amqp10 clients
+
+<a name="Policy+parseAddress"></a>
+
+### policy.parseAddress(address)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| address | <code>string</code> | the address to parse |
+
+
+Parses an address for use when connecting to an AMQP 1.0 broker
+
+<a name="Policy+parseLinkAddress"></a>
+
+### policy.parseLinkAddress(address)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| address | <code>string</code> | the address to parse |
+
+
+Parses a link address used for creating Sender and Receiver links.
+
+The resulting object has a required `name` property (used as the source
+address in the attach performative), as well as an optional `subject` property
+which (if specified) will automatically create a source filter.
+
+<a name="Policy.connect"></a>
+
+### Policy.connect
+
+
+* [connect](#user-content-Policy.connect)
+  * _Properties_
+    * [options](#user-content-Policy.connect.options)
+      * _Properties_
+        * [channelMax](#user-content-Policy.connect.options.channelMax)
+        * [containerId](#user-content-Policy.connect.options.containerId)
+        * [desiredCapabilities](#user-content-Policy.connect.options.desiredCapabilities)
+        * [hostname](#user-content-Policy.connect.options.hostname)
+        * [idleTimeout](#user-content-Policy.connect.options.idleTimeout)
+        * [incomingLocales](#user-content-Policy.connect.options.incomingLocales)
+        * [maxFrameSize](#user-content-Policy.connect.options.maxFrameSize)
+        * [offeredCapabilities](#user-content-Policy.connect.options.offeredCapabilities)
+        * [outgoingLocales](#user-content-Policy.connect.options.outgoingLocales)
+        * [properties](#user-content-Policy.connect.options.properties)
+        * [sslOptions](#user-content-Policy.connect.options.sslOptions)
+          * _Properties_
+            * [caFile](#user-content-Policy.connect.options.sslOptions.caFile)
+            * [certFile](#user-content-Policy.connect.options.sslOptions.certFile)
+            * [keyFile](#user-content-Policy.connect.options.sslOptions.keyFile)
+    * [saslMechanism](#user-content-Policy.connect.saslMechanism)
+
+<a name="Policy.connect.options"></a>
+
+#### connect.options
+
+Options passed into the open performative on initial connection
+
+
+* [options](#user-content-Policy.connect.options)
+  * _Properties_
+    * [channelMax](#user-content-Policy.connect.options.channelMax)
+    * [containerId](#user-content-Policy.connect.options.containerId)
+    * [desiredCapabilities](#user-content-Policy.connect.options.desiredCapabilities)
+    * [hostname](#user-content-Policy.connect.options.hostname)
+    * [idleTimeout](#user-content-Policy.connect.options.idleTimeout)
+    * [incomingLocales](#user-content-Policy.connect.options.incomingLocales)
+    * [maxFrameSize](#user-content-Policy.connect.options.maxFrameSize)
+    * [offeredCapabilities](#user-content-Policy.connect.options.offeredCapabilities)
+    * [outgoingLocales](#user-content-Policy.connect.options.outgoingLocales)
+    * [properties](#user-content-Policy.connect.options.properties)
+    * [sslOptions](#user-content-Policy.connect.options.sslOptions)
+      * _Properties_
+        * [caFile](#user-content-Policy.connect.options.sslOptions.caFile)
+        * [certFile](#user-content-Policy.connect.options.sslOptions.certFile)
+        * [keyFile](#user-content-Policy.connect.options.sslOptions.keyFile)
+
+<a name="Policy.connect.options.channelMax"></a>
+
+##### options.channelMax
+
+The channel-max value is the highest channel number that can be used on the connection
+
+<a name="Policy.connect.options.containerId"></a>
+
+##### options.containerId
+
+The id of the source container
+
+<a name="Policy.connect.options.desiredCapabilities"></a>
+
+##### options.desiredCapabilities
+
+The desired-capability list defines which extension capabilities the sender may
+use if the receiver offers them
+
+<a name="Policy.connect.options.hostname"></a>
+
+##### options.hostname
+
+The name of the target host
+
+<a name="Policy.connect.options.idleTimeout"></a>
+
+##### options.idleTimeout
+
+The idle timeout required by the sender
+
+<a name="Policy.connect.options.incomingLocales"></a>
+
+##### options.incomingLocales
+
+A list of locales that the sending peer permits for incoming informational text
+
+<a name="Policy.connect.options.maxFrameSize"></a>
+
+##### options.maxFrameSize
+
+The largest frame size that the sending peer is able to accept on this connection
+
+<a name="Policy.connect.options.offeredCapabilities"></a>
+
+##### options.offeredCapabilities
+
+A list of extension capabilities the peer may use if the sender offers them
+
+<a name="Policy.connect.options.outgoingLocales"></a>
+
+##### options.outgoingLocales
+
+A list of the locales that the peer supports for sending informational text
+
+<a name="Policy.connect.options.properties"></a>
+
+##### options.properties
+
+The properties map contains a set of fields intended to indicate information
+about the connection and its container
+
+<a name="Policy.connect.options.sslOptions"></a>
+
+##### options.sslOptions
+
+Options used to initiate a TLS/SSL connection, with the exception of the
+following options all options in this object are passed directly to node's
+[tls.connect](https://nodejs.org/api/tls.html#tls_tls_connect_options_callback) method.
+
+
+* [sslOptions](#user-content-Policy.connect.options.sslOptions)
+  * _Properties_
+    * [caFile](#user-content-Policy.connect.options.sslOptions.caFile)
+    * [certFile](#user-content-Policy.connect.options.sslOptions.certFile)
+    * [keyFile](#user-content-Policy.connect.options.sslOptions.keyFile)
+
+<a name="Policy.connect.options.sslOptions.caFile"></a>
+
+###### sslOptions.caFile
+
+Path to the file containing the trusted cert for the client
+
+<a name="Policy.connect.options.sslOptions.certFile"></a>
+
+###### sslOptions.certFile
+
+Path to the file containing the certificate key for the client
+
+<a name="Policy.connect.options.sslOptions.keyFile"></a>
+
+###### sslOptions.keyFile
+
+Path to the file containing the private key for the client
+
+<a name="Policy.connect.saslMechanism"></a>
+
+#### connect.saslMechanism
+
+Allows the sasl mechanism to be overriden by policy
+
+<a name="Policy.defaultSubjects"></a>
+
+### Policy.defaultSubjects
+
+support subjects in link names with the following characteristics:
+receiver: "amq.topic/news", means a filter on the ReceiverLink will be made
+          for messages send with a subject "news"
+
+sender: "amq.topic/news", will automatically set "news" as the subject for
+        messages sent on this link, unless the user explicitly overrides
+        the subject.
+
+<a name="Policy.receiverLink"></a>
+
+### Policy.receiverLink
+
+
+* [receiverLink](#user-content-Policy.receiverLink)
+  * _Properties_
+    * [attach](#user-content-Policy.receiverLink.attach)
+      * _Properties_
+        * [initialDeliveryCount](#user-content-Policy.receiverLink.attach.initialDeliveryCount)
+        * [maxMessageSize](#user-content-Policy.receiverLink.attach.maxMessageSize)
+        * [name](#user-content-Policy.receiverLink.attach.name)
+        * [receiverSettleMode](#user-content-Policy.receiverLink.attach.receiverSettleMode)
+        * [role](#user-content-Policy.receiverLink.attach.role)
+    * [credit](#user-content-Policy.receiverLink.credit)
+    * [creditQuantum](#user-content-Policy.receiverLink.creditQuantum)
+    * [decoder](#user-content-Policy.receiverLink.decoder)
+    * [reattach](#user-content-Policy.receiverLink.reattach)
+
+<a name="Policy.receiverLink.attach"></a>
+
+#### receiverLink.attach
+
+Options passed into the `attach` performative on link attachment
+
+
+* [attach](#user-content-Policy.receiverLink.attach)
+  * _Properties_
+    * [initialDeliveryCount](#user-content-Policy.receiverLink.attach.initialDeliveryCount)
+    * [maxMessageSize](#user-content-Policy.receiverLink.attach.maxMessageSize)
+    * [name](#user-content-Policy.receiverLink.attach.name)
+    * [receiverSettleMode](#user-content-Policy.receiverLink.attach.receiverSettleMode)
+    * [role](#user-content-Policy.receiverLink.attach.role)
+
+<a name="Policy.receiverLink.attach.initialDeliveryCount"></a>
+
+##### attach.initialDeliveryCount
+
+This must not be null if role is sender, and it is ignored if the role is receiver.
+
+<a name="Policy.receiverLink.attach.maxMessageSize"></a>
+
+##### attach.maxMessageSize
+
+The maximum message size supported by the link endpoint
+
+<a name="Policy.receiverLink.attach.name"></a>
+
+##### attach.name
+
+This name uniquely identifies the link from the container of the source to
+the container of the target node
+
+<a name="Policy.receiverLink.attach.receiverSettleMode"></a>
+
+##### attach.receiverSettleMode
+
+The delivery settlement policy for the receiver
+
+<a name="Policy.receiverLink.attach.role"></a>
+
+##### attach.role
+
+The role being played by the peer
+
+<a name="Policy.receiverLink.credit"></a>
+
+#### receiverLink.credit
+
+A function that determines when (if ever) to refresh the receiver link's credit
+
+<a name="Policy.receiverLink.creditQuantum"></a>
+
+#### receiverLink.creditQuantum
+
+Quantum used in pre-defined credit policy functions
+
+<a name="Policy.receiverLink.decoder"></a>
+
+#### receiverLink.decoder
+
+The decoder used for all incoming data
+
+<a name="Policy.receiverLink.reattach"></a>
+
+#### receiverLink.reattach
+
+Whether the link should attempt reattach on detach
+
+<a name="Policy.reconnect"></a>
+
+### Policy.reconnect
+
+Options related to the reconnect behavior of the client. If this value is `null` reconnect
+is effectively disabled
+
+
+* [reconnect](#user-content-Policy.reconnect)
+  * _Properties_
+    * [forever](#user-content-Policy.reconnect.forever)
+    * [retries](#user-content-Policy.reconnect.retries)
+    * [strategy](#user-content-Policy.reconnect.strategy)
+
+<a name="Policy.reconnect.forever"></a>
+
+#### reconnect.forever
+
+Whether or not to attempt reconnection forever
+
+<a name="Policy.reconnect.retries"></a>
+
+#### reconnect.retries
+
+How many times to attempt reconnection
+
+<a name="Policy.reconnect.strategy"></a>
+
+#### reconnect.strategy
+
+The algorithm used for backoff. Can be `fibonacci` or `exponential`
+
+<a name="Policy.senderLink"></a>
+
+### Policy.senderLink
+
+
+* [senderLink](#user-content-Policy.senderLink)
+  * _Properties_
+    * [attach](#user-content-Policy.senderLink.attach)
+      * _Properties_
+        * [initialDeliveryCount](#user-content-Policy.senderLink.attach.initialDeliveryCount)
+        * [maxMessageSize](#user-content-Policy.senderLink.attach.maxMessageSize)
+        * [name](#user-content-Policy.senderLink.attach.name)
+        * [role](#user-content-Policy.senderLink.attach.role)
+        * [senderSettleMode](#user-content-Policy.senderLink.attach.senderSettleMode)
+    * [callback](#user-content-Policy.senderLink.callback)
+    * [encoder](#user-content-Policy.senderLink.encoder)
+    * [reattach](#user-content-Policy.senderLink.reattach)
+
+<a name="Policy.senderLink.attach"></a>
+
+#### senderLink.attach
+
+Options passed into the `attach` performative on link attachment
+
+
+* [attach](#user-content-Policy.senderLink.attach)
+  * _Properties_
+    * [initialDeliveryCount](#user-content-Policy.senderLink.attach.initialDeliveryCount)
+    * [maxMessageSize](#user-content-Policy.senderLink.attach.maxMessageSize)
+    * [name](#user-content-Policy.senderLink.attach.name)
+    * [role](#user-content-Policy.senderLink.attach.role)
+    * [senderSettleMode](#user-content-Policy.senderLink.attach.senderSettleMode)
+
+<a name="Policy.senderLink.attach.initialDeliveryCount"></a>
+
+##### attach.initialDeliveryCount
+
+This must not be null if role is sender, and it is ignored if the role is receiver.
+
+<a name="Policy.senderLink.attach.maxMessageSize"></a>
+
+##### attach.maxMessageSize
+
+The maximum message size supported by the link endpoint
+
+<a name="Policy.senderLink.attach.name"></a>
+
+##### attach.name
+
+This name uniquely identifies the link from the container of the source to
+the container of the target node
+
+<a name="Policy.senderLink.attach.role"></a>
+
+##### attach.role
+
+The role being played by the peer
+
+<a name="Policy.senderLink.attach.senderSettleMode"></a>
+
+##### attach.senderSettleMode
+
+The delivery settlement policy for the sender
+
+<a name="Policy.senderLink.callback"></a>
+
+#### senderLink.callback
+
+Determines when a send should call its callback.
+
+<a name="Policy.senderLink.encoder"></a>
+
+#### senderLink.encoder
+
+The encoder used for all outgoing sends
+
+<a name="Policy.senderLink.reattach"></a>
+
+#### senderLink.reattach
+
+Whether the link should attempt reattach on detach
+
+<a name="Policy.session"></a>
+
+### Policy.session
+
+
+* [session](#user-content-Policy.session)
+  * _Properties_
+    * [enableSessionFlowControl](#user-content-Policy.session.enableSessionFlowControl)
+    * [options](#user-content-Policy.session.options)
+      * _Properties_
+        * [incomingWindow](#user-content-Policy.session.options.incomingWindow)
+        * [nextOutgoingId](#user-content-Policy.session.options.nextOutgoingId)
+        * [outgoingWindow](#user-content-Policy.session.options.outgoingWindow)
+    * [window](#user-content-Policy.session.window)
+    * [windowQuantum](#user-content-Policy.session.windowQuantum)
+
+<a name="Policy.session.enableSessionFlowControl"></a>
+
+#### session.enableSessionFlowControl
+
+Whether or not session flow control should be performed at all
+
+<a name="Policy.session.options"></a>
+
+#### session.options
+
+Options passed into the `begin` performative on session start
+
+
+* [options](#user-content-Policy.session.options)
+  * _Properties_
+    * [incomingWindow](#user-content-Policy.session.options.incomingWindow)
+    * [nextOutgoingId](#user-content-Policy.session.options.nextOutgoingId)
+    * [outgoingWindow](#user-content-Policy.session.options.outgoingWindow)
+
+<a name="Policy.session.options.incomingWindow"></a>
+
+##### options.incomingWindow
+
+The maximum number of incoming transfer frames that the endpoint can currently receive
+
+<a name="Policy.session.options.nextOutgoingId"></a>
+
+##### options.nextOutgoingId
+
+The transfer-id to assign to the next transfer frame
+
+<a name="Policy.session.options.outgoingWindow"></a>
+
+##### options.outgoingWindow
+
+The maximum number of outgoing transfer frames that the endpoint can currently send
+
+<a name="Policy.session.window"></a>
+
+#### session.window
+
+A function used to calculate how/when the flow control window should change
+
+<a name="Policy.session.windowQuantum"></a>
+
+#### session.windowQuantum
+
+Quantum used in predefined window policies
 
