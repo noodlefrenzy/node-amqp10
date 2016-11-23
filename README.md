@@ -3,7 +3,6 @@ amqp10
 
 [![Build Status](https://secure.travis-ci.org/noodlefrenzy/node-amqp10.svg?branch=master)](https://travis-ci.org/noodlefrenzy/node-amqp10)
 [![Dependency Status](https://david-dm.org/noodlefrenzy/node-amqp10.svg)](https://david-dm.org/noodlefrenzy/node-amqp10)
-[![Code Climate](https://codeclimate.com/github/noodlefrenzy/node-amqp10/badges/gpa.svg)](https://codeclimate.com/github/noodlefrenzy/node-amqp10)
 [![Test Coverage](https://codeclimate.com/github/noodlefrenzy/node-amqp10/badges/coverage.svg)](https://codeclimate.com/github/noodlefrenzy/node-amqp10)
 [![npm version](https://badge.fury.io/js/amqp10.svg)](http://badge.fury.io/js/amqp10)
 [![Join the chat at https://gitter.im/noodlefrenzy/node-amqp10](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/noodlefrenzy/node-amqp10?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -58,6 +57,8 @@ In addition to the above, you can also tune how message link credit is doled out
 well as most other AMQP behaviors, all through policy overrides.  See [DefaultPolicy](https://github.com/noodlefrenzy/node-amqp10/blob/master/lib/policies/default_policy.js)
 and the [policy utilities](https://github.com/noodlefrenzy/node-amqp10/blob/master/lib/policies/policy_utilities.js)
 for more details on altering various behaviors.
+
+## [Documentation](https://github.com/noodlefrenzy/node-amqp10/blob/master/DOCUMENTATION.md) ##
 
 ## Flow Control and Message Dispositions ##
 
