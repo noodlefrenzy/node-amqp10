@@ -8,6 +8,7 @@ QPID_INTEGRATION_TESTS = ./test/integration/qpid
 SERVICEBUS_INTEGRATION_TESTS = ./test/integration/servicebus
 NPM_BIN = ./node_modules/.bin
 TIMEOUT = 30000
+PUBLIC_API_SRC = lib/amqp_client.js lib/link.js lib/receiver_link.js lib/sender_link.js lib/policies/policy.js
 
 jshint:
 	$(NPM_BIN)/jshint lib test tools examples
@@ -32,7 +33,7 @@ test: test-unit test-qpid test-servicebus
 changelog:
 	${NPM_BIN}/conventional-changelog -p angular -i CHANGELOG.md -s
 
-apidoc: jshint
-	$(NPM_BIN)/jsdoc2md --src lib/**/*.js > api/README.md
+docs: jshint
+	$(NPM_BIN)/jsdoc2md --plugin dmd-clean --src $(PUBLIC_API_SRC) > DOCUMENTATION.md
 
 .PHONY: jshint fixjsstyle coverage test changelog apidoc
