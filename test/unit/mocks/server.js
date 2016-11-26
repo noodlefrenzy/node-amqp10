@@ -152,6 +152,10 @@ MockServer.prototype._sendNextResponse = function() {
 };
 
 MockServer.prototype._sendResponse = function(response) {
+  if (this._client === undefined || this._client === null) {
+    return;
+  }
+
   if (!response) {
     debug('no data to send');
     return;
