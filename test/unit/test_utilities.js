@@ -11,11 +11,6 @@ describe('Utilities', function() {
       var b2 = tu.buildBuffer([1, 2, 3, 4]);
       expect(u.bufferEquals(b1, b2)).to.be.true;
     });
-    it('should only operate on slices expected', function() {
-      var b1 = tu.buildBuffer([1, 2, 3, 4, 5]);
-      var b2 = tu.buildBuffer([2, 3, 4, 5, 6]);
-      expect(u.bufferEquals(b1, b2, 1, 0, 4)).to.be.true;
-    });
     it('should return false quickly on unequal size buffers', function() {
       // Ideally, I'd use two huge buffers, set the timeout low, and ensure the test passes in the time allotted,
       //  but that's (a) a pain, and (b) prone to sporadic failures, so just ensuring it at least gives the right answer.
