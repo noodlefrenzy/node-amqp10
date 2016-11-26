@@ -5,21 +5,6 @@ var Policy = require('../../lib/policies/policy'),
     tu = require('./../testing_utils');
 
 describe('Utilities', function() {
-  describe('#contains()', function() {
-    it('should find value when contained', function() {
-      expect(u.contains([1, 2, 3], 2)).to.be.true;
-    });
-
-    it('should not find value when missing', function() {
-      expect(u.contains([1, 2, 3], 4)).to.be.false;
-    });
-
-    it('should cope with null/empty arrays', function() {
-      expect(u.contains(null, 2)).to.be.false;
-      expect(u.contains([], 2)).to.be.false;
-    });
-  });
-
   describe('#bufferEquals()', function() {
     it('should succeed when equal', function() {
       var b1 = tu.buildBuffer([1, 2, 3, 4]);
@@ -38,33 +23,6 @@ describe('Utilities', function() {
       var b2 = tu.buildBuffer([1, 2]);
       expect(u.bufferEquals(b1, b2)).to.be.false;
     });
-  });
-
-  describe('#coerce()', function() {
-    /*
-    it('should coerce strings into symbols', function() {
-      var result = u.coerce('en-US', AMQPSymbol);
-      expect(result).to.be.an.instanceOf(AMQPSymbol);
-    });
-
-    it('should ignore if of same type', function() {
-      var result = u.coerce(new AMQPSymbol('en-US'), AMQPSymbol);
-      expect(result).to.be.an.instanceOf(AMQPSymbol);
-      expect(result.contents).to.be.a('string');
-    });
-
-    it('should coerce array of values', function() {
-      var result = u.coerce(['a', 'b', 'c'], AMQPSymbol);
-      expect(result).to.be.an.instanceOf(Array);
-      expect(result).to.have.length(3);
-      expect(result[0]).to.be.an.instanceOf(AMQPSymbol);
-    });
-
-    it('should pass through nulls', function() {
-      var result = u.coerce(null, AMQPSymbol);
-      expect(result).to.be.null;
-    });
-    */
   });
 
   describe('#deepMerge()', function() {
