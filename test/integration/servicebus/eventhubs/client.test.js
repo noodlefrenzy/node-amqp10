@@ -1,12 +1,13 @@
 'use strict';
-var AMQPClient = require('../../../../lib/index.js').Client,
-  Policy = require('../../../../lib/index').Policy,
-  translator = require('../../../../lib/index').translator,
-  Promise = require('bluebird'),
-  config = require('./config'),
-  expect = require('chai').expect,
-  uuid = require('uuid'),
-  _ = require('lodash');
+var amqp = require('../../../../lib'),
+    AMQPClient = amqp.Client,
+    Policy = amqp.Policy,
+    translator = amqp.translator,
+    Promise = require('bluebird'),
+    config = require('./config'),
+    expect = require('chai').expect,
+    u = require('../../../../lib/utilities'),
+    _ = require('lodash');
 
 function createPartitionReceivers(client, count, prefix, options) {
   return Promise.map(_.range(count), function(partition) {
@@ -29,7 +30,7 @@ describe('EventHubs', function () {
   });
 
   it('should connect, send, and receive a message', function (done) {
-    var msgVal = uuid.v4();
+    var msgVal = u.uuidV4();
     test.client.connect(config.address)
       .then(function() {
         return createPartitionReceivers(test.client, config.partitionCount, config.receiverLinkPrefix);
@@ -49,7 +50,7 @@ describe('EventHubs', function () {
   });
 
   it('should create receiver with date-based x-header', function (done) {
-    var msgVal = uuid.v4();
+    var msgVal = u.uuidV4();
     var now = Date.now() - (1000 * 5); // 5 seconds ago
 
     var filterOptions = {
@@ -78,7 +79,7 @@ describe('EventHubs', function () {
   });
 
   it('should send to a specific partition', function (done) {
-    var msgVal = uuid.v4();
+    var msgVal = u.uuidV4();
     var partition = '1';
     test.client.connect(config.address)
       .then(function() {
@@ -102,8 +103,8 @@ describe('EventHubs', function () {
   });
 
   it('should only receive messages after last offset when using offset-based x-header', function (done) {
-    var msgVal1 = uuid.v4();
-    var msgVal2 = uuid.v4();
+    var msgVal1 = u.uuidV4();
+    var msgVal2 = u.uuidV4();
     var partition = '1';
     test.client.connect(config.address)
       .then(function() {

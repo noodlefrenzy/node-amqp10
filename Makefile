@@ -20,13 +20,13 @@ coverage: jshint
 	$(NPM_BIN)/istanbul cover $(NPM_BIN)/_mocha -- --recursive -t $(TIMEOUT) --ui tdd $(UNIT_TESTS) $(QPID_INTEGRATION_TESTS) $(SERVICEBUS_INTEGRATION_TESTS)
 
 test-unit: jshint
-	$(NPM_BIN)/mocha --globals setImmediate,clearImmediate --recursive --check-leaks --colors -t $(TIMEOUT) --reporter $(REPORTER) $(UNIT_TESTS) $(GREPARG)
+	$(NPM_BIN)/mocha --recursive --check-leaks --colors -t $(TIMEOUT) --reporter $(REPORTER) $(UNIT_TESTS) $(GREPARG)
 
 test-qpid: jshint
-	$(NPM_BIN)/mocha --globals setImmediate,clearImmediate --recursive --check-leaks --colors -t $(TIMEOUT) --reporter $(REPORTER) $(QPID_INTEGRATION_TESTS) $(GREPARG)
+	$(NPM_BIN)/mocha --recursive --check-leaks --colors -t $(TIMEOUT) --reporter $(REPORTER) $(QPID_INTEGRATION_TESTS) $(GREPARG)
 
 test-servicebus: jshint
-	$(NPM_BIN)/mocha --recursive --globals setImmediate,clearImmediate --recursive --check-leaks --colors -t $(TIMEOUT) --reporter $(REPORTER) $(SERVICEBUS_INTEGRATION_TESTS) $(GREPARG)
+	$(NPM_BIN)/mocha --recursive --check-leaks --colors -t $(TIMEOUT) --reporter $(REPORTER) $(SERVICEBUS_INTEGRATION_TESTS) $(GREPARG)
 
 test: test-unit test-qpid test-servicebus
 

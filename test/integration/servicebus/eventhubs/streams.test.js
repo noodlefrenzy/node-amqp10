@@ -1,10 +1,11 @@
 'use strict';
 var Promise = require('bluebird'),
-    AMQPClient = require('../../../..').Client,
-    Policy = require('../../../..').Policy,
+    amqp = require('../../../..'),
+    AMQPClient = amqp.Client,
+    Policy = amqp.Policy,
     config = require('./config'),
     expect = require('chai').expect,
-    uuid = require('uuid');
+    u = require('../../../../lib/utilities');
 
 var test = {};
 if (process.version.match(/v0.10/))
@@ -39,7 +40,7 @@ describe('ServiceBus', function() {
       expect(config.partitionSenderLinkPrefix,
         'Required env vars not found in ' + Object.keys(process.env)).to.exist;
 
-      var dataString = uuid.v4().replace(/-/g, ''),
+      var dataString = u.uuidV4().replace(/-/g, ''),
           expected = Array.apply(null, new Array(20))
             .map(function(a) { return Math.floor(Math.random() * 100); });
 
@@ -68,7 +69,7 @@ describe('ServiceBus', function() {
     afterEach(teardown);
 
     it('should let you create a sender link as a writable stream', function(done) {
-      var dataString = uuid.v4().replace(/-/g, ''),
+      var dataString = u.uuidV4().replace(/-/g, ''),
           expected = Array.apply(null, new Array(20))
             .map(function(a) { return Math.floor(Math.random() * 100); });
 

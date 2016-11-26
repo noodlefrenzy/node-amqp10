@@ -1,10 +1,11 @@
 'use strict';
-var AMQPClient = require('../../../../lib/index.js').Client,
-  Policy = require('../../../../lib/index').Policy,
-  Promise = require('bluebird'),
-  config = require('./config'),
-  expect = require('chai').expect,
-  uuid = require('uuid');
+var amqp = require('../../../..'),
+    AMQPClient = amqp.Client,
+    Policy = amqp.Policy,
+    Promise = require('bluebird'),
+    config = require('./config'),
+    expect = require('chai').expect,
+    u = require('../../../../lib/utilities');
 
 var test = {};
 describe('ServiceBus', function() {
@@ -21,7 +22,7 @@ describe('Queues', function() {
   });
 
   it('should connect, send, and receive a message', function(done) {
-    var msgVal = uuid.v4();
+    var msgVal = u.uuidV4();
     test.client = new AMQPClient(Policy.ServiceBusQueue);
     test.client.connect(config.address)
       .then(function() {
@@ -74,16 +75,16 @@ describe('Queues', function() {
         });
 
         return Promise.all([
-          sender.send({ DataString: 'From Node v2', DataValue: uuid.v4() }),
-          sender.send({ DataString: 'From Node v2', DataValue: uuid.v4() })
+          sender.send({ DataString: 'From Node v2', DataValue: u.uuidV4() }),
+          sender.send({ DataString: 'From Node v2', DataValue: u.uuidV4() })
         ]);
       });
 
   });
 
   it('should allow you to reject messages and continue to receive subsequent', function(done) {
-    var msgVal1 = uuid.v4();
-    var msgVal2 = uuid.v4();
+    var msgVal1 = u.uuidV4();
+    var msgVal2 = u.uuidV4();
     test.client = new AMQPClient(Policy.ServiceBusQueue, {
       receiverLink: { attach: { receiverSettleMode: 1 } }
     });
