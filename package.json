@@ -31,7 +31,7 @@
     "stream-buffers": "^3.0.1"
   },
   "scripts": {
-    "version": "make changelog && git add CHANGELOG.md"
+    "version": "make changelog && git add CHANGELOG.md && make docs && git add DOCUMENTATION.md"
   },
   "author": {
     "name": "noodlefrenzy",

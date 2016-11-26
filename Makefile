@@ -34,6 +34,6 @@ changelog:
 	${NPM_BIN}/conventional-changelog -p angular -i CHANGELOG.md -s
 
 docs: jshint
-	$(NPM_BIN)/jsdoc2md --plugin dmd-clean --src $(PUBLIC_API_SRC) > DOCUMENTATION.md
+	$(NPM_BIN)/jsdoc2md --plugin dmd-clean --files $(PUBLIC_API_SRC) > DOCUMENTATION.md
 
 .PHONY: jshint fixjsstyle coverage test changelog apidoc
