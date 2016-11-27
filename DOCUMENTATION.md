@@ -401,7 +401,8 @@ Detach the link from the session
 | Param | Type | Description |
 | --- | --- | --- |
 | msg | <code>object</code> &#124; <code>string</code> &#124; <code>array</code> | Message to send.  Will be encoded using sender link policy's encoder. |
-| [options] | <code>object</code> | An object of options to attach to the message including: annotations, properties,                              and application properties |
+| [options] | <code>object</code> | An object of options to attach to the message including: annotations, properties,                           and application properties |
+| [options.callback] | <code>string</code> | Determines when the send operation should callback. Possible                                    options are: 'sent', 'settled' and 'none'. For the best performance                                    choose 'none', which is essentially "send and forget" and notably will                                    not return a promise. |
 | [options.annotations] | <code>object</code> | Annotations for the message, if any.  See AMQP spec for details, and server for specific                                       annotations that might be relevant (e.g. x-opt-partition-key on EventHub).  If node-amqp-encoder'd                                       map is given, it will be translated to appropriate internal types.  Simple maps will be converted                                       to AMQP Fields type as defined in the spec. |
 
 

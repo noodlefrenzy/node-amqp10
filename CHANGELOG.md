@@ -1,3 +1,20 @@
+<a name="3.4.0"></a>
+# [3.4.0](https://github.com/noodlefrenzy/node-amqp10/compare/v3.3.2...v3.4.0) (2016-11-27)
+
+
+### Bug Fixes
+
+* **use:** throw an error if a plugin does not provide a function ([e50566a](https://github.com/noodlefrenzy/node-amqp10/commit/e50566a))
+
+
+### Features
+
+* **connection:** terminate connection when frame steam interrupted ([5455179](https://github.com/noodlefrenzy/node-amqp10/commit/5455179))
+* **docs:** update documentation ([#282](https://github.com/noodlefrenzy/node-amqp10/issues/282)) ([39ed4ab](https://github.com/noodlefrenzy/node-amqp10/commit/39ed4ab))
+* **sender-link:** add support for sending with no reply ([5e159a9](https://github.com/noodlefrenzy/node-amqp10/commit/5e159a9))
+
+
+
 <a name="3.3.2"></a>
 ## [3.3.2](https://github.com/noodlefrenzy/node-amqp10/compare/v3.3.1...v3.3.2) (2016-10-27)
 
