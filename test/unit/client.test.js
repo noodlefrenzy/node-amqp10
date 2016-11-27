@@ -479,46 +479,6 @@ describe('Client', function() {
         });
     });
 
-    it('should throw an error if attempting to send with no connection', function(done) {
-      test.server.setResponseSequence([
-        constants.amqpVersion,
-        new frames.OpenFrame(test.client.policy.connect.options),
-        new frames.BeginFrame({
-          remoteChannel: 1, nextOutgoingId: 0,
-          incomingWindow: 2147483647, outgoingWindow: 2147483647,
-          handleMax: 4294967295
-        }),
-        [
-          function (prev) {
-            var rxAttach = frames.readFrame(prev[prev.length - 1]);
-            return new frames.AttachFrame({
-              name: rxAttach.name, handle: 1,
-              role: constants.linkRole.receiver,
-              source: {}, target: {},
-              initialDeliveryCount: 0
-            });
-          },
-
-          { delay: 100 },
-
-          // force detach from remote server, and force close of the connection
-          new frames.DetachFrame({ handle: 1, closed: true, error: 'internal-error' }),
-          new frames.CloseFrame({
-            error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
-          })
-        ]
-      ]);
-
-      test.client.connect(test.server.address())
-        .then(function() { return test.client.createSender('testing'); })
-        .then(function(sender) {
-          setTimeout(function() {
-            expect(function() { sender.send('testing'); }).to.throw(errors.NotConnectedError);
-            done();
-          }, 200);
-        });
-    });
-
     it('should reject unsettled sends on connection error', function() {
       test.server.setResponseSequence([
         constants.amqpVersion,
