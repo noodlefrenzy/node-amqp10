@@ -43,10 +43,14 @@
 
 
     <section>
-        <article><h1>amqp10</h1><p><a href="https://travis-ci.org/noodlefrenzy/node-amqp10"><img src="https://secure.travis-ci.org/noodlefrenzy/node-amqp10.svg?branch=master" alt="Build Status"></a><br><a href="https://david-dm.org/noodlefrenzy/node-amqp10"><img src="https://david-dm.org/noodlefrenzy/node-amqp10.svg" alt="Dependency Status"></a><br><a href="https://codeclimate.com/github/noodlefrenzy/node-amqp10"><img src="https://codeclimate.com/github/noodlefrenzy/node-amqp10/badges/coverage.svg" alt="Test Coverage"></a><br><a href="http://badge.fury.io/js/amqp10"><img src="https://badge.fury.io/js/amqp10.svg" alt="npm version"></a><br><a href="https://gitter.im/noodlefrenzy/node-amqp10?utm_source=badge&amp;utm_medium=badge&amp;utm_campaign=pr-badge&amp;utm_content=badge"><img src="https://badges.gitter.im/Join%20Chat.svg" alt="Join the chat at https://gitter.im/noodlefrenzy/node-amqp10"></a></p>
+        <article><h1>amqp10</h1><p><a href="https://travis-ci.org/noodlefrenzy/node-amqp10"><img src="https://img.shields.io/travis/noodlefrenzy/node-amqp10.svg" alt="travis"></a> <a href="https://npmjs.org/package/amqp10"><img src="https://img.shields.io/npm/v/amqp10.svg" alt="npm"></a> <a href="https://codeclimate.com/github/noodlefrenzy/node-amqp10"><img src="https://codeclimate.com/github/noodlefrenzy/node-amqp10/badges/coverage.svg" alt="coverage"></a> <a href="https://npmjs.org/package/amqp10"><img src="https://img.shields.io/npm/dm/amqp10.svg" alt="npm"></a> <a href="https://gitter.im/noodlefrenzy/node-amqp10?utm_source=badge&amp;utm_medium=badge&amp;utm_campaign=pr-badge&amp;utm_content=badge"><img src="https://badges.gitter.im/Join%20Chat.svg" alt="gitter"></a></p>
 <p>amqp10 is a promise-based, AMQP 1.0 compliant node.js client</p>
-<h2>Usage</h2><p>See <code>simple_eventhub_test.js</code>, <code>simple_activemq_test.js</code> or any of the other files in <a href="https://github.com/noodlefrenzy/node-amqp10/tree/master/examples">examples</a>.</p>
-<p>The basic usage is to require the module, new up a client with the appropriate policy for the server you're<br>connecting against, connect, and then send/receive as necessary.  So a simple example for a local Apache Qpid<br>server would look like:</p>
+<h2>Contents</h2><ul>
+<li><a href="#usage">Usage</a></li>
+<li><a href="https://noodlefrenzy.github.io/node-amqp10/">Documentation</a></li>
+<li><a href="https://github.com/noodlefrenzy/node-amqp10/tree/master/examples">Examples</a></li>
+</ul>
+<h2>Usage</h2><p>The basic usage is to require the module, new up a client with the appropriate policy for the server you're<br>connecting against, connect, and then send/receive as necessary.  So a simple example for a local Apache Qpid<br>server would look like:</p>
 <pre class="prettyprint source"><code>var AMQPClient = require('amqp10').Client,
     Promise = require('bluebird');
 
@@ -76,7 +80,7 @@ var client = new AMQPClient(Policy.merge({
     callbackPolicy: Policy.Utils.SenderCallbackPolicies.OnSent
   }
 }, Policy.DefaultPolicy));</code></pre><p>In addition to the above, you can also tune how message link credit is doled out (for throttling), as<br>well as most other AMQP behaviors, all through policy overrides.  See <a href="https://github.com/noodlefrenzy/node-amqp10/blob/master/lib/policies/default_policy.js">DefaultPolicy</a><br>and the <a href="https://github.com/noodlefrenzy/node-amqp10/blob/master/lib/policies/policy_utilities.js">policy utilities</a><br>for more details on altering various behaviors.</p>
-<h2><a href="https://github.com/noodlefrenzy/node-amqp10/blob/master/DOCUMENTATION.md">Documentation</a></h2><h2>Flow Control and Message Dispositions</h2><p>Flow control in AMQP occurs at both the <code>Session</code> and <code>Link</code> layers. Using our default policy, we start out with some sensible Session windows and Link credits, and renew those every time they get to the half-way point. In addition, receiver links start in &quot;auto-settle&quot; mode, which means that the sender side can consider the message &quot;settled&quot; as soon as it's sent. However, <em>all</em> of those settings are easily tune-able through Policy overrides (<code>Policy.merge(&lt;overrides&gt;, &lt;base policy&gt;)</code>).</p>
+<h2>Flow Control and Message Dispositions</h2><p>Flow control in AMQP occurs at both the <code>Session</code> and <code>Link</code> layers. Using our default policy, we start out with some sensible Session windows and Link credits, and renew those every time they get to the half-way point. In addition, receiver links start in &quot;auto-settle&quot; mode, which means that the sender side can consider the message &quot;settled&quot; as soon as it's sent. However, <em>all</em> of those settings are easily tune-able through Policy overrides (<code>Policy.merge(&lt;overrides&gt;, &lt;base policy&gt;)</code>).</p>
 <p>For instance. we've provided a convenience helper for throttling your receiver links to only renew credits on messages they've &quot;settled&quot;. To use this with Azure ServiceBus Queues for instance, it would look like:</p>
 <pre class="prettyprint source"><code>var AMQPClient = require('amqp10').Client,
     Policy = require('amqp10').Policy;
@@ -170,7 +174,7 @@ receiverLink: {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sun Dec 11 2016 09:34:36 GMT-0500 (EST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sun Dec 11 2016 09:54:01 GMT-0500 (EST)
 </footer>
 
 <script> prettyPrint(); </script>
