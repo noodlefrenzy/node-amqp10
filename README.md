@@ -1,17 +1,29 @@
 amqp10
 =============
 
-[![Build Status](https://secure.travis-ci.org/noodlefrenzy/node-amqp10.svg?branch=master)](https://travis-ci.org/noodlefrenzy/node-amqp10)
-[![Dependency Status](https://david-dm.org/noodlefrenzy/node-amqp10.svg)](https://david-dm.org/noodlefrenzy/node-amqp10)
-[![Test Coverage](https://codeclimate.com/github/noodlefrenzy/node-amqp10/badges/coverage.svg)](https://codeclimate.com/github/noodlefrenzy/node-amqp10)
-[![npm version](https://badge.fury.io/js/amqp10.svg)](http://badge.fury.io/js/amqp10)
-[![Join the chat at https://gitter.im/noodlefrenzy/node-amqp10](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/noodlefrenzy/node-amqp10?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![coverage][coverage-image]][coverage-url] [![npm][npm-dl-image]][npm-url] [![gitter][gitter-image]][gitter-url]
 
 amqp10 is a promise-based, AMQP 1.0 compliant node.js client
 
-## Usage ##
+[travis-image]: https://img.shields.io/travis/noodlefrenzy/node-amqp10.svg
+[travis-url]: https://travis-ci.org/noodlefrenzy/node-amqp10
+[npm-image]: https://img.shields.io/npm/v/amqp10.svg
+[npm-url]: https://npmjs.org/package/amqp10
+[npm-dl-image]: https://img.shields.io/npm/dm/amqp10.svg
+[coverage-image]: https://codeclimate.com/github/noodlefrenzy/node-amqp10/badges/coverage.svg
+[coverage-url]: https://codeclimate.com/github/noodlefrenzy/node-amqp10
+[gitter-image]: https://badges.gitter.im/Join%20Chat.svg
+[gitter-url]: https://gitter.im/noodlefrenzy/node-amqp10?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-See `simple_eventhub_test.js`, `simple_activemq_test.js` or any of the other files in [examples](https://github.com/noodlefrenzy/node-amqp10/tree/master/examples).
+Contents
+--------
+
+* [Usage](#usage)
+* [Documentation](https://noodlefrenzy.github.io/node-amqp10/)
+* [Examples](https://github.com/noodlefrenzy/node-amqp10/tree/master/examples)
+
+Usage
+---------------
 
 The basic usage is to require the module, new up a client with the appropriate policy for the server you're
 connecting against, connect, and then send/receive as necessary.  So a simple example for a local Apache Qpid
@@ -58,9 +70,8 @@ well as most other AMQP behaviors, all through policy overrides.  See [DefaultPo
 and the [policy utilities](https://github.com/noodlefrenzy/node-amqp10/blob/master/lib/policies/policy_utilities.js)
 for more details on altering various behaviors.
 
-## [Documentation](https://github.com/noodlefrenzy/node-amqp10/blob/master/DOCUMENTATION.md) ##
-
-## Flow Control and Message Dispositions ##
+Flow Control and Message Dispositions
+----------------------------------------
 
 Flow control in AMQP occurs at both the `Session` and `Link` layers. Using our default policy, we start out with some sensible Session windows and Link credits, and renew those every time they get to the half-way point. In addition, receiver links start in "auto-settle" mode, which means that the sender side can consider the message "settled" as soon as it's sent. However, _all_ of those settings are easily tune-able through Policy overrides (`Policy.merge(<overrides>, <base policy>)`).
 
@@ -101,14 +112,16 @@ Note that once you've set the policy to not auto-settle messages, you'll need to
 
 All of these methods accept an array of messages, allowing you to settle many at once.
 
-## Plugins ##
+Plugins
+---------------
 
 The amqp10 module now supports pluggable Client behaviors with the exported `use` method. Officially supported plugins include:
 
 + [amqp10-link-cache](https://github.com/mbroadst/amqp10-link-cache) - caches links with optional purging based on ttl
 + [amqp10-rpc](https://github.com/mbroadst/amqp10-rpc) - an rpc server/client implementation on top of amqp10
 
-## Supported Servers ##
+Supported Servers
+-------------------
 
 We are currently actively running integration tests against the following servers:
 
@@ -124,13 +137,15 @@ We have been tested against the following servers, but not exhaustively so issue
 
 If you find any issues, please report them via GitHub.
 
-## Todos and Known Issues ##
+Todos and Known Issues
+--------------------------
 
 1. Disposition support is incomplete in that we don't send proper "unsettled" information when re-attaching links.
 1. There are some AMQP types we don't process - notably the Decimal23/64/128 types.  These are unused by the protocol, and no-one seems to
    be using them to convey information in messages, so ignoring them is likely safe.
 
-## Implementation Notes ##
+Implementation Notes
+---------------------------
 
 +   Using node's built-in net/tls classes for communicating with the server.
 

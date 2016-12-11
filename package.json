@@ -22,16 +22,16 @@
     "chai-string": "^1.3.0",
     "chai-as-promised": "^6.0.0",
     "conventional-changelog-cli": "^1.2.0",
-    "dmd-clean": "^0.1.1",
+    "gh-pages": "^0.12.0",
     "istanbul": "^0.4.5",
-    "jsdoc-to-markdown": "^2.0.1",
+    "jsdoc": "^3.4.2",
     "jshint": "^2.9.4",
     "mocha": "^3.2.0",
     "qmf2": "^0.1.5",
     "stream-buffers": "^3.0.1"
   },
   "scripts": {
-    "version": "make changelog && git add CHANGELOG.md && make docs && git add DOCUMENTATION.md"
+    "version": "make changelog && git add CHANGELOG.md && make docs"
   },
   "author": {
     "name": "noodlefrenzy",

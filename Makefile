@@ -33,7 +33,10 @@ test: test-unit test-qpid test-servicebus
 changelog:
 	${NPM_BIN}/conventional-changelog -p angular -i CHANGELOG.md -s
 
-docs: jshint
-	$(NPM_BIN)/jsdoc2md --plugin dmd-clean --files $(PUBLIC_API_SRC) > DOCUMENTATION.md
+gen-docs: jshint
+	$(NPM_BIN)/jsdoc -c jsdoc.json -R README.md
+
+docs: gen-docs
+	$(NPM_BIN)/gh-pages -d docs
 
 .PHONY: jshint fixjsstyle coverage test changelog apidoc
