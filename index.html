@@ -1,143 +1,179 @@
-<!doctype html>
-<html>
-  <head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Node-amqp-1-0 by noodlefrenzy</title>
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script src="javascripts/respond.js"></script>
+    <title>JSDoc: Home</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
     <!--[if lt IE 9]>
       <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-    <!--[if lt IE 8]>
-    <link rel="stylesheet" href="stylesheets/ie.css">
-    <![endif]-->
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
 
-  </head>
-  <body>
-      <div id="header">
-        <nav>
-          <li class="fork"><a href="https://github.com/noodlefrenzy/node-amqp-1-0">View On GitHub</a></li>
-          <li class="downloads"><a href="https://github.com/noodlefrenzy/node-amqp-1-0/zipball/master">ZIP</a></li>
-          <li class="downloads"><a href="https://github.com/noodlefrenzy/node-amqp-1-0/tarball/master">TAR</a></li>
-          <li class="title">DOWNLOADS</li>
-        </nav>
-      </div><!-- end header -->
+<body>
 
-    <div class="wrapper">
+<div id="main">
 
-      <section>
-        <div id="title">
-          <h1>Node-amqp-1-0</h1>
-          <p>AMQP 1.0-compliant Node.js client with no native code (e.g. Qpid Proton). </p>
-          <hr>
-          <span class="credits left">Project maintained by <a href="https://github.com/noodlefrenzy">noodlefrenzy</a></span>
-          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
-        </div>
+    <h1 class="page-title">Home</h1>
 
-        <h1>
-<a id="node-amqp-1-0" class="anchor" href="#node-amqp-1-0" aria-hidden="true"><span class="octicon octicon-link"></span></a>node-amqp-1-0</h1>
+    
 
-<p><a href="https://travis-ci.org/noodlefrenzy/node-amqp-1-0"><img src="https://secure.travis-ci.org/noodlefrenzy/node-amqp-1-0.png?branch=master" alt="Build Status"></a>
-<a href="https://david-dm.org/noodlefrenzy/node-amqp-1-0"><img src="https://david-dm.org/noodlefrenzy/node-amqp-1-0.png" alt="Dependency Status"></a></p>
 
-<p>AMQP 1.0-compliant Node.js client.  Since AMQP 1.0 is such a large departure from 0.9.1, 
-I've started a new project rather than fork from node-amqp or amqp.node.  Both node-amqp and amqp.node are
-great 0.9.1 clients and I recommend them, but neither is pursuing a 1.0 implementation.  If I can find an
-easy way to integrate this code back into them, I'll definitely be submitting a PR.</p>
 
-<h2>
-<a id="implementation-notes" class="anchor" href="#implementation-notes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Implementation Notes</h2>
+    
 
-<p>Here are my current implementation plans - if you have feedback or critiques on any of these choices, feel free to
-submit an Issue or even a PR.  Trust me, I don't take criticism personally, and I'm new to Nodejs so I could be making
-"obviously bad" choices to someone who is more familiar with the landscape.</p>
 
+    <h3> </h3>
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+    <section>
+        <article><h1>amqp10</h1><p><a href="https://travis-ci.org/noodlefrenzy/node-amqp10"><img src="https://secure.travis-ci.org/noodlefrenzy/node-amqp10.svg?branch=master" alt="Build Status"></a><br><a href="https://david-dm.org/noodlefrenzy/node-amqp10"><img src="https://david-dm.org/noodlefrenzy/node-amqp10.svg" alt="Dependency Status"></a><br><a href="https://codeclimate.com/github/noodlefrenzy/node-amqp10"><img src="https://codeclimate.com/github/noodlefrenzy/node-amqp10/badges/coverage.svg" alt="Test Coverage"></a><br><a href="http://badge.fury.io/js/amqp10"><img src="https://badge.fury.io/js/amqp10.svg" alt="npm version"></a><br><a href="https://gitter.im/noodlefrenzy/node-amqp10?utm_source=badge&amp;utm_medium=badge&amp;utm_campaign=pr-badge&amp;utm_content=badge"><img src="https://badges.gitter.im/Join%20Chat.svg" alt="Join the chat at https://gitter.im/noodlefrenzy/node-amqp10"></a></p>
+<p>amqp10 is a promise-based, AMQP 1.0 compliant node.js client</p>
+<h2>Usage</h2><p>See <code>simple_eventhub_test.js</code>, <code>simple_activemq_test.js</code> or any of the other files in <a href="https://github.com/noodlefrenzy/node-amqp10/tree/master/examples">examples</a>.</p>
+<p>The basic usage is to require the module, new up a client with the appropriate policy for the server you're<br>connecting against, connect, and then send/receive as necessary.  So a simple example for a local Apache Qpid<br>server would look like:</p>
+<pre class="prettyprint source"><code>var AMQPClient = require('amqp10').Client,
+    Promise = require('bluebird');
+
+var client = new AMQPClient(); // Uses PolicyBase default policy
+client.connect('amqp://localhost')
+  .then(function() {
+    return Promise.all([
+      client.createReceiver('amq.topic'),
+      client.createSender('amq.topic')
+    ]);
+  })
+  .spread(function(receiver, sender) {
+    receiver.on('errorReceived', function(err) { // check for errors });
+    receiver.on('message', function(message) {
+      console.log('Rx message: ', message.body);
+    });
+
+    return sender.send({ key: &quot;Value&quot; });
+  })
+  .error(function(err) {
+    console.log(&quot;error: &quot;, err);
+  });</code></pre><p>By default send promises are resolved when a disposition frame is received from the remote link for the<br>sent message, at this point the message is considered &quot;settled&quot;.  To tune this behavior, you can tweak<br>the policy you give to AMQPClient on construction.  For instance, to force send promises to be resolved<br>immediately on successful sending of the payload, you would build AMQPClient like so:</p>
+<pre class="prettyprint source"><code>var AMQPClient = require('amqp10').Client,
+    Policy = require('amqp10').Policy;
+var client = new AMQPClient(Policy.merge({
+  senderLinkPolicy: {
+    callbackPolicy: Policy.Utils.SenderCallbackPolicies.OnSent
+  }
+}, Policy.DefaultPolicy));</code></pre><p>In addition to the above, you can also tune how message link credit is doled out (for throttling), as<br>well as most other AMQP behaviors, all through policy overrides.  See <a href="https://github.com/noodlefrenzy/node-amqp10/blob/master/lib/policies/default_policy.js">DefaultPolicy</a><br>and the <a href="https://github.com/noodlefrenzy/node-amqp10/blob/master/lib/policies/policy_utilities.js">policy utilities</a><br>for more details on altering various behaviors.</p>
+<h2><a href="https://github.com/noodlefrenzy/node-amqp10/blob/master/DOCUMENTATION.md">Documentation</a></h2><h2>Flow Control and Message Dispositions</h2><p>Flow control in AMQP occurs at both the <code>Session</code> and <code>Link</code> layers. Using our default policy, we start out with some sensible Session windows and Link credits, and renew those every time they get to the half-way point. In addition, receiver links start in &quot;auto-settle&quot; mode, which means that the sender side can consider the message &quot;settled&quot; as soon as it's sent. However, <em>all</em> of those settings are easily tune-able through Policy overrides (<code>Policy.merge(&lt;overrides&gt;, &lt;base policy&gt;)</code>).</p>
+<p>For instance. we've provided a convenience helper for throttling your receiver links to only renew credits on messages they've &quot;settled&quot;. To use this with Azure ServiceBus Queues for instance, it would look like:</p>
+<pre class="prettyprint source"><code>var AMQPClient = require('amqp10').Client,
+    Policy = require('amqp10').Policy;
+var client = new AMQPClient(Policy.Utils.RenewOnSettle(1, 1, Policy.ServiceBusQueue));</code></pre><p>Where the first number is the initial credit, and the second is the <em>threshold</em> - once remaining credit goes below that, we will give out more credit by the number of messages we've settled. In this case we're setting up the client for one-by-one message processing. Behind the scenes, this does the following:</p>
+<ol>
+<li><p>Sets the Link's creditQuantum to the first number (1), which you can do for yourself via the Policy mix-in <code>{ receiverLink: { creditQuantum: 1 } }</code></p>
+</li>
+<li><p>Sets the Link to not auto-settle messages at the sender, which you can do for yourself via <code>{ receiverLink: { attach: { receiverSettleMode: 1 } } }</code><br>Where did that magic &quot;1&quot; come from? Well, that's the value from the spec, but you could use the constant we've defined at <code>require('amqp10').Constants.receiverSettleMode.settleOnDisposition</code></p>
+</li>
+<li><p>Sets the Link's credit renewal policy to a custom method that renews only when the link credit is below the threshold and we've settled some messages. You can do this yourself by using your own custom method:</p>
+<pre class="prettyprint source"><code>{
+receiverLink: {
+ credit: function (link, options) {
+   // If the receiver link was just connected, set the initial link credit to the quantum. Otherwise, give more credit for every message we've settled.
+   var creditQuantum = (!!options && options.initial) ? link.policy.creditQuantum : link.settledMessagesSinceLastCredit;
+   if (creditQuantum > 0 && link.linkCredit &lt; threshold) {
+     link.addCredits(creditQuantum);
+   }
+ }
+}
+}</code></pre></li>
+</ol>
+<p>Note that once you've set the policy to not auto-settle messages, you'll need to settle them yourself. We've tried to make that easy by providing methods on the receiver link for each of the possible &quot;disposition states&quot; that AMQP allows:</p>
 <ul>
-<li>  I'm planning on using Node's built-in net/socket classes for communicating with the server.</li>
-<li>  Data from the server will be written to a circular buffer based on <a href="https://github.com/cbarrick/CircularBuffer">CBarrick's</a>.</li>
-<li>  Outgoing data will be encoded using <a href="https://github.com/PeterReid/node-buffer-builder">this buffer builder</a> - streaming
-output won't really work since each outgoing payload needs to be prefixed with its encoded size.</li>
-<li>  The connection state will be managed using <a href="https://github.com/fschaefer/Stately.js">Stately.js</a>, with state transitions
-swapping which callback gets invoked on receipt of new data. (e.g. post-connection, we write the AMQP version header
-and then install a callback to ensure the correct version.  Once incoming data is written to the circular buffer, this
-callback is invoked, and a comparison vs. the expected version triggers another transition).</li>
-<li>  Buffer comparisons are done via <a href="https://github.com/bnoordhuis/node-buffertools">Buffertools</a>.  Bit-twiddling is done
-via <a href="https://github.com/nlf/node-butils">node-butils</a>, if necessary.</li>
+<li><code>link.accept(message)</code> will tell the sender that you've accepted and processed the message.</li>
+<li><code>link.reject(message, [error])</code> will reject the message with the given error (if provided). The sender is free to re-deliver, so this can be used to indicate transient errors.</li>
+<li><code>link.modify(message, [options])</code> will tell the sender to modify the message and re-deliver. You can tell it you can't accept the message by using <code>link.modify(message, { undeliverableHere: true })</code></li>
+<li><code>link.release(message)</code> will tell the sender that you haven't processed the message and it's free to re-deliver - even back to you.</li>
 </ul>
-
-<p>Further, detailed implementation nodes are available in the <a href="api/">API Readme</a>.</p>
-
-<h2>
-<a id="protocol-notes" class="anchor" href="#protocol-notes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Protocol Notes</h2>
-
-<p>The <a href="http://docs.oasis-open.org/amqp/core/v1.0/amqp-core-complete-v1.0.pdf">AMQP 1.0 Protocol</a> differs substantially 
-from the <a href="http://www.rabbitmq.com/resources/specs/amqp0-9-1.pdf">0.9.1 protocol</a>, with 0.9.1 defining exchanges, brokers, 
-types of queues (fanout, topic, etc.) and 1.0 focusing on more robust data interchange specifications and leaving much 
-of the server implementation to the implementor.  This section is just attempting to document features of this protocol 
-with the aim of enlightening those looking into the defined classes (and helping me drive my implementation).</p>
-
+<p>All of these methods accept an array of messages, allowing you to settle many at once.</p>
+<h2>Plugins</h2><p>The amqp10 module now supports pluggable Client behaviors with the exported <code>use</code> method. Officially supported plugins include:</p>
 <ul>
-<li>
-<p>Connection</p>
-
-<p>An AMQP connection is a full-duplex ordered sequence of frames.</p>
-</li>
-<li>
-<p>Frame</p>
-
-<p>A Frame is the bitstream defining a full parsable unit.</p>
-</li>
-<li>
-<p>Channel</p>
-
-<p>A connection is divided into a negotiated number of independent unidirectional channels.  Frames are marked with
-their parent channel number.</p>
-</li>
-<li>
-<p>Session</p>
-
-<p>Correlation of two channels to form a bi-di sequential conversation.</p>
-
-<p>Connections may have multiple independent sessions active simultaneously, up to the negotiated channel limit.</p>
-</li>
-<li>
-<p>Link</p>
-
-<p>Connection between two nodes.  Provides a credit-based flow-control scheme, each terminus of a link must track 
-stream state.  Links are named, and may outlive their associated connections, allowing reconnection and retention
-of associated state.</p>
-</li>
+<li><a href="https://github.com/mbroadst/amqp10-link-cache">amqp10-link-cache</a> - caches links with optional purging based on ttl</li>
+<li><a href="https://github.com/mbroadst/amqp10-rpc">amqp10-rpc</a> - an rpc server/client implementation on top of amqp10</li>
 </ul>
+<h2>Supported Servers</h2><p>We are currently actively running integration tests against the following servers:</p>
+<ol>
+<li>Azure EventHubs</li>
+<li>Azure ServiceBus Queues and Topics</li>
+<li>Apache Qpid C++ broker (qpidd)</li>
+</ol>
+<p>We have been tested against the following servers, but not exhaustively so issues may remain:</p>
+<ol>
+<li>ActiveMQ (open issue related to ActiveMQ ignoring the auto-settle setting and disposition frames may cause messages to re-deliver or stop sending after a certain period)</li>
+<li>RabbitMQ with the amqp 1.0 experimental extension</li>
+<li>Apache Qpid Java broker</li>
+</ol>
+<p>If you find any issues, please report them via GitHub.</p>
+<h2>Todos and Known Issues</h2><ol>
+<li>Disposition support is incomplete in that we don't send proper &quot;unsettled&quot; information when re-attaching links.</li>
+<li>There are some AMQP types we don't process - notably the Decimal23/64/128 types.  These are unused by the protocol, and no-one seems to<br>be using them to convey information in messages, so ignoring them is likely safe.</li>
+</ol>
+<h2>Implementation Notes</h2><ul>
+<li><p>Using node's built-in net/tls classes for communicating with the server.</p>
+</li>
+<li><p>Data from the server is written to a buffer-list based on <a href="https://github.com/rvagg/bl">Rod Vagg's BL</a>.</p>
+</li>
+<li><p>Outgoing data is encoded using <a href="https://github.com/PeterReid/node-buffer-builder">this buffer builder</a> - streaming<br>output won't really work since each outgoing payload needs to be prefixed with its encoded size, however we're working on<br>converting to use as much streaming as possible.</p>
+</li>
+<li><p>The connection state is managed using <a href="https://github.com/fschaefer/Stately.js">Stately.js</a>, with state transitions<br>swapping which callback gets invoked on receipt of new data. (e.g. post-connection, we write the AMQP version header<br>and then install a callback to ensure the correct version.  Once incoming data is written to the circular buffer, this<br>callback is invoked, and a comparison vs. the expected version triggers another transition).</p>
+</li>
+<li><p>Debug output is done via <a href="https://www.npmjs.com/package/debug">debug</a> with the prefix <code>amqp10:</code>.  The main client's debug<br>name is <code>amqp10:client</code> so setting <code>DEBUG=amqp10:client</code> as an environment variable will get you all top-level debugging output.</p>
+<pre class="prettyprint source lang-bash"><code>bash# export DEBUG=amqp*</code></pre><pre class="prettyprint source lang-bash"><code>C:\> set DEBUG=amqp*</code></pre><pre class="prettyprint source lang-bash"><code>[root@pinguino]# node simple_eventhub_test.js
+  amqp10:client connecting to: amqps://xxxxxx:xxxxxxxxx@xxxxxxxxxxxx.servicebus.windows.net +0ms
+  amqp10:connection Connecting to xxxxxx-service-bus-001.servicebus.windows.net:5671 via TLS +72ms
+  amqp10:connection Transitioning from DISCONNECTED to START due to connect +17ms
+  amqp10:connection Sending Header 414d515003010000 +405ms
+  amqp10:connection Transitioning from START to IN_SASL due to connected +6ms
+  amqp10:connection Rx: 414d515003010000 +128ms
+  amqp10:sasl Server SASL Version: 414d515003010000 vs 414d515003010000 +1ms
+  amqp10:connection Rx: 0000003f02010000005340c03201e02f04b3000000074d535342434... +162ms
+  amqp10:client Reading variable with prefix 0xc0 of length 52 +2ms
+  amqp10:client Decoding 5340 +0ms
+  [...]</code></pre></li>
+<li><p>Many thanks to Gordon Sim for inspiration on the type system, gleaned from his project <a href="https://github.com/grs/rhea">rhea</a>.</p>
+</li>
+</ul></article>
+    </section>
 
-<h2>
-<a id="caveats" class="anchor" href="#caveats" aria-hidden="true"><span class="octicon octicon-link"></span></a>Caveats</h2>
 
-<p>NOT YET IMPLEMENTED!  I'm just starting on this work - please ignore this repo for now.  Unless you want to help,
-in which case PR's are welcome :)</p>
 
-<h2>
-<a id="license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>License</h2>
 
-<p>MIT License.  If you need a more permissive license, or you want to try your hand at integrating this code into
-node-amqp or amqp.node and need to match their license, let me know (i.e. open an issue).</p>
-      </section>
 
-    </div>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
-              <script type="text/javascript">
-            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-          </script>
-          <script type="text/javascript">
-            try {
-              var pageTracker = _gat._getTracker("UA-54597100-2");
-            pageTracker._trackPageview();
-            } catch(err) {}
-          </script>
 
-  </body>
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AMQPClient.html">AMQPClient</a></li><li><a href="Link.html">Link</a></li><li><a href="Policy.html">Policy</a></li><li><a href="ReceiverLink.html">ReceiverLink</a></li><li><a href="SenderLink.html">SenderLink</a></li></ul><h3>Events</h3><ul><li><a href="AMQPClient.html#event:client:errorReceived">client:errorReceived</a></li><li><a href="AMQPClient.html#event:connection:closed">connection:closed</a></li><li><a href="AMQPClient.html#event:connection:opened">connection:opened</a></li><li><a href="Link.html#event:attached">attached</a></li><li><a href="Link.html#event:detached">detached</a></li><li><a href="Link.html#event:errorReceived">errorReceived</a></li><li><a href="ReceiverLink.html#event:attached">attached</a></li><li><a href="ReceiverLink.html#event:creditChange">creditChange</a></li><li><a href="ReceiverLink.html#event:detached">detached</a></li><li><a href="ReceiverLink.html#event:errorReceived">errorReceived</a></li><li><a href="ReceiverLink.html#event:message">message</a></li><li><a href="SenderLink.html#event:attached">attached</a></li><li><a href="SenderLink.html#event:detached">detached</a></li><li><a href="SenderLink.html#event:errorReceived">errorReceived</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sun Dec 11 2016 09:34:36 GMT-0500 (EST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
 </html>
