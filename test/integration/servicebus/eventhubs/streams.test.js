@@ -2,6 +2,7 @@
 var Promise = require('bluebird'),
     amqp = require('../../../..'),
     AMQPClient = amqp.Client,
+    translator = amqp.translator,
     Policy = amqp.Policy,
     config = require('./config'),
     expect = require('chai').expect,
@@ -37,6 +38,17 @@ describe('ReceiverStream', function() {
   afterEach(teardown);
 
   it('should let you create a receiver link as a readable stream', function(done) {
+    var now = Date.now() - (1000 * 5); // 5 seconds ago
+
+    // This is necessary because EH seems to not be purging messages correctly, so we're date-bounding receivers. Ideally, we should NOT
+    //  be doing filter options in this test, since that's explicitly tested below.
+    var filterOptions = {
+      attach: { source: { filter: {
+        'apache.org:selector-filter:string': translator(
+          ['described', ['symbol', 'apache.org:selector-filter:string'], ['string', 'amqp.annotation.x-opt-enqueuedtimeutc > ' + now]])
+      } } }
+    };
+
     expect(config.partitionSenderLinkPrefix,
       'Required env vars not found in ' + Object.keys(process.env)).to.exist;
 
@@ -45,7 +57,7 @@ describe('ReceiverStream', function() {
           .map(function(a) { return Math.floor(Math.random() * 100); });
 
     Promise.all([
-      test.client.createReceiverStream(config.receiverLinkPrefix + test.partition),
+      test.client.createReceiverStream(config.receiverLinkPrefix + test.partition, filterOptions),
       test.client.createSender(config.partitionSenderLinkPrefix + test.partition, { callback: 'none' })
     ])
     .spread(function(stream, sender) {
@@ -73,8 +85,19 @@ describe('SenderStream', function() {
         expected = Array.apply(null, new Array(20))
           .map(function(a) { return Math.floor(Math.random() * 100); });
 
+    var now = Date.now() - (1000 * 5); // 5 seconds ago
+
+    // This is necessary because EH seems to not be purging messages correctly, so we're date-bounding receivers. Ideally, we should NOT
+    //  be doing filter options in this test, since that's explicitly tested below.
+    var filterOptions = {
+      attach: { source: { filter: {
+        'apache.org:selector-filter:string': translator(
+          ['described', ['symbol', 'apache.org:selector-filter:string'], ['string', 'amqp.annotation.x-opt-enqueuedtimeutc > ' + now]])
+      } } }
+    };
+
     Promise.all([
-      test.client.createReceiver(config.receiverLinkPrefix + test.partition),
+      test.client.createReceiver(config.receiverLinkPrefix + test.partition, filterOptions),
       test.client.createSenderStream(config.partitionSenderLinkPrefix + test.partition, { callback: 'none' })
     ])
     .spread(function(receiver, stream) {
