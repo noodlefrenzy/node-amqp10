@@ -2,7 +2,7 @@
 var tu = require('../../../testing_utils.js');
 
 module.exports = tu.populateConfig({
-  serviceBusHost: 'ServiceBusNamespace',
+  serviceBusHost: 'EventHubNamespace',
   senderLink: 'EventHubName',
   partitionCount: 'EventHubPartitionCount',
   sasKeyName: 'EventHubKeyName',

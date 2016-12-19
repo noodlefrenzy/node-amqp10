@@ -30,10 +30,21 @@ describe('EventHubs', function () {
   });
 
   it('should connect, send, and receive a message', function (done) {
+    var now = Date.now() - (1000 * 5); // 5 seconds ago
+
+    // This is necessary because EH seems to not be purging messages correctly, so we're date-bounding receivers. Ideally, we should NOT
+    //  be doing filter options in this test, since that's explicitly tested below.
+    var filterOptions = {
+      attach: { source: { filter: {
+        'apache.org:selector-filter:string': translator(
+          ['described', ['symbol', 'apache.org:selector-filter:string'], ['string', 'amqp.annotation.x-opt-enqueuedtimeutc > ' + now]])
+      } } }
+    };
+
     var msgVal = u.uuidV4();
     test.client.connect(config.address)
       .then(function() {
-        return createPartitionReceivers(test.client, config.partitionCount, config.receiverLinkPrefix);
+        return createPartitionReceivers(test.client, config.partitionCount, config.receiverLinkPrefix, filterOptions);
       })
       .map(function(receiver) {
         receiver.on('message', function (message) {
