@@ -1,3 +1,14 @@
+<a name="3.4.1"></a>
+## [3.4.1](https://github.com/noodlefrenzy/node-amqp10/compare/v3.4.0...v3.4.1) (2017-02-07)
+
+
+### Bug Fixes
+
+* **amqp_error:** accept non-standard values for error-condition ([9a560d2](https://github.com/noodlefrenzy/node-amqp10/commit/9a560d2)), closes [#293](https://github.com/noodlefrenzy/node-amqp10/issues/293)
+* **ServiceBusPolicy:** Avoid jsonifying Buffers ([0814658](https://github.com/noodlefrenzy/node-amqp10/commit/0814658))
+
+
+
 <a name="3.4.0"></a>
 # [3.4.0](https://github.com/noodlefrenzy/node-amqp10/compare/v3.3.2...v3.4.0) (2016-11-27)
 
