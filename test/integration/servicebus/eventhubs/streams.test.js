@@ -2,7 +2,7 @@
 var Promise = require('bluebird'),
     amqp = require('../../../..'),
     AMQPClient = amqp.Client,
-    translator = amqp.translator,
+    t = amqp.Encoder,
     Policy = amqp.Policy,
     config = require('./config'),
     expect = require('chai').expect,
@@ -44,8 +44,10 @@ describe('ReceiverStream', function() {
     //  be doing filter options in this test, since that's explicitly tested below.
     var filterOptions = {
       attach: { source: { filter: {
-        'apache.org:selector-filter:string': translator(
-          ['described', ['symbol', 'apache.org:selector-filter:string'], ['string', 'amqp.annotation.x-opt-enqueuedtimeutc > ' + now]])
+        'apache.org:selector-filter:string': t.described(
+          t.symbol('apache.org:selector-filter:string'),
+          t.string('amqp.annotation.x-opt-enqueuedtimeutc > ' + now)
+        )
       } } }
     };
 
@@ -91,8 +93,10 @@ describe('SenderStream', function() {
     //  be doing filter options in this test, since that's explicitly tested below.
     var filterOptions = {
       attach: { source: { filter: {
-        'apache.org:selector-filter:string': translator(
-          ['described', ['symbol', 'apache.org:selector-filter:string'], ['string', 'amqp.annotation.x-opt-enqueuedtimeutc > ' + now]])
+        'apache.org:selector-filter:string': t.described(
+          t.symbol('apache.org:selector-filter:string'),
+          t.string('amqp.annotation.x-opt-enqueuedtimeutc > ' + now)
+        )
       } } }
     };
 
