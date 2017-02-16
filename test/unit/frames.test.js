@@ -10,9 +10,9 @@ var frames = require('../../lib/frames'),
     DeliveryState = require('../../lib/types/delivery_state'),
     AMQPError = require('../../lib/types/amqp_error'),
     ForcedType = require('../../lib/types/forced_type'),
+    t = require('../../lib').Encoder,
 
-    terminus = require('../../lib/types/terminus'),
-    translator = require('../../lib/adapters/translate_encoder');
+    terminus = require('../../lib/types/terminus');
 
 describe('Frames', function() {
 describe('errors', function() {
@@ -303,9 +303,7 @@ describe('AttachFrame', function() {
       }
     });
     attach.channel = 1;
-    attach.source.filter = translator([
-      'described', ['symbol', 'apache.org:legacy-amqp-direct-binding:string'], ['string', 'news']
-    ]);
+    attach.source.filter = t.described(t.symbol('apache.org:legacy-amqp-direct-binding:string'), t.string('news'));
 
     var actual = tu.convertFrameToBuffer(attach);
     var expected = tu.buildBuffer([

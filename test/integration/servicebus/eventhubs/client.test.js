@@ -2,7 +2,7 @@
 var amqp = require('../../../../lib'),
     AMQPClient = amqp.Client,
     Policy = amqp.Policy,
-    translator = amqp.translator,
+    t = amqp.Encoder,
     Promise = require('bluebird'),
     config = require('./config'),
     expect = require('chai').expect,
@@ -24,9 +24,10 @@ function boundedFilter(offset) {
 
   return {
     attach: { source: { filter: {
-      'apache.org:selector-filter:string': translator(
-        ['described', ['symbol', 'apache.org:selector-filter:string'],
-        ['string', 'amqp.annotation.x-opt-enqueuedtimeutc > ' + enqueuedTimeUTC]])
+      'apache.org:selector-filter:string': t.described(
+        t.symbol('apache.org:selector-filter:string'),
+        t.string('amqp.annotation.x-opt-enqueuedtimeutc > ' + enqueuedTimeUTC)
+      )
     } } }
   };
 }
