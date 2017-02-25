@@ -10,7 +10,7 @@ var frames = require('../../lib/frames'),
     DeliveryState = require('../../lib/types/delivery_state'),
     AMQPError = require('../../lib/types/amqp_error'),
     ForcedType = require('../../lib/types/forced_type'),
-    t = require('../../lib').Encoder,
+    t = require('../../lib').Type,
 
     terminus = require('../../lib/types/terminus');
 

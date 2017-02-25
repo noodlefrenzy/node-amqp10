@@ -2,7 +2,7 @@
 var amqp = require('../../../../lib'),
     AMQPClient = amqp.Client,
     Policy = amqp.Policy,
-    t = amqp.Encoder,
+    t = amqp.Type,
     Promise = require('bluebird'),
     config = require('./config'),
     expect = require('chai').expect,
