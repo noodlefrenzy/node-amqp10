@@ -55,6 +55,8 @@ function buildBuffer(contents) {
     var cur = contents[idx];
     if (typeof cur === 'function') {
       cur.call(bufb, contents[++idx]);
+    } else if (typeof cur === 'string') {
+      bufb.appendString(cur);
     } else {
       bufb.appendUInt8(cur);
     }
