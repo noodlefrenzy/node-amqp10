@@ -1,3 +1,18 @@
+<a name="3.4.2"></a>
+## [3.4.2](https://github.com/noodlefrenzy/node-amqp10/compare/v3.4.1...v3.4.2) (2017-02-27)
+
+
+### Bug Fixes
+
+* **sender-link:** use spec-defined calculation for linkCredit ([373b736](https://github.com/noodlefrenzy/node-amqp10/commit/373b736))
+
+
+### Features
+
+* **sender-link:** add support for sending with no reply ([f0f267c](https://github.com/noodlefrenzy/node-amqp10/commit/f0f267c))
+
+
+
 <a name="3.4.1"></a>
 ## [3.4.1](https://github.com/noodlefrenzy/node-amqp10/compare/v3.4.0...v3.4.1) (2017-02-07)
 
