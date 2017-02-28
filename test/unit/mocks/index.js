@@ -30,7 +30,7 @@ module.exports = {
       linkCredit: 500
     },
     close: {
-      error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
+      error: { condition: ErrorCondition.ConnectionForced, description: 'from mock server' }
     }
   }
 };
