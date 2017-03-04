@@ -23,6 +23,14 @@ var TestPolicy = new Policy({
   reconnect: { retries: 0, forever: false }
 });
 
+function AttachFrameWithReceivedName(role) {
+  role = role || constants.linkRole.sender;
+  return function(prev) {
+    var rxAttach = frames.readFrame(prev[prev.length-1]);
+    return new frames.AttachFrame(u.deepMerge({ name: rxAttach.name, role: role }, md.attach));
+  };
+}
+
 describe('SenderLink', function() {
   beforeEach(function() {
     if (!!test.server) test.server = undefined;
@@ -44,12 +52,7 @@ describe('SenderLink', function() {
       new frames.OpenFrame({ containerId: 'test' }),
       new frames.BeginFrame(md.begin),
       [
-        function (prev) {
-          var rxAttach = frames.readFrame(prev[prev.length-1]);
-          return new frames.AttachFrame(u.deepMerge({
-            name: rxAttach.name, role: constants.linkRole.receiver,
-          }, md.attach));
-        },
+        new AttachFrameWithReceivedName(constants.linkRole.receiver),
         new frames.FlowFrame(md.flow)
       ],
       new frames.DispositionFrame({
@@ -73,12 +76,7 @@ describe('SenderLink', function() {
       new frames.OpenFrame({ containerId: 'test' }),
       new frames.BeginFrame(md.begin),
       [
-        function (prev) {
-          var rxAttach = frames.readFrame(prev[prev.length-1]);
-          return new frames.AttachFrame(u.deepMerge({
-            name: rxAttach.name, role: constants.linkRole.receiver
-          }, md.attach));
-        },
+        new AttachFrameWithReceivedName(constants.linkRole.receiver),
         new frames.FlowFrame(md.flow)
       ],
       new frames.CloseFrame(md.close)
@@ -103,12 +101,7 @@ describe('SenderLink', function() {
       new frames.OpenFrame({ containerId: 'test' }),
       new frames.BeginFrame(md.begin),
       [
-        function (prev) {
-          var rxAttach = frames.readFrame(prev[prev.length-1]);
-          return new frames.AttachFrame(u.deepMerge({
-            name: rxAttach.name, role: constants.linkRole.receiver
-          }, md.attach));
-        },
+        new AttachFrameWithReceivedName(constants.linkRole.receiver),
         new frames.FlowFrame({
           handle: 1, deliveryCount: 0,
           nextIncomingId: 0, incomingWindow: 0,
@@ -140,12 +133,7 @@ describe('SenderLink', function() {
       new frames.OpenFrame({ containerId: 'test' }),
       new frames.BeginFrame(md.begin),
       [
-        function (prev) {
-          var rxAttach = frames.readFrame(prev[prev.length-1]);
-          return new frames.AttachFrame(u.deepMerge({
-            name: rxAttach.name, role: constants.linkRole.receiver
-          }, md.attach));
-        },
+        new AttachFrameWithReceivedName(constants.linkRole.receiver),
         new frames.FlowFrame({
           handle: 1, deliveryCount: 1,
           nextIncomingId: 0, incomingWindow: 1,
@@ -156,7 +144,12 @@ describe('SenderLink', function() {
       new frames.CloseFrame(md.close)
     ]);
 
-    test.client.policy.session.enableSessionFlowControl = true;
+    test.client = new AMQPClient(new Policy({
+      connect: { options: { containerId: 'test' } },
+      reconnect: { retries: 0, forever: false },
+      session: { enableSessionFlowControl: true }
+    }));
+
     return test.client.connect(test.server.address())
       .then(function() { return test.client.createSender('test.link'); })
       .delay(100) // wait for flow
@@ -173,46 +166,31 @@ describe('SenderLink', function() {
   });
 
 
-  it.skip('should send message after reattach', function(done) {
+  it.skip('should send message after reattach', function() {
     test.server.setResponseSequence([
       constants.amqpVersion,
       new frames.OpenFrame({ containerId: 'test' }),
       new frames.BeginFrame(md.begin),
       [
-        function (prev) {
-          var rxAttach = frames.readFrame(prev[prev.length-1]);
-          return new frames.AttachFrame(u.deepMerge({
-            name: rxAttach.name, role: constants.linkRole.receiver
-          }, md.attach));
-        },
-        new frames.FlowFrame({
-          handle: 1, deliveryCount: 0,
-          nextIncomingId: 0, incomingWindow: 0,
-          nextOutgoingId: 0, outgoingWindow: 0,
-          linkCredit: 0
-        }),
-        { delay: 100 },
+        new AttachFrameWithReceivedName(constants.linkRole.receiver),
+        new frames.FlowFrame(md.flow),
+        { delay: 1000 },
         new frames.CloseFrame(md.close),
       ],
     ]);
 
-    var sendPromise;
-    test.client = new AMQPClient({
-      connect: { options: { containerId: 'test' } },
-      reconnect: { retries: 5, forever: true }
-    });
-
-    test.client.connect(test.server.address())
+    var sender;
+    return test.client.connect(test.server.address())
       .then(function() { return test.client.createSender('test.link'); })
       .delay(100) // wait for flow
-      .then(function(sender) {
-        sendPromise = sender.send('test');
-        sendPromise
-          .then(function() { done(); })
-          .catch(function(err) { done(err); });
+      .then(function(_sender) {
+        sender = _sender;
+        return expect(sender.send('test')).to.eventually.be.rejectedWith(/detach-forced/);
       })
-      .delay(1000);
-      // .then(function() { return test.client.disconnect(); });
+      .then(function() {
+        expect(Object.keys(sender._unsettledSends)).to.have.length(0);
+        return test.client.disconnect();
+      });
   });
 
 
