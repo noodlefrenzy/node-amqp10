@@ -17,7 +17,9 @@ var _ = require('lodash'),
     m = require('../../lib/types/message'),
     DeliveryState = require('../../lib/types/delivery_state'),
 
-    test = require('./test-fixture');
+    u = require('../../lib/utilities'),
+    test = require('./test-fixture'),
+    md = require('./mocks').Defaults;
 
 chai.use(require('chai-as-promised'));
 
@@ -25,6 +27,14 @@ var TestPolicy = new Policy({
   connect: { options: { containerId: 'test' } },
   reconnect: { retries: 0, forever: false }
 });
+
+function AttachFrameWithReceivedName(role) {
+  role = role || constants.linkRole.sender;
+  return function(prev) {
+    var rxAttach = frames.readFrame(prev[prev.length-1]);
+    return new frames.AttachFrame(u.deepMerge({ name: rxAttach.name, role: role }, md.attach));
+  };
+}
 
 function encodeMessagePayload(message) {
   var tmpBuf = new Builder();
@@ -95,15 +105,7 @@ describe('Client', function() {
           incomingWindow: 2147483647, outgoingWindow: 2147483647,
           handleMax: 4294967295
         }),
-        function (prev) {
-          var rxAttach = frames.readFrame(prev[prev.length-1]);
-          return new frames.AttachFrame({
-            name: rxAttach.name, handle: 1,
-            role: constants.linkRole.sender,
-            source: {}, target: {},
-            initialDeliveryCount: 0
-          });
-        },
+        new AttachFrameWithReceivedName(constants.linkRole.sender),
         new frames.CloseFrame({
           error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
         })
@@ -131,15 +133,7 @@ describe('Client', function() {
           incomingWindow: 2147483647, outgoingWindow: 2147483647,
           handleMax: 4294967295
         }),
-        function (prev) {
-          var rxAttach = frames.readFrame(prev[prev.length-1]);
-          return new frames.AttachFrame({
-            name: rxAttach.name, handle: 1,
-            role: constants.linkRole.sender,
-            source: {}, target: {},
-            initialDeliveryCount: 0
-          });
-        },
+        new AttachFrameWithReceivedName(constants.linkRole.sender),
         function (prev) {
           var txFrame = new frames.TransferFrame({
             handle: 1, deliveryId: 1
@@ -198,14 +192,7 @@ describe('Client', function() {
           incomingWindow: 2147483647, outgoingWindow: 2147483647,
           handleMax: 4294967295
         }),
-        function (prev) {
-          var rxAttach = frames.readFrame(prev[prev.length-1]);
-          return new frames.AttachFrame({
-            name: rxAttach.name, handle: 1,
-            role: constants.linkRole.sender,
-            source: {}, target: {}, initialDeliveryCount: 0
-          });
-        },
+        new AttachFrameWithReceivedName(constants.linkRole.sender),
         [
           function (prev) {
             var txFrame = new frames.TransferFrame({ handle: 1, deliveryId: 1, more: true });
@@ -253,13 +240,7 @@ describe('Client', function() {
           outgoingWindow: 2147483647, handleMax: 4294967295
         }),
         [
-          function (prev) {
-            var rxAttach = frames.readFrame(prev[prev.length-1]);
-            return new frames.AttachFrame({
-              name: rxAttach.name, handle: 1, role: constants.linkRole.receiver,
-              source: {}, target: {}, initialDeliveryCount: 0
-            });
-          },
+          new AttachFrameWithReceivedName(constants.linkRole.receiver),
           new frames.FlowFrame({
             handle: 1, deliveryCount: 1,
             nextIncomingId: 1, incomingWindow: 2147483647,
@@ -412,15 +393,7 @@ describe('Client', function() {
           handleMax: 4294967295
         }),
         [
-          function (prev) {
-            var rxAttach = frames.readFrame(prev[prev.length - 1]);
-            return new frames.AttachFrame({
-              name: rxAttach.name, handle: 1,
-              role: constants.linkRole.receiver,
-              source: {}, target: {},
-              initialDeliveryCount: 0
-            });
-          },
+          new AttachFrameWithReceivedName(constants.linkRole.receiver),
 
           { delay: 100 },
 
@@ -451,15 +424,7 @@ describe('Client', function() {
           handleMax: 4294967295
         }),
         [
-          function (prev) {
-            var rxAttach = frames.readFrame(prev[prev.length - 1]);
-            return new frames.AttachFrame({
-              name: rxAttach.name, handle: 1,
-              role: constants.linkRole.receiver,
-              source: {}, target: {},
-              initialDeliveryCount: 0
-            });
-          },
+          new AttachFrameWithReceivedName(constants.linkRole.receiver),
 
           { delay: 100 },
 
@@ -489,15 +454,7 @@ describe('Client', function() {
           handleMax: 4294967295
         }),
         [
-          function (prev) {
-            var rxAttach = frames.readFrame(prev[prev.length - 1]);
-            return new frames.AttachFrame({
-              name: rxAttach.name, handle: 1,
-              role: constants.linkRole.receiver,
-              source: {}, target: {},
-              initialDeliveryCount: 0
-            });
-          },
+          new AttachFrameWithReceivedName(constants.linkRole.receiver),
 
           { delay: 1000 },
 
@@ -632,15 +589,7 @@ describe('Client', function() {
           incomingWindow: 2147483647, outgoingWindow: 2147483647,
           handleMax: 4294967295
         }),
-        function (prev) {
-          var rxAttach = frames.readFrame(prev[prev.length-1]);
-          return new frames.AttachFrame({
-            name: rxAttach.name, handle: 1,
-            role: constants.linkRole.sender,
-            source: {}, target: {},
-            initialDeliveryCount: 0
-          });
-        },
+        new AttachFrameWithReceivedName(constants.linkRole.sender),
         [ // force detach from remote server, and force close of the connection
           new frames.DetachFrame({ handle: 1, closed: true, error: 'internal-error' }),
           new frames.CloseFrame({
@@ -662,15 +611,7 @@ describe('Client', function() {
           incomingWindow: 2147483647, outgoingWindow: 2147483647,
           handleMax: 4294967295
         }),
-        function (prev) {
-          var rxAttach = frames.readFrame(prev[prev.length-1]);
-          return new frames.AttachFrame({
-            name: rxAttach.name, handle: 1,
-            role: constants.linkRole.sender,
-            source: {}, target: {},
-            initialDeliveryCount: 0
-          });
-        },
+        new AttachFrameWithReceivedName(constants.linkRole.sender),
         [ // force detach from remote server, and force close of the connection
           new frames.DetachFrame({ handle: 1, closed: true }),
           new frames.EndFrame(),
