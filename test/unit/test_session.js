@@ -215,7 +215,7 @@ describe('Session', function() {
           'OPENED', 'CLOSE_RCVD', 'DISCONNECTED'
         ],
         session: ['UNMAPPED', 'BEGIN_SENT', 'MAPPED', 'END_RCVD', 'UNMAPPED'],
-        link: ['ATTACHING', 'ATTACHED', 'DETACHING', 'DETACHED']
+        link: ['ATTACHING', 'ATTACHED', 'DETACHED']
       };
 
       var actual = {};
@@ -243,7 +243,7 @@ describe('Session', function() {
 //            expect(err).to.eql(errors.wrapProtocolError(new AMQPError(ErrorCondition.LinkDetachForced, 'test', '')));
           });
 
-          link.linkSM.bind(tu.assertTransitions(expected.link, function(transitions) {
+          link.sm.bind(tu.assertTransitions(expected.link, function(transitions) {
             assertMultipleTransitions('link', transitions);
           }));
         });

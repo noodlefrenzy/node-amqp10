@@ -619,16 +619,17 @@ describe('Client', function() {
         ]
       ]);
 
+      var receiver;
       return test.client.connect(test.server.address())
         .then(function() {
-          var $terminate = test.client._connection._terminate.bind(test.client._connection);
-          test.client._connection._terminate = function() {
-            setTimeout(function() { $terminate(); }, 500);
-          };
+          setTimeout(function() { test.server.closeConnection(); }, 200);
         })
         .then(function() { return test.client.createReceiver('testing'); })
-        .delay(500);
+        .then(function(_receiver) { receiver = _receiver; })
+        .delay(500)
+        .then(function() {
+          expect(receiver.state()).to.eql('detached');
+        });
     });
-
   });
 });

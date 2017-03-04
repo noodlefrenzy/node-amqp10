@@ -41,8 +41,8 @@ MockSenderLink.prototype._clearState = function() {
 };
 
 MockSenderLink.prototype.simulateAttaching = function() {
-  this.linkSM.sendAttach();
-  this.linkSM.attachReceived();
+  this.sm.sendAttach();
+  this.sm.attachReceived();
   this.emit(Link.Attached, this);
   this._resolveAttachPromises(null, this);
 };

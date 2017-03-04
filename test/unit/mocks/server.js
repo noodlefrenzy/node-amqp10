@@ -33,6 +33,12 @@ MockServer.prototype.address = function(user, pass) {
   return address;
 };
 
+MockServer.prototype.closeConnection = function() {
+  if (this._client) {
+    this._client.end();
+  }
+};
+
 MockServer.prototype.setup = function() {
   var self = this;
   return new Promise(function(resolve, reject) {
