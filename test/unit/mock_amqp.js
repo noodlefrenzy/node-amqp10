@@ -1,7 +1,7 @@
 'use strict';
 
 var BufferList = require('bl'),
-    debug = require('debug')('amqp10-MockServer'),
+    debug = require('debug')('amqp10:mock:server'),
     net = require('net'),
     expect = require('chai').expect,
     frames = require('../../lib/frames'),
