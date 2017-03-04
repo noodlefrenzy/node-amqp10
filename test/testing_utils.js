@@ -116,6 +116,6 @@ module.exports.assertTransitions = function(expectedTransitions, callback) {
 
 module.exports.convertFrameToBuffer = function(frame) {
   var buffer = new sb.WritableStreamBuffer();
-  frames.writeFrame(frame, buffer);
+  frames.writeFrame(frame, buffer, { verbose: false });
   return buffer.getContents();
 };
