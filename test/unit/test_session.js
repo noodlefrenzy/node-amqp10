@@ -118,7 +118,7 @@ describe('Session', function() {
 
       connection.on(Connection.Connected, function() {
         var session = new Session(connection);
-        session.sessionSM.bind(tu.assertTransitions(expected.session, function(transitions) {
+        session.sm.bind(tu.assertTransitions(expected.session, function(transitions) {
           assertMultipleTransitions('session', transitions);
         }));
 
@@ -232,7 +232,7 @@ describe('Session', function() {
 
       connection.on(Connection.Connected, function() {
         var session = new Session(connection);
-        session.sessionSM.bind(tu.assertTransitions(expected.session, function(transitions) {
+        session.sm.bind(tu.assertTransitions(expected.session, function(transitions) {
           assertMultipleTransitions('session', transitions);
         }));
 
