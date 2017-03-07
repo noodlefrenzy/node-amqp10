@@ -1,3 +1,13 @@
+<a name="3.5.0"></a>
+# [3.5.0](https://github.com/noodlefrenzy/node-amqp10/compare/v3.4.2...v3.5.0) (2017-03-07)
+
+
+### Features
+
+* **encoder:** introduce exported Encoder for easy type annotation ([0d7e2c3](https://github.com/noodlefrenzy/node-amqp10/commit/0d7e2c3))
+
+
+
 <a name="3.4.2"></a>
 ## [3.4.2](https://github.com/noodlefrenzy/node-amqp10/compare/v3.4.1...v3.4.2) (2017-02-27)
 
