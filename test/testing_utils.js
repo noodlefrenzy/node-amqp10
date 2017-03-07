@@ -119,3 +119,17 @@ module.exports.convertFrameToBuffer = function(frame) {
   frames.writeFrame(frame, buffer, { verbose: false });
   return buffer.getContents();
 };
+
+
+module.exports.bufferEqual = function(a, b) {
+  if (!Buffer.isBuffer(a)) return undefined;
+  if (!Buffer.isBuffer(b)) return undefined;
+  if (typeof a.equals === 'function') return a.equals(b);
+  if (a.length !== b.length) return false;
+
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+
+  return true;
+};

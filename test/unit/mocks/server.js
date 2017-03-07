@@ -61,8 +61,8 @@ MockServer.prototype.setup = function() {
         debug('read: ', d.toString('hex'));
 
         // special case for initial headers
-        if (d.compare(constants.amqpVersion) === 0 ||
-            d.compare(constants.saslVersion) === 0) {
+        if (tu.bufferEqual(d, constants.amqpVersion) ||
+            tu.bufferEqual(d, constants.saslVersion)) {
           self._checkExpectations(d);
           return;
         }
