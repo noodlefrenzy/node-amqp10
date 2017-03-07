@@ -6,7 +6,8 @@ var _ = require('lodash'),
     expect = require('chai').expect,
     debug = require('debug')('amqp10:mock:server'),
     frames = require('../../../lib/frames'),
-    tu = require('../../testing_utils');
+    tu = require('../../testing_utils'),
+    constants = require('../../../lib/constants');
 
 function MockServer(options) {
   this._server = null;
@@ -45,6 +46,7 @@ MockServer.prototype.setup = function() {
     self.server = net.createServer(function(c) {
       debug('connection established');
       self._client = c;
+      self._buffer = new BufferList();
 
       if (self.serverGoesFirst) {
         self._sendNextResponse();
@@ -57,7 +59,23 @@ MockServer.prototype.setup = function() {
 
       c.on('data', function(d) {
         debug('read: ', d.toString('hex'));
-        self._checkExpectations(d);
+
+        // special case for initial headers
+        if (d.compare(constants.amqpVersion) === 0 ||
+            d.compare(constants.saslVersion) === 0) {
+          self._checkExpectations(d);
+          return;
+        }
+
+        self._buffer.append(d);
+        var checkBuffer = self._buffer.duplicate();
+        let frame = frames.readFrame(checkBuffer, { verbose: false });
+        if (!frame) return;
+
+        var dataSize = self._buffer.length - checkBuffer.length;
+        var data = self._buffer.slice(0, dataSize);
+        self._buffer.consume(dataSize);
+        self._checkExpectations(data);
       });
     });
 
@@ -76,6 +94,10 @@ MockServer.prototype._checkExpectations = function(data) {
   var idx = 0, expectedFrame;
   while (this._expectedFrames.length) {
     expectedFrame = this._expectedFrames.shift();
+    if (expectedFrame === null) {
+      break;
+    }
+
     if (data.length < idx + expectedFrame.length) {
       this._expectedFrames.unshift(expectedFrame);
       break;
