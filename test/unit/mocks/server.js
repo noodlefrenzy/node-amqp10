@@ -69,7 +69,7 @@ MockServer.prototype.setup = function() {
 
         self._buffer.append(d);
         var checkBuffer = self._buffer.duplicate();
-        let frame = frames.readFrame(checkBuffer, { verbose: false });
+        var frame = frames.readFrame(checkBuffer, { verbose: false });
         if (!frame) return;
 
         var dataSize = self._buffer.length - checkBuffer.length;
