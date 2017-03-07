@@ -23,11 +23,13 @@ var TestPolicy = new Policy({
   reconnect: { retries: 0, forever: false }
 });
 
-function AttachFrameWithReceivedName(role) {
+function AttachFrameWithReceivedName(role, offset) {
+  offset = offset || 1;
   role = role || constants.linkRole.sender;
   return function(prev) {
-    var rxAttach = frames.readFrame(prev[prev.length-1]);
-    return new frames.AttachFrame(u.deepMerge({ name: rxAttach.name, role: role }, md.attach));
+    var data = prev[prev.length - offset].duplicate();
+    var lastAttach = frames.readFrame(data, { verbose: false });
+    return new frames.AttachFrame(u.deepMerge({ name: lastAttach.name, role: role }, md.attach));
   };
 }
 
@@ -166,7 +168,7 @@ describe('SenderLink', function() {
   });
 
 
-  it.skip('should send message after reattach', function() {
+  it('should reattach with non-null `unsettled` field to indicate `resume` (2.6.5)', function() {
     test.server.setResponseSequence([
       constants.amqpVersion,
       new frames.OpenFrame({ containerId: 'test' }),
@@ -174,24 +176,39 @@ describe('SenderLink', function() {
       [
         new AttachFrameWithReceivedName(constants.linkRole.receiver),
         new frames.FlowFrame(md.flow),
-        { delay: 1000 },
-        new frames.CloseFrame(md.close),
+        new frames.DetachFrame({ handle: 1, closed: true, error: 'com.microsoft:timeout' })
       ],
+      [ // force detach from remote server, and force close of the connection
+        new AttachFrameWithReceivedName(constants.linkRole.receiver, 2),
+        new frames.DetachFrame({ handle: 1, closed: true }),
+        new frames.EndFrame(),
+        new frames.CloseFrame()
+      ]
     ]);
 
-    var sender;
-    return test.client.connect(test.server.address())
-      .then(function() { return test.client.createSender('test.link'); })
-      .delay(100) // wait for flow
-      .then(function(_sender) {
-        sender = _sender;
-        return expect(sender.send('test')).to.eventually.be.rejectedWith(/detach-forced/);
+    test.server.setExpectedFrameSequence([
+      null, null, null, null,
+      new frames.AttachFrame({
+        channel: 1,
+        handle: 0, role: false,
+        name: 'test.link',
+        source: { address: 'localhost' },
+        target: { address: 'test.link' },
+        initialDeliveryCount: 1,
+        unsettled: {}
       })
-      .then(function() {
-        expect(Object.keys(sender._unsettledSends)).to.have.length(0);
-        return test.client.disconnect();
-      });
+    ]);
+
+    test.client = new AMQPClient(new Policy({
+      connect: { options: { containerId: 'test' } },
+      reconnect: false,
+      senderLink: { reattach: { retries: 5, forever: false } }
+    }));
+
+    // NOTE: The actual test here is in the expected frame sequence above, looking for the AttachFrame
+    return test.client.connect(test.server.address())
+      .then(function() { return test.client.createSender('test.link', { name: 'test.link' }); })
+      .delay(100) // wait for flow
+      .then(function() { return test.client.disconnect(); });
   });
-
-
 });
