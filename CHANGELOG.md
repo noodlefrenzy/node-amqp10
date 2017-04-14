@@ -1,3 +1,8 @@
+<a name="3.5.1"></a>
+## [3.5.1](https://github.com/noodlefrenzy/node-amqp10/compare/v3.5.0...v3.5.1) (2017-03-14)
+
+
+
 <a name="3.5.0"></a>
 # [3.5.0](https://github.com/noodlefrenzy/node-amqp10/compare/v3.4.2...v3.5.0) (2017-03-07)
 
