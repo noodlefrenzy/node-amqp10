@@ -71,7 +71,7 @@ describe('Disposition', function() {
           test.broker.initialize(),
           test.client.createReceiver(queueName, {
             attach: {
-              receiverSettleMode: c.receiverSettleMode.settleOnDisposition
+              rcvSettleMode: c.receiverSettleMode.settleOnDisposition
             },
             creditQuantum: 1
           }),

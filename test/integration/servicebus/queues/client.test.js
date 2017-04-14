@@ -86,7 +86,7 @@ describe('Queues', function() {
     var msgVal1 = u.uuidV4();
     var msgVal2 = u.uuidV4();
     test.client = new AMQPClient(Policy.ServiceBusQueue, {
-      receiverLink: { attach: { receiverSettleMode: 1 } }
+      receiverLink: { attach: { rcvSettleMode: 1 } }
     });
 
     test.client.connect(config.address)

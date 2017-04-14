@@ -628,7 +628,7 @@ describe('TransferFrame', function() {
       deliveryTag: tu.buildBuffer([1]),
       messageFormat: 20000,
       settled: true,
-      receiverSettleMode: constants.receiverSettleMode.autoSettle
+      rcvSettleMode: constants.receiverSettleMode.autoSettle
     });
     transfer.channel = 1;
     transfer.payload = new Buffer([0x00, 0x53, 0x77, 0x52, 10]);
@@ -667,7 +667,7 @@ describe('TransferFrame', function() {
       deliveryTag: tu.buildBuffer([1]),
       messageFormat: 20000,
       settled: true,
-      receiverSettleMode: 'auto'
+      rcvSettleMode: 'auto'
     });
     transfer.channel = 1;
     transfer.payload = new Buffer([0x00, 0x53, 0x77, 0x52, 10]);
