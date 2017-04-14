@@ -1,3 +1,13 @@
+<a name="3.5.1"></a>
+## [3.5.1](https://github.com/noodlefrenzy/node-amqp10/compare/v3.5.0...v3.5.1) (2017-04-14)
+
+
+### Bug Fixes
+
+* **link:** properly name settle mode frame fields in policies ([f3c4617](https://github.com/noodlefrenzy/node-amqp10/commit/f3c4617))
+
+
+
 <a name="3.5.0"></a>
 # [3.5.0](https://github.com/noodlefrenzy/node-amqp10/compare/v3.4.2...v3.5.0) (2017-03-07)
 
