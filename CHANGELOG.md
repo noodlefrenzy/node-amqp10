@@ -1,3 +1,13 @@
+<a name="3.5.2"></a>
+## [3.5.2](https://github.com/noodlefrenzy/node-amqp10/compare/v3.5.1...v3.5.2) (2017-04-15)
+
+
+### Bug Fixes
+
+* **policy:** reintroduce support for deprecated field names ([eb1147d](https://github.com/noodlefrenzy/node-amqp10/commit/eb1147d))
+
+
+
 <a name="3.5.1"></a>
 ## [3.5.1](https://github.com/noodlefrenzy/node-amqp10/compare/v3.5.0...v3.5.1) (2017-04-14)
 
