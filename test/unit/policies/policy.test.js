@@ -56,6 +56,28 @@ describe('Default Policy', function() {
       expect(addr).to.eql({ name: 'llamas' });
     });
 
+    it('should convert deprecated fields to their new names', function() {
+      var policy = amqp.Policy.merge({
+        senderLink: { attach: { senderSettleMode: 'llamas' } },
+        receiverLink: { attach: { receiverSettleMode: 'biscuits' } }
+      }, amqp.Policy.DefaultPolicy);
+
+      expect(policy.senderLink.attach.sndSettleMode).to.eql('llamas');
+      expect(policy.senderLink.attach.senderSettleMode).to.not.exist;
+      expect(policy.receiverLink.attach.rcvSettleMode).to.eql('biscuits');
+      expect(policy.receiverLink.attach.receiverSettleMode).to.not.exist;
+
+      var policy2 = new amqp.Policy.PolicyBase({
+        senderLink: { attach: { senderSettleMode: 'llamas' } },
+        receiverLink: { attach: { receiverSettleMode: 'biscuits' } }
+      });
+
+      expect(policy2.senderLink.attach.sndSettleMode).to.eql('llamas');
+      expect(policy2.senderLink.attach.senderSettleMode).to.not.exist;
+      expect(policy2.receiverLink.attach.rcvSettleMode).to.eql('biscuits');
+      expect(policy2.receiverLink.attach.receiverSettleMode).to.not.exist;
+    });
+
     it('should not add a SASL layer for anonymous auth by default', function() {
       var policy = amqp.Policy.merge({
         connect: {
