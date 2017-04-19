@@ -1,14 +1,15 @@
 'use strict';
 var Link = require('../../../lib/link'),
     ReceiverLink = require('../../../lib/receiver_link'),
-
+    Policy = require('../../../lib/policies/policy'),
+    putils = require('../../../lib/policies/policy_utilities'),
     util = require('util');
 
-function MockReceiverLink(session, options) {
-  MockReceiverLink.super_.call(this);
+function MockReceiverLink(session, options, policyOverrides) {
+  var linkPolicy = putils.Merge(policyOverrides, (new Policy()).senderLink);
+  MockReceiverLink.super_.call(this, session, null, linkPolicy);
 
   this._created = 0;
-  this.session = session;
   this.options = options;
   this._clearState();
 }
