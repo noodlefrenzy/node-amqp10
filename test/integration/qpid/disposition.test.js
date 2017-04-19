@@ -60,6 +60,24 @@ describe('Disposition', function() {
       });
   });
 
+  it('should immediately resolve send promises if `sndSettleMode` is `settled`', function(done) {
+    test.client = new AMQPClient({
+      senderLink: {
+        attach: {
+          sndSettleMode: c.senderSettleMode.settled
+        }
+      }
+    });
+
+    test.client.connect(config.address)
+      .then(function() { return test.client.createSender('test.disposition.queue'); })
+      .then(function(sender) { return sender.send({ llamas: 'are cool' }); })
+
+      // now drain the queue, so we don't leave state on the server
+      .then(function() { return test.client.createReceiver('test.disposition.queue'); })
+      .then(function(receiver) { receiver.on('message', function(msg) { done(); }); });
+  });
+
   it('should allow for manual disposition of received messages', function(done) {
     var queueName = 'test.disposition.queue';
     var messageCount = 5, receivedCount = 0;

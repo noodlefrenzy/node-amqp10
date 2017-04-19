@@ -26,6 +26,7 @@ var TestPolicy = new Policy({
 function AttachFrameWithReceivedName(role, offset) {
   offset = offset || 1;
   role = role || constants.linkRole.sender;
+
   return function(prev) {
     var data = prev[prev.length - offset].duplicate();
     var lastAttach = frames.readFrame(data, { verbose: false });

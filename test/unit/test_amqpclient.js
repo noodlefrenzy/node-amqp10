@@ -61,6 +61,8 @@ describe('AMQPClient', function() {
         name: 'queue_TX',
         isSender: true,
         capacity: 0
+      }, {
+        attach: { sndSettleMode: 1 }
       });
 
       s._addMockLink(l);
@@ -133,6 +135,8 @@ describe('AMQPClient', function() {
         name: 'queue_TX',
         isSender: true,
         capacity: 100
+      }, {
+        attach: { sndSettleMode: 1 }
       });
 
       s._addMockLink(l);
