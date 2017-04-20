@@ -9,6 +9,7 @@ var amqp = require('../../../lib'),
     Sasl = require('../../../lib/sasl'),
     ErrorCondition = require('../../../lib/types/error_condition'),
 
+    pu = require('../../../lib/policies/policy_utilities'),
     expect = require('chai').expect,
     test = require('../test-fixture');
 
@@ -76,6 +77,16 @@ describe('Default Policy', function() {
       expect(policy2.senderLink.attach.senderSettleMode).to.not.exist;
       expect(policy2.receiverLink.attach.rcvSettleMode).to.eql('biscuits');
       expect(policy2.receiverLink.attach.receiverSettleMode).to.not.exist;
+
+      // for direct access, e.g. when passing overrides to `createLink`
+      var senderLinkPolicy = { attach: { senderSettleMode: 'llamas' } };
+      pu.fixDeprecatedLinkOptions(senderLinkPolicy);
+      expect(senderLinkPolicy.attach.senderSettleMode).to.not.exist;
+      expect(senderLinkPolicy.attach.sndSettleMode).to.eql('llamas');
+      var receiverLinkPolicy = { attach: { receiverSettleMode: 'biscuits' } };
+      pu.fixDeprecatedLinkOptions(receiverLinkPolicy);
+      expect(receiverLinkPolicy.attach.receiverSettleMode).to.not.exist;
+      expect(receiverLinkPolicy.attach.rcvSettleMode).to.eql('biscuits');
     });
 
     it('should not add a SASL layer for anonymous auth by default', function() {
