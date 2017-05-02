@@ -1,3 +1,15 @@
+<a name="3.5.3"></a>
+## [3.5.3](https://github.com/noodlefrenzy/node-amqp10/compare/v3.5.2...v3.5.3) (2017-05-02)
+
+
+### Bug Fixes
+
+* **policy:** fix deprecated link options when using link overrides ([25a8ded](https://github.com/noodlefrenzy/node-amqp10/commit/25a8ded))
+* **sender-link:** resolve send promises for certain sndSettleMode ([be48605](https://github.com/noodlefrenzy/node-amqp10/commit/be48605))
+* **service-bus-policy:** leave default `sndSettleMode` as `mixed` ([ed8578c](https://github.com/noodlefrenzy/node-amqp10/commit/ed8578c))
+
+
+
 <a name="3.5.2"></a>
 ## [3.5.2](https://github.com/noodlefrenzy/node-amqp10/compare/v3.5.1...v3.5.2) (2017-04-15)
 
