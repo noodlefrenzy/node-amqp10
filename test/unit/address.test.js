@@ -92,6 +92,16 @@ describe('Address Parsing', function() {
           rootUri: 'amqps://username:password@192.168.1.1:1234',
           href: 'amqps://username:password@192.168.1.1:1234/myroute'
         }
+      },
+      {
+        description: 'should match credentials if passwd contains colons',
+        address: 'amqp://username:ii%7DS%3Aae3@my.amqp.server',
+        expected: {
+          protocol: 'amqp', host: 'my.amqp.server', port: 5672, path: '/',
+          user: 'username', pass: 'ii}S:ae3',
+          rootUri: 'amqp://username:ii%7DS%3Aae3@my.amqp.server:5672',
+          href: 'amqp://username:ii%7DS:ae3@my.amqp.server'
+        }
       }
     ].forEach(function(testCase) {
       it('should match ' + testCase.description, function() {
