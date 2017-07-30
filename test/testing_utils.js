@@ -4,6 +4,7 @@ var Builder = require('buffer-builder'),
     expect = require('chai').expect,
     _ = require('lodash'),
     sb = require('stream-buffers'),
+    semver = require('semver'),
     frames = require('../lib/frames');
 
 function populateConfig(configKeyMap, cb) {
@@ -120,7 +121,6 @@ module.exports.convertFrameToBuffer = function(frame) {
   return buffer.getContents();
 };
 
-
 module.exports.bufferEqual = function(a, b) {
   if (!Buffer.isBuffer(a)) return undefined;
   if (!Buffer.isBuffer(b)) return undefined;
@@ -133,3 +133,20 @@ module.exports.bufferEqual = function(a, b) {
 
   return true;
 };
+
+/**
+ * Ensures a test case is expected to be run
+ * given our current runtime versions
+ * 
+ * @param {Object} testCase test object to ensure
+ * @returns {Boolean} success or failure flag
+ */
+module.exports.ensureCompatibleTest = function(testCase) {
+  for (var prop in testCase.compatibleWith) {
+    if (!semver.satisfies(process.versions[prop], testCase.compatibleWith[prop])) {
+      return false;
+    }
+  }
+
+  return true;
+}
