@@ -149,4 +149,4 @@ module.exports.ensureCompatibleTest = function(testCase) {
   }
 
   return true;
-}
+};
