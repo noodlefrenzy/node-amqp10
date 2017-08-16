@@ -20,7 +20,7 @@ before_install:
 
 before_script:
   - sudo sh -c 'echo "auth=no" >> /etc/qpid/qpidd.conf'
-  - sudo /etc/init.d/qpidd restart
+  - sudo service qpidd restart
 
   # remove these when we can specify link properties
   - sudo qpid-config add queue test.disposition.queue
