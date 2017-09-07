@@ -119,15 +119,21 @@ MockServer.prototype._testData = function() {
   while (this.buffer.length) {
     expect(this.requestsExpected.length).to.be.greaterThan(0, 'More data received than expected');
     var expected = this.requestsExpected[this.requestIdx];
+    if (expected instanceof Array) expected = expected[1];
     if (this.buffer.length < expected.length) return;
 
     expected = this.requestsExpected[this.requestIdx++];
+    if (expected instanceof Array) expected = expected[1];
     var actual = this.buffer.slice(0, expected.length);
     this.buffer.consume(expected.length);
 
     debug('Receiving ' + actual.toString('hex'));
     expect(actual.toString('hex')).to.eql(expected.toString('hex'), 'Req ' + (this.requestIdx - 1));
-    this._sendNext();
+    
+    // Send a frame if the next receive frame doesn't preempt it
+    if (!Array.isArray(this.requestsExpected[this.requestIdx]) || !this.requestsExpected[this.requestIdx][0]) {
+      this._sendNext();
+    }
   }
 };
 

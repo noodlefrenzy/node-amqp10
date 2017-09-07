@@ -30,4 +30,4 @@ script:
   - make coverage
 
 after_script:
-  - codeclimate-test-reporter < coverage/lcov.info
+- codeclimate-test-reporter < coverage/lcov.info

@@ -128,6 +128,84 @@ describe('Session', function() {
       connection.open({ protocol: 'amqp', host: 'localhost', port: server.port });
     });
 
+    it('should reestablish the session when ended by the broker if the policy says to', function(done) {
+      server = new MockServer();
+      server.setSequence([
+        constants.amqpVersion,
+        new frames.OpenFrame(test.policy.connect.options),
+        new MockBeginFrame(null, 1),
+        new MockEndFrame(null, 1),
+        [true, new MockBeginFrame(null, 1)],
+        new MockEndFrame(null, 1),
+        new frames.CloseFrame()
+      ], [
+        constants.amqpVersion,
+        new frames.OpenFrame(test.policy.connect.options),
+        new MockBeginFrame({ remoteChannel: 1 }, 5),
+        [true,
+          new MockEndFrame({
+            error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
+          }, 5)
+        ],
+        new MockBeginFrame({ remoteChannel: 1 }, 5),
+        new MockEndFrame(null, 5),
+        [true, new frames.CloseFrame()]
+      ]);
+
+      var connection = new Connection(test.policy.connect);
+      server.setup(connection);
+
+      var expected = {
+        connection: [
+          'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH','OPEN_SENT', 'OPENED',
+          'CLOSE_RCVD', 'DISCONNECTED'
+        ],
+        session: [
+          'UNMAPPED', 'BEGIN_SENT', 'MAPPED', 'END_RCVD', 'UNMAPPED', 'BEGIN_SENT',
+          'MAPPED', 'END_SENT', 'UNMAPPED'
+        ]
+      };
+
+      var actual = {};
+      var assertMultipleTransitions = function(name, transitions) {
+        actual[name] = transitions;
+        if (_.isEqual(actual, expected))
+          done();
+      };
+
+      connection.connSM.bind(tu.assertTransitions(expected.connection, function(transitions) {
+        assertMultipleTransitions('connection', transitions);
+      }));
+
+      connection.on(Connection.Connected, function() {
+        var session = new Session(connection);
+        session.sm.bind(tu.assertTransitions(expected.session, function(transitions) {
+          assertMultipleTransitions('session', transitions);
+        }));
+
+        // After the first time the session ends, we set up a listener for the
+        // next time that it's mapped so we can end it ourselves
+        session.once(Session.Unmapped, function() {
+          session.once(Session.Mapped, function() {
+            session.end();
+          });
+        });
+
+        session.begin(
+          u.deepMerge({
+            reestablish: {
+              retries: 10,
+              strategy: 'fibonacci',
+              forever: true
+            }},
+            test.policy.session
+          )
+        );
+      });
+
+      connection.open({ protocol: 'amqp', host: 'localhost', port: server.port });
+    });
+
     it('should emit events', function(done) {
       server = new MockServer();
       server.setSequence([
