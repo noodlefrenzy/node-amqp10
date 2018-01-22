@@ -4,6 +4,7 @@ var Policies = require('../../lib').Policy,
     QpidJavaPolicy = Policies.QpidJava,
     ActiveMQPolicy = Policies.ActiveMQ,
     expect = require('chai').expect,
+    ensureCompatibleTest = require('../testing_utils').ensureCompatibleTest,
     u = require('../../lib/utilities');
 
 describe('Address Parsing', function() {
@@ -94,21 +95,39 @@ describe('Address Parsing', function() {
         }
       },
       {
-        description: 'should match credentials if passwd contains colons',
+        description: 'should match credentials if passwd contains colons (node >= 5.7.0)',
         address: 'amqp://username:ii%7DS%3Aae3@my.amqp.server',
         expected: {
           protocol: 'amqp', host: 'my.amqp.server', port: 5672, path: '/',
           user: 'username', pass: 'ii}S:ae3',
           rootUri: 'amqp://username:ii%7DS%3Aae3@my.amqp.server:5672',
           href: 'amqp://username:ii%7DS:ae3@my.amqp.server'
+        },
+        compatibleWith: {
+          node: '>=5.7.0'
+        }
+      },
+      {
+        description: 'should match credentials if passwd contains colons (node <5.7.0)',
+        address: 'amqp://username:ii%7DS%3Aae3@my.amqp.server',
+        expected: {
+          protocol: 'amqp', host: 'my.amqp.server', port: 5672, path: '/',
+          user: 'username', pass: 'ii}S:ae3',
+          rootUri: 'amqp://username:ii%7DS%3Aae3@my.amqp.server:5672',
+          href: 'amqp://username:ii%7DS%3Aae3@my.amqp.server'
+        },
+        compatibleWith: {
+          node: '<5.7.0'
         }
       }
     ].forEach(function(testCase) {
-      it('should match ' + testCase.description, function() {
-        var policy = DefaultPolicy;
-        expect(policy.parseAddress(testCase.address))
-          .to.eql(testCase.expected);
-      });
+      if (ensureCompatibleTest(testCase)) {
+        it('should match ' + testCase.description, function() {
+          var policy = DefaultPolicy;
+          expect(policy.parseAddress(testCase.address))
+            .to.eql(testCase.expected);
+        });
+      }
     });
   });
 
