@@ -11,20 +11,16 @@ branches:
   except:
     - gh-pages
 
-addons:
-  apt:
-   sources:
-   - sourceline: 'ppa:qpid/testing'
-   packages:
-   - qpidd
-   - qpid-tools
-
 before_install:
   - npm install -g codeclimate-test-reporter
+  - sudo sh -c 'printf "start on (started networking and filesystem)\nstop on runlevel [!2345]\n\nexpect fork\npre-start script\n\tmkdir -p /var/lib/qpidd/\nend script\n\nscript\n\texec qpidd -d --config /etc/qpid/qpidd.conf\nend script\n" > /etc/init/qpidd.conf'
+  - sudo add-apt-repository -y ppa:qpid/testing
+  - sudo apt-get update -qq
+  - sudo apt-get install -y qpidd qpid-tools
 
 before_script:
   - sudo sh -c 'echo "auth=no" >> /etc/qpid/qpidd.conf'
-  - sudo /etc/init.d/qpidd restart
+  - sudo service qpidd restart
 
   # remove these when we can specify link properties
   - sudo qpid-config add queue test.disposition.queue
