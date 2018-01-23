@@ -66,7 +66,7 @@ immediately on successful sending of the payload, you would build AMQPClient lik
     }, Policy.DefaultPolicy));
 
 In addition to the above, you can also tune how message link credit is doled out (for throttling), as
-well as most other AMQP behaviors, all through policy overrides.  See [DefaultPolicy](https://github.com/noodlefrenzy/node-amqp10/blob/master/lib/policies/default_policy.js)
+well as most other AMQP behaviors, all through policy overrides.  See [DefaultPolicy](https://github.com/noodlefrenzy/node-amqp10/blob/master/lib/policies/policy.js)
 and the [policy utilities](https://github.com/noodlefrenzy/node-amqp10/blob/master/lib/policies/policy_utilities.js)
 for more details on altering various behaviors.
 
