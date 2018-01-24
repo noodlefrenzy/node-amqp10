@@ -18,7 +18,7 @@ var mock_uri = 'amqp://localhost/';
 
 describe('AMQPClient', function() {
   describe('#connect()', function() {
-    it('should set up connection and session', function() {
+    it('should set up connection but not session', function() {
       var c = new Mock.Connection();
       var s = new Mock.Session(c);
       var client = new Mock.Client(c, s);
@@ -40,17 +40,17 @@ describe('AMQPClient', function() {
       return client.connect(mock_uri)
         .then(function() {
           expect(c._created).to.eql(1);
-          expect(s._created).to.eql(1);
-          expect(called).to.eql({ open: 1, begin: 1 });
+          expect(s._created).to.eql(0);
+          expect(called).to.eql({ open: 1, begin: 0 });
         });
     });
   });
 
-  describe('#send()', function() {
+  describe('#createSender()', function() {
     it('should throw an error if not connected', function () {
       var client = new Mock.Client();
       expect(function () {
-        client.send();
+        client.createSender();
       }).to.throw(Error);
     });
 
@@ -197,15 +197,110 @@ describe('AMQPClient', function() {
           });
         });
     });
+
+    it('should allow a link to be created with a custom session', function() {
+      var c = new Mock.Connection();
+      var s = new Mock.Session(c);
+      var l = new Mock.SenderLink(s, {
+        name: 'queue_TX',
+        isSender: true,
+        capacity: 100
+      }, {
+        attach: { sndSettleMode: 1 }
+      });
+      s._addMockLink(l);
+
+      // Custom session (already initialized)
+      var s2 = new Mock.Session(c);
+      s2.mapped = true;
+      s2._created = 1;
+      var l2 = new Mock.SenderLink(s, {
+        name: 'queue_TX',
+        isSender: true,
+        capacity: 100
+      }, {
+        attach: { sndSettleMode: 1 }
+      });
+      s2._addMockLink(l2);
+
+      var client = new Mock.Client(c, s);
+      var queue = 'queue';
+      var called = {
+        open: 0,
+        begin: 0,
+        begin2: 0,
+        attachLink: 0,
+        attachLink2: 0,
+        sendMessage: 0,
+        sendMessage2: 0
+      };
+      c.on('open-called', function (_c, _addr, _sasl) {
+        expect(_addr).to.eql(defaultPolicy.parseAddress(mock_uri));
+        expect(_sasl).to.not.exist;
+        called.open++;
+        _c.emit(Connection.Connected, _c);
+      });
+
+      s.on('begin-called', function (_s, _policy) {
+        called.begin++;
+
+        _s.mapped = true;
+        _s.emit(Session.Mapped, _s);
+      });
+
+      s2.on('begin-called', function(_s, _policy) {
+        called.begin2++;
+
+        _s.mapped = true;
+        _s.emit(Session.Mapped, _s);
+      });
+
+      s.on('attachLink-called', function (_s, _policy, _l) {
+        called.attachLink++;
+        expect(_policy.attach.target).to.eql({address: queue});
+        expect(_policy.attach.role).to.eql(constants.linkRole.sender);
+
+        process.nextTick(function() {
+          _l.simulateAttaching();
+        });
+      });
+
+      s2.on('attachLink-called', function(_s, _policy, _l) {
+        called.attachLink2++;
+        expect(_policy.attach.target).to.eql({ address: queue });
+        expect(_policy.attach.role).to.eql(constants.linkRole.sender);
+
+        process.nextTick(function() {
+          _l.simulateAttaching();
+        });
+      });
+
+      return client.connect(mock_uri)
+        .then(function () {
+          return client.createSender(queue, { name: 'queue_TX' }, s2);
+        })
+        .then(function () {
+          expect(c._created).to.eql(1);
+          expect(s._created).to.eql(0);
+          expect(l._created).to.eql(0);
+          expect(s2._created).to.eql(1);
+          expect(l2._created).to.eql(1);
+          expect(called.open).to.eql(1);
+          expect(called.begin).to.eql(0);
+          expect(called.attachLink).to.eql(0);
+          expect(called.begin2).to.eql(0);
+          expect(called.attachLink2).to.eql(1);
+        });
+    });
   });
 
-  describe('#receive()', function() {
+  describe('#createReceiver()', function() {
     it('should throw an error if not connected', function() {
       var client = new Mock.Client();
       expect(function() { client.createReceiver(); }).to.throw(Error);
     });
 
-    it('should only create a single connection, session, multiple links for multiple receives', function() {
+    it('should only create a single connection, session, multiple links for multiple receivers', function() {
       var c = new Mock.Connection();
       var s = new Mock.Session(c);
       var l1 = new Mock.ReceiverLink(s, {
@@ -383,6 +478,97 @@ describe('AMQPClient', function() {
             expect(called.begin).to.eql(2);
             expect(called.attachLink).to.eql(2);
           });
+        });
+    });
+
+    it('should allow a link to be created with a custom session', function() {
+      var c = new Mock.Connection();
+      var s = new Mock.Session(c);
+      var l = new Mock.ReceiverLink(s, {
+        name: 'queue_RX',
+        isSender: false,
+        capacity: 100
+      });
+      s._addMockLink(l);
+
+      // Custom session (already initialized)
+      var s2 = new Mock.Session(c);
+      s2.mapped = true;
+      s2._created = 1;
+      var l2 = new Mock.ReceiverLink(s, {
+        name: 'queue_RX',
+        isSender: false,
+        capacity: 100
+      });
+      s2._addMockLink(l2);
+
+      var client = new Mock.Client(c, s);
+      var queue = 'queue';
+      var called = {
+        open: 0,
+        begin: 0,
+        begin2: 0,
+        attachLink: 0,
+        attachLink2: 0,
+        sendMessage: 0,
+        sendMessage2: 0
+      };
+      c.on('open-called', function (_c, _addr, _sasl) {
+        expect(_addr).to.eql(defaultPolicy.parseAddress(mock_uri));
+        expect(_sasl).to.not.exist;
+        called.open++;
+        _c.emit(Connection.Connected, _c);
+      });
+
+      s.on('begin-called', function (_s, _policy) {
+        called.begin++;
+
+        _s.mapped = true;
+        _s.emit(Session.Mapped, _s);
+      });
+
+      s2.on('begin-called', function(_s, _policy) {
+        called.begin2++;
+
+        _s.mapped = true;
+        _s.emit(Session.Mapped, _s);
+      });
+
+      s.on('attachLink-called', function (_s, _policy, _l) {
+        called.attachLink++;
+        expect(_policy.attach.source).to.eql({ address: queue });
+        expect(_policy.attach.role).to.eql(constants.linkRole.receiver);
+
+        process.nextTick(function() {
+          _l.simulateAttaching();
+        });
+      });
+
+      s2.on('attachLink-called', function(_s, _policy, _l) {
+        called.attachLink2++;
+        expect(_policy.attach.source).to.eql({ address: queue });
+        expect(_policy.attach.role).to.eql(constants.linkRole.receiver);
+
+        process.nextTick(function() {
+          _l.simulateAttaching();
+        });
+      });
+
+      return client.connect(mock_uri)
+        .then(function () {
+          return client.createReceiver(queue, { name: 'queue_RX' }, s2);
+        })
+        .then(function () {
+          expect(c._created).to.eql(1);
+          expect(s._created).to.eql(0);
+          expect(l._created).to.eql(0);
+          expect(s2._created).to.eql(1);
+          expect(l2._created).to.eql(1);
+          expect(called.open).to.eql(1);
+          expect(called.begin).to.eql(0);
+          expect(called.attachLink).to.eql(0);
+          expect(called.begin2).to.eql(0);
+          expect(called.attachLink2).to.eql(1);
         });
     });
   });
