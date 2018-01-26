@@ -1,7 +1,7 @@
 'use strict';
 
 var builder = require('buffer-builder'),
-
+    Promise = require('bluebird'),
     constants = require('../../lib/constants'),
     frames = require('../../lib/frames'),
     DefaultPolicy = require('../../lib').Policy.Default,
@@ -11,9 +11,12 @@ var builder = require('buffer-builder'),
     ErrorCondition = require('../../lib/types/error_condition'),
 
     Connection = require('../../lib/connection'),
-    Sasl = require('../../lib/sasl'),
+    Sasl = require('../../lib/sasl/sasl'),
+    SaslPlain = require('../../lib/sasl/sasl_plain'),
 
-    tu = require('./../testing_utils');
+    tu = require('./../testing_utils'),
+    errors = require('../../lib/errors'),
+    expect = require('chai').expect;
 
 function MockSaslInitFrame() {
   return new frames.SaslInitFrame({
@@ -29,6 +32,20 @@ var test = {
 };
 
 describe('Sasl', function() {
+  describe('constructor', function () {
+    it('should throw if the either the saslMechanism or saslHandler parameters are null', function () {
+      expect(function () {
+        return new Sasl();
+      }).to.throw(errors.NotImplementedError);
+      expect(function () {
+        return new Sasl('mechanism');
+      }).to.throw(errors.NotImplementedError);
+      expect(function () {
+        return new Sasl('', {});
+      }).to.throw(errors.NotImplementedError);
+    });
+  });
+
   describe('Connection.open()', function() {
     var server = null;
 
@@ -70,7 +87,78 @@ describe('Sasl', function() {
       ];
 
       connection.connSM.bind(tu.assertTransitions(expected, function() { done(); }));
-      connection.open({protocol: 'amqp',host: 'localhost', port: server.port, user: 'user', pass: 'pass'}, new Sasl());
+      connection.open({protocol: 'amqp', host: 'localhost', port: server.port, user: 'user', pass: 'pass'}, new Sasl('PLAIN', new SaslPlain()));
+    });
+
+    it('should use the saslHandler passed to the constructor', function (done) {
+      var expectedSaslMechanism = 'TEST';
+      var expectedInitialAnswer = new Buffer('initialAnswer');
+      var expectedChallenge = new Buffer('challenge');
+      var expectedChallengeResponse = new Buffer('challenge-response');
+
+      var expectedSaslInitFrame = new frames.SaslInitFrame({
+        mechanism: expectedSaslMechanism,
+        initialResponse: expectedInitialAnswer,
+        hostname: 'host'
+      });
+
+      var expectedSaslChallengeResponseFrame = new frames.SaslResponseFrame({
+        response: expectedChallengeResponse
+      });
+
+      var saslHandler = {
+        getInitFrame: function (credentials) {
+          return new Promise(function (resolve) {
+            resolve({
+              mechanism: expectedSaslMechanism,
+              initialResponse: expectedInitialAnswer,
+              hostname: 'host'
+            });
+          });
+        },
+        getResponseFrame: function (challenge) {
+          expect(challenge[0].value.toString()).to.equal(expectedChallenge.toString());
+          return new Promise(function (resolve) {
+            resolve({ response: expectedChallengeResponse });
+          });
+        }
+      };
+
+      server = new MockServer();
+      server.setSequence([
+        constants.saslVersion,
+        expectedSaslInitFrame,
+        expectedSaslChallengeResponseFrame,
+        constants.amqpVersion,
+        new frames.OpenFrame(test.policy.connect.options),
+        new frames.CloseFrame()
+      ], [
+        constants.saslVersion,
+        [ true, new frames.SaslMechanismsFrame({ saslServerMechanisms: [expectedSaslMechanism] }) ],
+        new frames.SaslChallengeFrame({
+          challenge: expectedChallenge
+        }),
+        new frames.SaslOutcomeFrame({ code: constants.saslOutcomes.ok }),
+        constants.amqpVersion,
+        new frames.OpenFrame(test.policy.connect.options),
+        [ true,
+          new frames.CloseFrame({
+            error: { condition: ErrorCondition.ConnectionForced, description: 'test' }
+          })
+        ]
+      ]);
+
+      var connection = new Connection(test.policy.connect);
+      server.setup(connection);
+
+
+      var expected = [
+        'DISCONNECTED', 'START', 'IN_SASL', 'HDR_SENT', 'HDR_EXCH',
+        'OPEN_SENT', 'OPENED', 'CLOSE_RCVD', 'DISCONNECTED'
+      ];
+
+      connection.connSM.bind(tu.assertTransitions(expected, function() { done(); }));
+      connection.open({protocol: 'amqp', host: 'localhost', port: server.port}, new Sasl('TEST', saslHandler));
     });
   });
 });

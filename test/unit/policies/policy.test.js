@@ -6,7 +6,7 @@ var amqp = require('../../../lib'),
     constants = require('../../../lib/constants'),
     frames = require('../../../lib/frames'),
     errors = require('../../../lib/errors'),
-    Sasl = require('../../../lib/sasl'),
+    Sasl = require('../../../lib/sasl/sasl'),
     ErrorCondition = require('../../../lib/types/error_condition'),
 
     pu = require('../../../lib/policies/policy_utilities'),

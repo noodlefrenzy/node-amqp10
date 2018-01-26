@@ -1,12 +1,14 @@
 'use strict';
 
 var _ = require('lodash'),
+    Promise = require('bluebird'),
     amqp = require('../../lib'),
     chai = require('chai'),
     expect = chai.expect,
     Builder = require('buffer-builder'),
     AMQPClient = require('../../lib').Client,
     MockServer = require('./mocks').Server,
+    MockServerWithSasl = require('./mock_amqp'),
 
     Session = require('../../lib/session'),
     errors = require('../../lib/errors'),
@@ -563,7 +565,7 @@ describe('Client', function() {
           return test.client.disconnect();
         });
     });
-    
+
     it('should fail if the client hasn\'t been connected yet', function() {
       expect(function() {
         return test.client.createSession();
@@ -764,6 +766,102 @@ describe('Client', function() {
           });
         })
         .catch(done);
+    });
+  });
+
+  describe('#registerSaslMechanism()', function() {
+    beforeEach(function() {
+      if (!!test.server) test.server = undefined;
+      if (!!test.client) test.client = undefined;
+      test.client = new AMQPClient(TestPolicy);
+      test.server = new MockServerWithSasl();
+    });
+
+    afterEach(function(done) {
+      if (test.server) {
+        test.server.teardown();
+        test.server = null;
+      }
+      if (test.client) {
+        test.client = null;
+      }
+      done();
+    });
+
+    it('should use the registered Sasl mechanism when connecting', function (done) {
+      var saslMechanism = 'TEST';
+      var expectedChallenge = 'challenge';
+      var expectedChallengeResponse = 'challenge-response';
+      var expectedSaslInitResponse = 'init';
+
+      var initOK = false;
+      var challengeOK = false;
+
+      var expectedSaslInitFrame = new frames.SaslInitFrame({
+        mechanism: saslMechanism,
+        initialResponse: expectedSaslInitResponse
+      });
+
+      var expectedSaslChallengeResponseFrame = new frames.SaslResponseFrame({
+        response: expectedChallengeResponse
+      });
+
+      var saslHandler = {
+        getInitFrame: function() {
+          return new Promise(function(resolve) {
+            initOK = true;
+            resolve({
+              mechanism: saslMechanism,
+              initialResponse: expectedSaslInitResponse
+            });
+          });
+        },
+        getResponseFrame: function(challengeFrame) {
+          return new Promise(function(resolve) {
+            challengeOK = true;
+            expect(challengeFrame[0].value.toString()).to.equal(expectedChallenge);
+            resolve({ response: expectedChallengeResponse });
+          });
+        }
+      };
+
+      test.server.setSequence([
+        constants.saslVersion,
+        expectedSaslInitFrame,
+        expectedSaslChallengeResponseFrame,
+        constants.amqpVersion,
+        new frames.OpenFrame(test.client.policy.connect.options),
+        new frames.BeginFrame({ nextOutgoingId: 1, incomingWindow: 100, outgoingWindow: 100, channel: 1})
+      ], [
+        constants.saslVersion,
+        [ true, new frames.SaslMechanismsFrame({ saslServerMechanisms: [saslMechanism] }) ],
+        new frames.SaslChallengeFrame({
+          challenge: expectedChallenge
+        }),
+        new frames.SaslOutcomeFrame({ code: constants.saslOutcomes.ok }),
+        constants.amqpVersion,
+        new frames.OpenFrame(test.client.policy.connect.options),
+
+        new frames.BeginFrame({
+          remoteChannel: 1, nextOutgoingId: 0,
+          incomingWindow: 2147483647, outgoingWindow: 2147483647,
+          handleMax: 4294967295
+        })
+      ]);
+      test.server.setup();
+
+      // need both the policy setting and the registerSaslMechanism call to work (since one could in theory register multiple sasl mechanism but only one can be used to connect)
+      test.client.policy.connect.saslMechanism = saslMechanism;
+      test.client.registerSaslMechanism(saslMechanism, saslHandler);
+
+      test.client.connect('amqp://localhost:' + test.server.port)
+        .then(function () {
+          expect(initOK).to.equal(true);
+          expect(challengeOK).to.equal(true);
+          done();
+      }).catch(function(err) {
+        done(err);
+      });
     });
   });
 });
