@@ -1,3 +1,19 @@
+<a name="3.6.0"></a>
+# [3.6.0](https://github.com/noodlefrenzy/node-amqp10/compare/v3.5.3...v3.6.0) (2018-01-26)
+
+
+### Bug Fixes
+
+* **address-parsing:** don't truncate ':' passwords ([fc84946](https://github.com/noodlefrenzy/node-amqp10/commit/fc84946)), closes [#318](https://github.com/noodlefrenzy/node-amqp10/issues/318)
+
+
+### Features
+
+* **sasl:** support custom SASL handlers ([2842560](https://github.com/noodlefrenzy/node-amqp10/commit/2842560))
+* **session:** add support for multiple sessions per client ([8068045](https://github.com/noodlefrenzy/node-amqp10/commit/8068045))
+
+
+
 <a name="3.5.3"></a>
 ## [3.5.3](https://github.com/noodlefrenzy/node-amqp10/compare/v3.5.2...v3.5.3) (2017-05-02)
 
