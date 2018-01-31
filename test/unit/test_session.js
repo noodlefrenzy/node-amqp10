@@ -128,6 +128,118 @@ describe('Session', function() {
       connection.open({ protocol: 'amqp', host: 'localhost', port: server.port });
     });
 
+    it('should do nothing if the session is already mapped', function(done) {
+      server = new MockServer();
+      server.setSequence([
+        constants.amqpVersion,
+        new frames.OpenFrame(test.policy.connect.options),
+        new MockBeginFrame(null, 1),
+        new MockEndFrame(null, 1),
+        new frames.CloseFrame()
+      ], [
+        constants.amqpVersion,
+        new frames.OpenFrame(test.policy.connect.options),
+        new MockBeginFrame({ remoteChannel: 1 }, 5),
+        new MockEndFrame({
+          error: { condition: ErrorCondition.ConnectionForced, description: 'test'}
+        }, 5),
+        [ true, new frames.CloseFrame() ]
+      ]);
+
+      var connection = new Connection(test.policy.connect);
+      server.setup(connection);
+
+      var expected = {
+        connection: [
+          'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH','OPEN_SENT', 'OPENED',
+          'CLOSE_RCVD', 'DISCONNECTED'
+        ],
+        session: ['UNMAPPED', 'BEGIN_SENT', 'MAPPED', 'END_SENT', 'UNMAPPED']
+      };
+
+      var actual = {};
+      var assertMultipleTransitions = function(name, transitions) {
+        actual[name] = transitions;
+        if (_.isEqual(actual, expected))
+          done();
+      };
+
+      connection.connSM.bind(tu.assertTransitions(expected.connection, function(transitions) {
+        assertMultipleTransitions('connection', transitions);
+      }));
+
+      connection.on(Connection.Connected, function() {
+        var session = new Session(connection);
+        session.sm.bind(tu.assertTransitions(expected.session, function(transitions) {
+          assertMultipleTransitions('session', transitions);
+        }));
+
+        session.once(Session.Mapped, function() {
+          session.begin(test.policy.session);
+          session.end();
+        });
+        session.begin(test.policy.session);
+      });
+
+      connection.open({ protocol: 'amqp', host: 'localhost', port: server.port });
+    });
+
+    it('should not allow a begin() while the session is being mapped', function(done) {
+      server = new MockServer();
+      server.setSequence([
+        constants.amqpVersion,
+        new frames.OpenFrame(test.policy.connect.options),
+        new MockBeginFrame(null, 1),
+        new MockEndFrame(null, 1),
+        new frames.CloseFrame()
+      ], [
+        constants.amqpVersion,
+        new frames.OpenFrame(test.policy.connect.options),
+        new MockBeginFrame({ remoteChannel: 1 }, 5),
+        [ true,
+          new MockEndFrame({
+            error: { condition: ErrorCondition.ConnectionForced, description: 'test'}
+          }, 5)
+        ],
+        [ true, new frames.CloseFrame() ]
+      ]);
+
+      var connection = new Connection(test.policy.connect);
+      server.setup(connection);
+
+      var expected = {
+        connection: [
+          'DISCONNECTED', 'START', 'HDR_SENT', 'HDR_EXCH','OPEN_SENT', 'OPENED',
+          'CLOSE_RCVD', 'DISCONNECTED'
+        ],
+        session: ['UNMAPPED', 'BEGIN_SENT', 'BEGIN_SENT', 'MAPPED', 'END_RCVD', 'UNMAPPED']
+      };
+
+      var actual = {};
+      var assertMultipleTransitions = function(name, transitions) {
+        actual[name] = transitions;
+        if (_.isEqual(actual, expected))
+          done();
+      };
+
+      connection.connSM.bind(tu.assertTransitions(expected.connection, function(transitions) {
+        assertMultipleTransitions('connection', transitions);
+      }));
+
+      connection.on(Connection.Connected, function() {
+        var session = new Session(connection);
+        session.sm.bind(tu.assertTransitions(expected.session, function(transitions) {
+          assertMultipleTransitions('session', transitions);
+        }));
+
+        // The second call should be ignored and log a warning for now
+        session.begin(test.policy.session);
+        session.begin(test.policy.session);
+      });
+
+      connection.open({ protocol: 'amqp', host: 'localhost', port: server.port });
+    });
+
     it('should reestablish the session when ended by the broker if the policy says to', function(done) {
       server = new MockServer();
       server.setSequence([
