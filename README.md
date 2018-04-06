@@ -41,7 +41,7 @@ server would look like:
         ]);
       })
       .spread(function(receiver, sender) {
-        receiver.on('errorReceived', function(err) { // check for errors });
+        receiver.on('errorReceived', function(err) { /* Check for errors */ });
         receiver.on('message', function(message) {
           console.log('Rx message: ', message.body);
         });
