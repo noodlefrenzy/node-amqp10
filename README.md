@@ -3,6 +3,8 @@ amqp10
 
 [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![coverage][coverage-image]][coverage-url] [![npm][npm-dl-image]][npm-url] [![gitter][gitter-image]][gitter-url]
 
+### NOTE: This repository is no longer being maintained. Please use [rhea](https://github.com/amqp/rhea) which is a fully compliant amqp 1.0 library that is actively maintained.
+
 amqp10 is a promise-based, AMQP 1.0 compliant node.js client
 
 [travis-image]: https://img.shields.io/travis/noodlefrenzy/node-amqp10.svg
