@@ -374,7 +374,7 @@ describe('AttachFrame', function() {
     expect(attach.handle).to.eql(0);
     expect(attach.role).to.eql(true);
     expect(attach.sndSettleMode).to.eql(constants.senderSettleMode.mixed);
-    expect(attach.rcvSettleMode).to.eql(constants.receiverSettleMode.autoSettle);
+    expect(attach.rcvSettleMode).to.eql(constants.receiverSettleMode.first);
   });
 
   it('should decode performative correctly (2)', function() {
@@ -397,7 +397,7 @@ describe('AttachFrame', function() {
     expect(attach.handle).to.eql(0);
     expect(attach.role).to.eql(true);
     expect(attach.sndSettleMode).to.eql(constants.senderSettleMode.mixed);
-    expect(attach.rcvSettleMode).to.eql(constants.receiverSettleMode.autoSettle);
+    expect(attach.rcvSettleMode).to.eql(constants.receiverSettleMode.first);
   });
 
   it('should decode performative correctly (3)', function() {
@@ -454,7 +454,7 @@ describe('AttachFrame', function() {
     expect(attach.handle).to.eql(1);
     expect(attach.role).to.eql(false);
     expect(attach.sndSettleMode).to.eql(constants.senderSettleMode.mixed);
-    expect(attach.rcvSettleMode).to.eql(constants.receiverSettleMode.autoSettle);
+    expect(attach.rcvSettleMode).to.eql(constants.receiverSettleMode.first);
     expect(attach.properties).to.eql({
       'com.microsoft:client-version': 'azure-iot-device/1.0.0-preview.9'
     });
@@ -628,7 +628,7 @@ describe('TransferFrame', function() {
       deliveryTag: tu.buildBuffer([1]),
       messageFormat: 20000,
       settled: true,
-      rcvSettleMode: constants.receiverSettleMode.autoSettle
+      rcvSettleMode: constants.receiverSettleMode.first
     });
     transfer.channel = 1;
     transfer.payload = new Buffer([0x00, 0x53, 0x77, 0x52, 10]);
@@ -733,7 +733,7 @@ describe('TransferFrame', function() {
     expect(transfer).to.be.an.instanceOf(frames.TransferFrame);
     expect(transfer.channel).to.eql(channel);
     expect(transfer.handle).to.eql(handle);
-    expect(transfer.rcvSettleMode).to.eql(constants.receiverSettleMode.autoSettle);
+    expect(transfer.rcvSettleMode).to.eql(constants.receiverSettleMode.first);
     expect(transfer.payload).to.have.length(5);
 
     // var message = transfer.decodePayload();

@@ -87,8 +87,7 @@ Where the first number is the initial credit, and the second is the _threshold_ 
 
 1. Sets the Link's creditQuantum to the first number (1), which you can do for yourself via the Policy mix-in `{ receiverLink: { creditQuantum: 1 } }`
 
-2. Sets the Link to not auto-settle messages at the sender, which you can do for yourself via `{ receiverLink: { attach: { receiverSettleMode: 1 } } }`
- Where did that magic "1" come from? Well, that's the value from the spec, but you could use the constant we've defined at `require('amqp10').Constants.receiverSettleMode.settleOnDisposition`
+2. Sets the Link to not auto-settle messages at the sender
 
 3. Sets the Link's credit renewal policy to a custom method that renews only when the link credit is below the threshold and we've settled some messages. You can do this yourself by using your own custom method:
 ```

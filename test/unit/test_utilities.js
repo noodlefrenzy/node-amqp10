@@ -78,7 +78,7 @@ describe('Utilities', function() {
           address: 'localhost'
         }),
         sndSettleMode: constants.senderSettleMode.settled,
-        rcvSettleMode: constants.receiverSettleMode.autoSettle,
+        rcvSettleMode: constants.receiverSettleMode.first,
         maxMessageSize: 10000,
         initialDeliveryCount: 1
       }};
