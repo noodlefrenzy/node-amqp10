@@ -59,7 +59,11 @@ function buildBuffer(contents) {
     } else if (typeof cur === 'string') {
       bufb.appendString(cur);
     } else {
-      bufb.appendUInt8(cur);
+      if (cur < 0) {
+        bufb.appendInt8(cur);
+      } else {
+        bufb.appendUInt8(cur);
+      }
     }
   }
   return bufb.get();
