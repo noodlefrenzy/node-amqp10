@@ -222,7 +222,7 @@ describe('Codec', function() {
 
       bufb = new Builder();
       codec.encode(new Int64(0xFFFFFFFF, 0xFFFFFF00), bufb);
-      expected = buildBuffer([0x81, Builder.prototype.appendInt32BE, 0xFFFFFFFF, Builder.prototype.appendInt32BE, 0xFFFFFF00]);
+      expected = buildBuffer([0x81, Builder.prototype.appendInt32BE, -1, Builder.prototype.appendInt32BE, -256]);
       tu.shouldBufEql(expected, bufb);
     });
     it('should encode lists', function() {
